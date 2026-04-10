@@ -5,6 +5,7 @@ import { useSteppedVisualization } from "@/hooks/useSteppedVisualization";
 import { StepControls } from "@/components/visualizations/shared/step-controls";
 import { useSvgPalette } from "@/hooks/useDarkMode";
 import { useLocale } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 interface FlowNode {
   id: string;
@@ -278,7 +279,15 @@ function edgePath(nodes: FlowNode[], fromId: string, toId: string): string {
   return `M ${startX} ${startY} L ${endX} ${endY}`;
 }
 
-export default function AgentLoop({ title }: { title?: string }) {
+export default function AgentLoop({
+  title,
+  compact = false,
+  hideTitle = false,
+}: {
+  title?: string;
+  compact?: boolean;
+  hideTitle?: boolean;
+}) {
   const locale = normalizeLocale(useLocale());
   const copy = COPY[locale];
   const nodes = getNodes(locale);
@@ -306,21 +315,28 @@ export default function AgentLoop({ title }: { title?: string }) {
   const stepInfo = copy.stepInfo[currentStep];
 
   return (
-    <section className="min-h-[500px] space-y-4">
-      <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-        {title || copy.title}
-      </h2>
+    <section className={compact ? "mx-auto max-w-[1080px] space-y-3" : "min-h-[500px] space-y-4"}>
+      {!hideTitle && (
+        <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+          {title || copy.title}
+        </h2>
+      )}
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
-        <div className="flex flex-col gap-4 lg:flex-row">
+      <div
+        className={cn(
+          "rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900",
+          compact ? "p-3" : "p-4"
+        )}
+      >
+        <div className={cn("flex flex-col lg:flex-row", compact ? "gap-3" : "gap-4")}>
           <div className="w-full lg:w-[60%]">
-            <div className="mb-2 font-mono text-xs text-zinc-400 dark:text-zinc-500">
+            <div className={cn("font-mono text-xs text-zinc-400 dark:text-zinc-500", compact ? "mb-1.5" : "mb-2")}>
               {copy.loopLabel}
             </div>
             <svg
               viewBox="0 0 500 440"
               className="w-full rounded-md border border-zinc-100 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
-              style={{ minHeight: 300 }}
+              style={{ minHeight: compact ? 260 : 300 }}
             >
               <defs>
                 <filter id="glow-blue">
@@ -476,10 +492,15 @@ export default function AgentLoop({ title }: { title?: string }) {
           </div>
 
           <div className="w-full lg:w-[40%]">
-            <div className="mb-2 font-mono text-xs text-zinc-400 dark:text-zinc-500">
+            <div className={cn("font-mono text-xs text-zinc-400 dark:text-zinc-500", compact ? "mb-1.5" : "mb-2")}>
               messages[]
             </div>
-            <div className="min-h-[300px] space-y-2 rounded-md border border-zinc-100 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950">
+            <div
+              className={cn(
+                "space-y-2 rounded-md border border-zinc-100 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950",
+                compact ? "min-h-[260px] p-2.5" : "min-h-[300px] p-3"
+              )}
+            >
               <AnimatePresence mode="popLayout">
                 {visibleMessages.length === 0 && (
                   <motion.div
@@ -487,7 +508,10 @@ export default function AgentLoop({ title }: { title?: string }) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="py-8 text-center text-xs text-zinc-400 dark:text-zinc-600"
+                    className={cn(
+                      "text-center text-xs text-zinc-400 dark:text-zinc-600",
+                      compact ? "py-6" : "py-8"
+                    )}
                   >
                     {copy.emptyLabel}
                   </motion.div>
@@ -500,12 +524,12 @@ export default function AgentLoop({ title }: { title?: string }) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ duration: 0.35, type: "spring", bounce: 0.3 }}
-                    className={`rounded-md px-3 py-2 ${message.colorClass}`}
+                    className={cn("rounded-md", compact ? "px-2.5 py-1.5" : "px-3 py-2", message.colorClass)}
                   >
-                    <div className="font-mono text-[11px] font-semibold text-white">
+                    <div className={cn("font-mono font-semibold text-white", compact ? "text-[10px]" : "text-[11px]")}>
                       {message.role}
                     </div>
-                    <div className="mt-0.5 text-[10px] text-white/80">
+                    <div className={cn("text-white/80", compact ? "mt-0 text-[9px]" : "mt-0.5 text-[10px]")}>
                       {message.detail}
                     </div>
                   </motion.div>
@@ -513,7 +537,7 @@ export default function AgentLoop({ title }: { title?: string }) {
               </AnimatePresence>
 
               {visibleMessages.length > 0 && (
-                <div className="mt-3 border-t border-zinc-200 pt-2 dark:border-zinc-700">
+                <div className={cn("border-t border-zinc-200 pt-2 dark:border-zinc-700", compact ? "mt-2" : "mt-3")}>
                   <span className="font-mono text-[10px] text-zinc-400">
                     {copy.lengthLabel}: {visibleMessages.length}
                   </span>
@@ -534,6 +558,7 @@ export default function AgentLoop({ title }: { title?: string }) {
         onToggleAutoPlay={toggleAutoPlay}
         stepTitle={stepInfo.title}
         stepDescription={stepInfo.desc}
+        compact={compact}
       />
     </section>
   );

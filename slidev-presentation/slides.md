@@ -192,6 +192,12 @@ def agent_loop(state):
 ```
 
 ---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s01/" />
+
+---
 
 # s02: 工具使用 (Tool Use)
 
@@ -272,6 +278,12 @@ output = handler(**block.input) if handler \
 </div>
 
 ---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s02/" />
+
+---
 
 # s03: 会话内规划 (TodoWrite)
 
@@ -332,6 +344,12 @@ if rounds_since_update >= 3:
 </div>
 
 ---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s03/" />
+
+---
 
 # s04: 子智能体 (Subagent)
 
@@ -359,6 +377,12 @@ class SubagentContext:
     handlers: dict     # 工具对应的函数
     max_turns: int     # 防止无限跑
 ```
+
+---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s04/" />
 
 ---
 
@@ -409,6 +433,12 @@ class SkillRegistry:
 
 </div>
 </div>
+
+---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s05/" />
 
 ---
 
@@ -473,6 +503,12 @@ def compact_history(messages):
 压缩后必须保住：当前目标、已完成动作、已修改文件、关键决定、下一步
 
 </div>
+
+---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s06/" />
 
 ---
 layout: section
@@ -820,6 +856,12 @@ def complete(self, task_id):
 </div>
 
 ---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s07/" />
+
+---
 
 # s13: 后台任务 (Background Tasks)
 
@@ -869,6 +911,12 @@ notification = {
 
 </div>
 </div>
+
+---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s08/" />
 
 ---
 
@@ -955,6 +1003,12 @@ graph TB
 </div>
 
 ---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s09/" />
+
+---
 
 # s16: 团队协议 (Team Protocols)
 
@@ -1007,6 +1061,12 @@ request = {
 </div>
 
 ---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s10/" />
+
+---
 
 # s17: 自治智能体 (Autonomous Agents)
 
@@ -1036,6 +1096,12 @@ def is_claimable_task(task, role=None):
 ```
 
 </div>
+
+---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s11/" />
 
 ---
 
@@ -1090,6 +1156,12 @@ worktree = {
 
 </div>
 </div>
+
+---
+layout: none
+---
+
+<EmbedVizFrame url="http://localhost:3000/en/embed/s12/" />
 
 ---
 
