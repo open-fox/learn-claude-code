@@ -36,7 +36,7 @@ export default async function RootLayout({
   const { locale } = await params;
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} className="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
