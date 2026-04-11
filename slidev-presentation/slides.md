@@ -1,9 +1,7 @@
 ---
 theme: default
-title: Learn Claude Code — 从零手搓 AI Coding Agent
-info: |
-  基于 Learn Claude Code 教程的完整教学演示
-  四阶段 · 19 章 · 从最小循环到多 Agent 平台
+title: Build Your Own Agent — 从0到1，手搓 AI Coding Agent
+info: Build Your Own Agent — 从0到1，手搓 AI Coding Agent
 lineNumbers: true
 drawings:
   persist: false
@@ -11,25 +9,399 @@ transition: slide-left
 mdc: true
 ---
 
-# Learn Claude Code
+# Build Your Own Agent
 
-## 从零手搓 AI Coding Agent
+## 从0到1，手搓 AI Coding Agent
 
 <div class="pt-8 text-lg text-gray-500">
-
-四阶段 · 19 章 · 从最小循环到完整平台
-
-</div>
-
-<div class="abs-br m-6 flex gap-2">
-  <a href="https://github.com/shareAI-lab/learn-claude-code" target="_blank" class="text-xl slidev-icon-btn">
-    <carbon-logo-github />
-  </a>
+<p>javayhu</p>
+<p>2026/4/13</p>
 </div>
 
 <!--
-本教程的目标不是逐行复制某个生产仓库，而是教会开发者从 0 到 1 手搓一个结构完整的 coding agent。
+基于开源项目 Learn Claude Code 的教程，分享一个简化版本的 AI Coding Agent 的构建流程
+
+这个教程是在 Claude Code 代码泄漏之前就有，在这之后，可能基于泄漏的源码，又补充了几个章节
 -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- <span class="text-orange-500 font-bold">LLM</span>
+- Prompt
+- Token
+- Context
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-llm.png" alt="LLM" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 半年内进展
+
+### 1、主流模型竞赛
+
+国外三家模型编程能力更强了，国产开源模型也表现亮眼
+
+- OpenAI GPT 5.4
+
+- Google Gemini 3.1
+
+- Anthropic Claude Opus/Sonnet 4.6
+
+- GLM 5.1 / Kimi K2.5 / MiniMax M2.7
+
+### 2、[models.dev](https://models.dev)
+
+记录主流模型的发布时间、知识库时间、性能、价格和能力
+
+### 3、<span class="text-orange-500">AI 应用生态</span>
+
+现在拼的不只是模型能力，还有 AI 应用生态
+
+- 1 月份，Claude Cowork 推出，AI 应用开始转向 个人 Agent 应用
+
+- 2 月份，OpenClaw 爆火，全民开始养虾，各种 *Claw 产品层出不穷
+
+- 随后，browser use、computer use 等功能逐渐成为 AI 应用的标配
+
+</template>
+
+<!-- LLM -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- <span class="text-orange-500 font-bold">Prompt</span>
+- Token
+- Context
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-prompt.png" alt="Prompt" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 半年内进展
+
+### 1、提示词缓存（Prompt Caching）
+
+如果当前请求的输入前缀和之前的请求完全一致，模型商就可以直接从缓存读取中间结果，效率更高，成本更低
+
+### 2、设计提示词的核心原则
+
+<span class="text-orange-500">常驻内容要短且稳定</span>，把不变的放前面，把变化的放后面
+
+- 前面：系统提示、工具定义等在多轮请求中基本不会变的内容
+
+- 后面：当前时间、用户输入、工具调用结果等动态变化的内容
+
+</template>
+
+<!-- Prompt -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- <span class="text-orange-500 font-bold">Token</span>
+- Context
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-token.png" alt="Token" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 半年内进展
+
+### 1、正式的中文名：<span class="text-orange-500 leading-snug">词元</span>
+
+Token是大模型处理信息的最小信息单元，也是 AI 时代的结算单位
+
+### 2、Token 不再“同价”
+
+Prompt Caching 普及后，重复前缀可以缓存复用，cached input tokens 比普通 input token 便宜很多
+
+### 3、Token Plan
+
+模型服务商从提供 Coding Plan 到提供 Token Plan，满足个人用户在使用 AI 应用时多模态输入输出的需求
+
+- Tencent Token Plan
+- MiniMax Token Plan
+
+</template>
+
+<!-- Token -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- Token
+- <span class="text-orange-500 font-bold">Context</span>
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-context-engineering.png" alt="Context" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 半年内进展
+
+### 1、工程化的演进
+
+<div class="mt-4 leading-snug">
+  <table class="w-full">
+    <thead>
+      <tr class="">
+        <th class="w-28 text-left pb-2"></th>
+        <th class="w-28 text-left pb-2">时间</th>
+        <th class="text-left pb-2">目标</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="pr-2 pb-2 align-center">提示词工程</td>
+        <td class="pr-2 pb-2 align-center">2023-2024</td>
+        <td class="pb-2 align-top"><span class="text-orange-500">怎么跟模型说</span>，能让它输出高质量的结果，更侧重于单次请求</td>
+      </tr>
+      <tr>
+        <td class="pr-2 pb-2 align-center">上下文工程</td>
+        <td class="pr-2 pb-2 align-center">2025</td>
+        <td class="pb-2 align-top"><span class="text-orange-500">给模型看什么</span>，能让它输出高质量的结果，更侧重于多轮请求</td>
+      </tr>
+      <tr>
+        <td class="pr-2 align-center">驾驭工程</td>
+        <td class="pr-2 align-center">2026+</td>
+        <td class="align-top"><span class="text-orange-500">把模型、工具、记忆、权限和流程编排成可靠可控的 Agent 系统，让模型能够长时间稳定运行</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="concept-slide-image">
+  <img src="./images/harness.png" alt="Harness" />
+</div>
+
+</template>
+
+<!-- Context -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- Token
+- Context
+- <span class="text-orange-500 font-bold">Tools</span>
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-tools.png" alt="Tools" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 半年内进展
+
+### 1、<span class="text-orange-500">Bash is all you need</span>
+
+- HCI 向 ACI (Agent Computer Interface) 转化
+
+- GUI 是给人看的，Agent 只需要 bash 工具
+
+- 人用的是 Chrome，而 Agent 只需 Headless Chrome
+
+### 2、为什么选择 bash？
+
+- bash 可以编写代码创建脚本，并执行脚本，高效
+
+- bash 可以保存工具调用结果到文件，并随时读取
+
+- bash 可以利用丰富的三方工具，比如 ffmpeg/git/grep
+
+### 3、CLI 工具的兴起
+
+- 飞书推出 CLI，钉钉推出 CLI，企微推出 CLI
+
+- Google Workspace 推出 CLI，Obsidian 推出 CLI
+
+</template>
+
+<!-- Tools -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- Token
+- Context
+- Tools
+- <span class="text-orange-500 font-bold">MCP + Skill</span>
+
+<div class="concept-slide-image">
+  <img src="./images/ai-mcp.png" alt="MCP" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 半年内进展
+
+### 1、MCP 的问题
+
+- MCP Tools 的定义和返回结果内容太多，占用大量上下文
+
+- 很多 MCP Server 只是把旧接口重新包装，使用体验不佳
+
+### 2、MCP 和 Skill
+
+<div class="mt-3 leading-snug">
+  <table class="w-full">
+    <thead>
+      <tr class="text-orange-500">
+        <th class="w-32 text-left"></th>
+        <th class="text-left">MCP</th>
+        <th class="text-left">Skill</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="pr-2 pb-2 align-top">解决的问题</td>
+        <td class="pr-2 pb-2 align-top">把外部能力接进来</td>
+        <td class="pb-2 align-top">把做事方法和步骤教给 Agent</td>
+      </tr>
+      <tr>
+        <td class="pr-2 pb-2 align-top">告诉模型什么</td>
+        <td class="pr-2 pb-2 align-top">能做什么</td>
+        <td class="pb-2 align-top">该怎么做</td>
+      </tr>
+      <tr>
+        <td class="pr-2 pb-2 align-top">内容形态</td>
+        <td class="pr-2 pb-2 align-top">tools / resources / prompts</td>
+        <td class="pb-2 align-top">Skill.md / scripts / references</td>
+      </tr>
+      <tr>
+        <td class="pr-2 pb-2 align-top">加载方式</td>
+        <td class="pr-2 pb-2 align-top">连接 server 后暴露能力</td>
+        <td class="pb-2 align-top">按需加载正文和脚本</td>
+      </tr>
+      <tr>
+        <td class="pr-2 align-top">上下文成本</td>
+        <td class="pr-2 align-top">工具定义和结果可能偏重</td>
+        <td class="align-top">分层设计，按需加载</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+### 3、理解 Skill
+
+- Agent = 系统，Tools = 系统应用，Skills = 安装在系统上的软件
+
+- Claude Cowork = iOS 系统，OpenClaw = Android 系统
+
+- SkillsHub = 应用商店，有毒的 Skill = 恶意软件
+
+- 安装软件是给人用的，安装 Skill 是给 Agent 用的
+
+</template>
+
+<!-- MCP -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (2/2) AI 编程工具的演进和经验
+
+- Chat：ChatGPT
+- VS Code 插件：Copilot
+- AI IDE：Cursor、Windsurf
+- AI Coding Agent：Claude Code
+
+<div class="concept-slide-image">
+  <img src="./images/ai-coding.png" alt="Coding" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 半年内进展
+
+### 1、CodeBuddy 逐渐完善
+
+- AI IDE：CodeBuddy IDE
+- VS Code 插件：CodeBuddy 插件
+- AI Coding Agent：CodeBuddy Code
+- 底层共享通用的 CodeBuddy Agent SDK
+
+### 2、Claude Code 源码泄漏
+
+网上各种源码分析，将带动 Agent 系统的开发
+
+</template>
+
+<!-- MCP -->
 
 ---
 layout: center
@@ -195,7 +567,7 @@ def agent_loop(state):
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s01/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s01/" />
 
 ---
 
@@ -281,7 +653,7 @@ output = handler(**block.input) if handler \
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s02/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s02/" />
 
 ---
 
@@ -347,7 +719,7 @@ if rounds_since_update >= 3:
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s03/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s03/" />
 
 ---
 
@@ -382,7 +754,7 @@ class SubagentContext:
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s04/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s04/" />
 
 ---
 
@@ -438,7 +810,7 @@ class SkillRegistry:
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s05/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s05/" />
 
 ---
 
@@ -508,7 +880,7 @@ def compact_history(messages):
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s06/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s06/" />
 
 ---
 layout: section
@@ -859,7 +1231,7 @@ def complete(self, task_id):
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s07/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s07/" />
 
 ---
 
@@ -916,7 +1288,7 @@ notification = {
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s08/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s08/" />
 
 ---
 
@@ -1006,7 +1378,7 @@ graph TB
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s09/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s09/" />
 
 ---
 
@@ -1064,7 +1436,7 @@ request = {
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s10/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s10/" />
 
 ---
 
@@ -1101,7 +1473,7 @@ def is_claimable_task(task, role=None):
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s11/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s11/" />
 
 ---
 
@@ -1161,7 +1533,7 @@ worktree = {
 layout: none
 ---
 
-<EmbedVizFrame url="http://localhost:3000/en/embed/s12/" />
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s12/" />
 
 ---
 
