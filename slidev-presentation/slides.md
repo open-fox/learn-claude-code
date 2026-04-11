@@ -567,7 +567,7 @@ layout: default
 <div class="grid grid-cols-[1fr_1.2fr] gap-4">
 <div>
 
-## 最小的心智循环
+最小的心智循环
 
 ```mermaid {scale: 0.6}
 graph TD
@@ -581,7 +581,7 @@ graph TD
 
 </div>
 
-<div style="transform: scale(0.8); transform-origin: top left; width: 133%; height: 400px;">
+<div style="transform: scale(0.9); transform-origin: top left; width: 112%; height: 400px;">
   <EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s01/" />
 </div>
 
@@ -694,28 +694,36 @@ layout: default
 
 # s02: 工具使用 (Tool Use)
 
-> 只有 bash，`rm -rf /` 谁来拦？路径逃逸谁来管？—— 你需要专用工具和安全沙箱
+> 只有 bash，`rm -rf /` 谁来拦？路径逃逸谁来管？高危高频的文件操作需要专用工具
 
-```mermaid {scale: 0.7}
-graph LR
+<div class="grid grid-cols-[1fr_1.2fr] gap-4">
+<div>
+
+新增工具 = 新增 handler + 新增 schema，核心的循环永远不变
+
+```mermaid {scale: 0.55}
+graph TD
   LLM["🤖 LLM"] -->|"tool_use"| D["Dispatch Map"]
-  D --> B["bash: run_bash"]
-  D --> R["read_file: run_read"]
-  D --> W["write_file: run_write"]
-  D --> E["edit_file: run_edit"]
-  B --> TR["tool_result"]
-  R --> TR
-  W --> TR
-  E --> TR
+  D --> B["bash"]
+  D --> R["read_file"]
+  D --> W["write_file"]
+  D --> E["edit_file"]
+  B & R & W & E --> TR["tool_result"]
   TR -->|"写回 messages"| LLM
+  style R fill:#f97316,color:#fff
+  style W fill:#f97316,color:#fff
+  style E fill:#f97316,color:#fff
 ```
 
-<v-clicks>
+</div>
+<div>
 
-- **Dispatch Map** = `{tool_name: handler_function}`
-- 新增工具 = 新增 handler + 新增 schema，循环永远不变
+<div style="transform: scale(0.7); transform-origin: top left; width: 110%; height: 380px;">
+  <EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s02/" />
+</div>
 
-</v-clicks>
+</div>
+</div>
 
 ---
 
@@ -724,54 +732,68 @@ graph LR
 <div class="grid grid-cols-2 gap-4">
 <div>
 
-## 路径沙箱
+## 工具分发
 
-```python {2-4}
-def safe_path(p: str) -> Path:
-    path = (WORKDIR / p).resolve()
-    if not path.is_relative_to(WORKDIR):
-        raise ValueError(f"Path escapes workspace: {p}")
-    return path
+新增工具 = 新增 handler + 新增 schema，核心的循环永远不变
+
+```python {1-8,12-15}
+# 工具注册表
+TOOL_HANDLERS = {
+    "bash":       lambda **kw: run_bash(kw["command"]),
+    "read_file":  lambda **kw: run_read(kw["path"], kw.get("limit")),
+    "write_file": lambda **kw: run_write(kw["path"], kw["content"]),
+    "edit_file":  lambda **kw: run_edit(kw["path"], kw["old_text"],
+                                        kw["new_text"]),
+}
+
+# 循环中按名称查找
+for block in response.content:
+    if block.type == "tool_use":
+        handler = TOOL_HANDLERS.get(block.name)
+        output = handler(**block.input) if handler \
+            else f"Unknown tool: {block.name}"
+        results.append({
+            "type": "tool_result",
+            "tool_use_id": block.id,
+            "content": output,
+        })
 ```
 
 </div>
 <div>
 
-## 分发表
+## 路径沙箱
 
-```python {1-6|8-12}
-TOOL_HANDLERS = {
-    "bash":       lambda **kw: run_bash(kw["command"]),
-    "read_file":  lambda **kw: run_read(kw["path"], kw.get("limit")),
-    "write_file": lambda **kw: run_write(kw["path"], kw["content"]),
-    "edit_file":  lambda **kw: run_edit(kw["path"], kw["old_text"], kw["new_text"]),
-}
+防止逃逸出工作目录
 
-# 循环中按名称查找
-handler = TOOL_HANDLERS.get(block.name)
-output = handler(**block.input) if handler \
-    else f"Unknown tool: {block.name}"
+```python {1-5,7-8}
+def safe_path(p: str) -> Path:
+    path = (WORKDIR / p).resolve()
+    if not path.is_relative_to(WORKDIR):
+        raise ValueError(f"Path escapes workspace: {p}")
+    return path
+
+def run_read(path: str, limit: int = None) -> str:
+    text = safe_path(path).read_text()
+    lines = text.splitlines()
+    if limit and limit < len(lines):
+        lines = lines[:limit]
+    return "\n".join(lines)[:50000]
 ```
 
 </div>
 </div>
 
-<div v-click class="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded text-sm">
+<div v-click class="mt-4 p-2 rounded text-sm">
 
 | 组件 | s01 | s02 |
 |------|-----|-----|
 | Tools | 1 (仅 bash) | 4 (bash, read, write, edit) |
-| Dispatch | 硬编码 | `TOOL_HANDLERS` 字典 |
-| 路径安全 | 无 | `safe_path()` 沙箱 |
+| Dispatch | 硬编码 | 工具注册表 |
+| 路径安全 | 无 | `safe_path()` 安全校验 |
 | Agent loop | 不变 | **不变** |
 
 </div>
-
----
-layout: none
----
-
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s02/" />
 
 ---
 
