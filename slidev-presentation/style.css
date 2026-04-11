@@ -3,7 +3,8 @@
   font-size: 10px;
 
   /* 代码块字号可以按需单独控制 */
-  /* --slidev-code-font-size: 0.8rem; */
+  --slidev-code-font-size: 0.8rem;
+  --slidev-code-line-height: 1.3;
 }
 
 .slidev-layout {
@@ -35,5 +36,25 @@
 
 .concept-slide-image img {
   width: 90%;
+  object-fit: contain;
+}
+
+.slide-image {
+  display: flex;
+  justify-content: left;
+}
+
+.slide-image img {
+  width: 90%;
+  object-fit: contain;
+}
+
+.section-image {
+  display: flex;
+  justify-content: left;
+}
+
+.section-image img {
+  width: 60%;
   object-fit: contain;
 }

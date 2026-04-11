@@ -20,9 +20,17 @@ mdc: true
 
 <!--
 基于开源项目 Learn Claude Code 的教程，分享一个简化版本的 AI Coding Agent 的构建流程
-
 这个教程是在 Claude Code 代码泄漏之前就有，在这之后，可能基于泄漏的源码，又补充了几个章节
 -->
+
+---
+layout: center
+---
+
+# 为什么做个分享？
+
+<!-- 大模型的核心概念，这次是介绍半年后它们的进展，以及现在火热的 Agent 开发入门 -->
+<!-- 基础知识的科普，对齐大家的认知，方便工作中遇到 Agent 开发时寻找方向和沟通交流 -->
 
 ---
 layout: two-cols
@@ -47,7 +55,7 @@ layout: two-cols
 
 <template v-slot:right>
 
-## 半年内进展
+## 近半年进展
 
 ### 1、主流模型竞赛
 
@@ -102,7 +110,7 @@ layout: two-cols
 
 <template v-slot:right>
 
-## 半年内进展
+## 近半年进展
 
 ### 1、提示词缓存（Prompt Caching）
 
@@ -110,7 +118,7 @@ layout: two-cols
 
 ### 2、设计提示词的核心原则
 
-<span class="text-orange-500">常驻内容要短且稳定</span>，把不变的放前面，把变化的放后面
+<span class="text-orange-500">常驻内容要短且稳定</span>：把不变的放前面，把变化的放后面
 
 - 前面：系统提示、工具定义等在多轮请求中基本不会变的内容
 
@@ -143,7 +151,7 @@ layout: two-cols
 
 <template v-slot:right>
 
-## 半年内进展
+## 近半年进展
 
 ### 1、正式的中文名：<span class="text-orange-500 leading-snug">词元</span>
 
@@ -187,7 +195,7 @@ layout: two-cols
 
 <template v-slot:right>
 
-## 半年内进展
+## 近半年进展
 
 ### 1、工程化的演进
 
@@ -214,13 +222,17 @@ layout: two-cols
       <tr>
         <td class="pr-2 align-center">驾驭工程</td>
         <td class="pr-2 align-center">2026+</td>
-        <td class="align-top"><span class="text-orange-500">把模型、工具、记忆、权限和流程编排成可靠可控的 Agent 系统，让模型能够长时间稳定运行</span></td>
+        <td class="align-top"><span class="text-orange-500">把模型、工具、记忆、权限和流程编排成可靠可控的 Agent 系统</span><br/>更侧重于让模型能够长时间稳定运行</td>
       </tr>
     </tbody>
   </table>
 </div>
 
-<div class="concept-slide-image">
+### 2、<span class="text-orange-500 font-bold">Agent = Model + Harness</span>
+
+模型是大脑，负责思考，Harness 是身体，负责感知+执行，Agent 是大脑和身体的结合
+
+<div class="slide-image">
   <img src="./images/harness.png" alt="Harness" />
 </div>
 
@@ -251,7 +263,7 @@ layout: two-cols
 
 <template v-slot:right>
 
-## 半年内进展
+## 近半年进展
 
 ### 1、<span class="text-orange-500">Bash is all you need</span>
 
@@ -263,17 +275,27 @@ layout: two-cols
 
 ### 2、为什么选择 bash？
 
+- bash 能读写文件、管理文件系统、在进程间传递数据
+
 - bash 可以编写代码创建脚本，并执行脚本，高效
 
 - bash 可以保存工具调用结果到文件，并随时读取
 
-- bash 可以利用丰富的三方工具，比如 ffmpeg/git/grep
+- bash 可以利用其他三方工具，比如 ffmpeg/git/grep
 
 ### 3、CLI 工具的兴起
 
 - 飞书推出 CLI，钉钉推出 CLI，企微推出 CLI
 
 - Google Workspace 推出 CLI，Obsidian 推出 CLI
+
+```bash
+# Search your vault
+obsidian search query="meeting notes"
+
+# Create a new note
+obsidian create name="Trip to Paris"
+```
 
 </template>
 
@@ -302,7 +324,7 @@ layout: two-cols
 
 <template v-slot:right>
 
-## 半年内进展
+## 近半年进展
 
 ### 1、MCP 的问题
 
@@ -386,7 +408,7 @@ layout: two-cols
 
 <template v-slot:right>
 
-## 半年内进展
+## 近半年进展
 
 ### 1、CodeBuddy 逐渐完善
 
@@ -397,11 +419,27 @@ layout: two-cols
 
 ### 2、Claude Code 源码泄漏
 
-网上各种源码分析，将带动 Agent 系统的开发
+网上各种源码分析，带动全网开发和设计更加高效的 Agent 框架
 
 </template>
 
-<!-- MCP -->
+<!-- AI Coding-->
+
+---
+layout: center
+---
+
+# <span class="text-orange-500 font-bold">Agent = Model + Harness</span>
+
+- Model 是大脑，负责思考
+
+- Harness 是身体，负责感知+执行
+
+- Agent 是大脑和身体的结合，如何设计和实现一个 Agent？
+
+<div class="section-image">
+  <img src="./images/open-harness.png" alt="Harness" />
+</div>
 
 ---
 layout: center
