@@ -726,6 +726,8 @@ graph TD
 </div>
 
 ---
+layout: default
+---
 
 # s02: 核心代码
 
@@ -781,25 +783,28 @@ def run_read(path: str, limit: int = None) -> str:
     return "\n".join(lines)[:50000]
 ```
 
-</div>
-</div>
 
-<div v-click class="mt-4 p-2 rounded text-sm">
+<div class="mt-4 p-2 rounded text-sm">
 
 | 组件 | s01 | s02 |
 |------|-----|-----|
-| Tools | 1 (仅 bash) | 4 (bash, read, write, edit) |
+| Tools | 1 (仅 bash) | <span class="text-orange-500">4 (bash, read, write, edit)</span> |
 | Dispatch | 硬编码 | 工具注册表 |
-| 路径安全 | 无 | `safe_path()` 安全校验 |
-| Agent loop | 不变 | **不变** |
+| 路径安全 | 无 | 路径安全校验 |
+| Agent loop | 不变 | <span class="text-orange-500">不变</span> |
 
 </div>
 
+</div>
+</div>
+
+---
+layout: default
 ---
 
 # s03: 会话内规划 (TodoWrite)
 
-> 你说"重构这个模块：加类型、文档、测试、main guard"，它做完前两步就开始即兴发挥
+> 你说"重构这个模块：加类型、文档、测试、编译通过"，结果 Agent 做完前两步之后，就开始即兴发挥
 
 <div class="grid grid-cols-2 gap-6">
 <div>
