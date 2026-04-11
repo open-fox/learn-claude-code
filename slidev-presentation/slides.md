@@ -641,6 +641,22 @@ def agent_loop(state):
 </div>
 <div>
 
+```python
+SYSTEM = (
+    f"You are a coding agent at {os.getcwd()}. "
+    "Use bash to inspect and change the workspace. Act first, then report clearly."
+)
+TOOLS = [{
+    "name": "bash",
+    "description": "Run a shell command in the current workspace.",
+    "input_schema": {
+        "type": "object",
+        "properties": {"command": {"type": "string"}},
+        "required": ["command"],
+    },
+}]
+```
+
 **Message**：消息历史不是聊天记录展示层，而是模型下一轮要读的上下文
 
 ```python
@@ -672,6 +688,8 @@ state = {
 </div>
 </div>
 
+---
+layout: default
 ---
 
 # s02: 工具使用 (Tool Use)
