@@ -7,13 +7,14 @@ drawings:
   persist: false
 transition: slide-left
 mdc: true
+layout: section
 ---
 
 # Build Your Own Agent
 
-## 从0到1，手搓 AI Coding Agent
+## 从 0 到 1 手搓 AI Coding Agent
 
-<div class="pt-8 text-lg text-gray-500">
+<div class="text-lg text-gray-500 mt-8">
 <p>javayhu</p>
 <p>2026/4/13</p>
 </div>
@@ -24,13 +25,21 @@ mdc: true
 -->
 
 ---
-layout: center
+layout: statement
 ---
 
-# 为什么做个分享？
+# 内容大纲
 
-<!-- 大模型的核心概念，这次是介绍半年后它们的进展，以及现在火热的 Agent 开发入门 -->
-<!-- 基础知识的科普，对齐大家的认知，方便工作中遇到 Agent 开发时寻找方向和沟通交流 -->
+### 1、回顾近半年进展
+
+### 2、Agent 框架介绍
+
+### 3、Agent 框架实现
+
+### 4、Agent 框架使用
+
+<!-- 大模型的核心概念，这次是介绍半年后它们的进展，以及现在火热的 Agent 开发入门。
+基础知识的科普，对齐大家的认知，方便工作中遇到 Agent 开发时沟通交流，或者寻找方向。 -->
 
 ---
 layout: two-cols
@@ -114,7 +123,7 @@ layout: two-cols
 
 ### 1、提示词缓存（Prompt Caching）
 
-如果当前请求的输入前缀和之前的请求完全一致，模型商就可以直接从缓存读取中间结果，效率更高，成本更低
+如果当前请求的输入前缀和之前的请求完全一致，模型商就可以直接从缓存中读取结果，效率更高，成本更低
 
 ### 2、设计提示词的核心原则
 
@@ -163,7 +172,7 @@ Prompt Caching 普及后，重复前缀可以缓存复用，cached input tokens 
 
 ### 3、Token Plan
 
-模型服务商从提供 Coding Plan 到提供 Token Plan，满足个人用户在使用 AI 应用时多模态输入输出的需求
+模型服务商从提供 Coding Plan 到提供 Token Plan，满足用户使用 AI 应用时多模态输入输出的需求
 
 - Tencent Token Plan
 - MiniMax Token Plan
@@ -228,12 +237,12 @@ layout: two-cols
   </table>
 </div>
 
-### 2、<span class="text-orange-500 font-bold">Agent = Model + Harness</span>
+### 2、<span class="text-orange-500 font-bold">Harness Engineering</span>
 
-模型是大脑，负责思考，Harness 是身体，负责感知+执行，Agent 是大脑和身体的结合
+Model 决定做什么，Harness 决定如何做，两者结合就是 Agent 系统
 
 <div class="slide-image">
-  <img src="./images/harness.png" alt="Harness" />
+  <img src="./images/open-harness.png" alt="Harness" />
 </div>
 
 </template>
@@ -265,23 +274,23 @@ layout: two-cols
 
 ## 近半年进展
 
-### 1、<span class="text-orange-500">Bash is all you need</span>
+### 1、<a href="https://youtu.be/TqC1qOfiVcQ" target="_blank"><span class="text-orange-500">Bash is all you need</span></a>
 
 - HCI 向 ACI (Agent Computer Interface) 转化
 
-- GUI 是给人看的，Agent 只需要 bash 工具
-
 - 人用的是 Chrome，而 Agent 只需 Headless Chrome
+
+- GUI 是给人看的，Agent 只需要 bash 工具就行
 
 ### 2、为什么选择 bash？
 
+- bash 可以编写代码、创建脚本，并执行脚本
+
 - bash 能读写文件、管理文件系统、在进程间传递数据
 
-- bash 可以编写代码创建脚本，并执行脚本，高效
-
-- bash 可以保存工具调用结果到文件，并随时读取
-
 - bash 可以利用其他三方工具，比如 ffmpeg/git/grep
+
+- 增加工具不会解锁新能力，只会增加模型需要理解的接口
 
 ### 3、CLI 工具的兴起
 
@@ -346,7 +355,7 @@ layout: two-cols
     <tbody>
       <tr>
         <td class="pr-2 pb-2 align-top">解决的问题</td>
-        <td class="pr-2 pb-2 align-top">把外部能力接进来</td>
+        <td class="pr-2 pb-2 align-top">把外部能力接进来给 Agent 用</td>
         <td class="pb-2 align-top">把做事方法和步骤教给 Agent</td>
       </tr>
       <tr>
@@ -375,13 +384,15 @@ layout: two-cols
 
 ### 3、理解 Skill
 
-- Agent = 系统，Tools = 系统应用，Skills = 安装在系统上的软件
+- <span class="text-orange-500">Agent = 系统，Tools = 系统应用，Skills = 安装在系统上的软件</span>
 
-- Claude Cowork = iOS 系统，OpenClaw = Android 系统
+- Claude Code/Cowork = iOS 系统，OpenClaw = Android 系统
 
-- SkillsHub = 应用商店，有毒的 Skill = 恶意软件
+- ClawHub = 国外应用商店，SkillsHub = 国内应用商店，有毒的 Skill = 恶意软件
 
-- 安装软件是给人用的，安装 Skill 是给 Agent 用的
+- 对 Agent 而言，MCP 和 Skill 都在 Tools 层，都是为了给 Agent 提供工具扩展能力
+
+<!-- 安装软件是给人用的，安装 Skill 是给 Agent 用的 -->
 
 </template>
 
@@ -398,7 +409,7 @@ layout: two-cols
 - Chat：ChatGPT
 - VS Code 插件：Copilot
 - AI IDE：Cursor、Windsurf
-- AI Coding Agent：Claude Code
+- AI Coding Agent：Claude Code、Codex
 
 <div class="concept-slide-image">
   <img src="./images/ai-coding.png" alt="Coding" />
@@ -421,89 +432,77 @@ layout: two-cols
 
 网上各种源码分析，带动全网开发和设计更加高效的 Agent 框架
 
+### 3、<a href="https://youtu.be/CEvIs9y1uog" target="_blank"><span class="text-orange-500">Don't build agents, build skills instead</span></a>
+
+Claude Code 不仅是一个 Coding Agent，通过技能扩展可以泛化到其他领域，变成其他领域的 Agent
+
+<div class="slide-image">
+<img src="./images/build-skills.png" alt="Skills" />
+</div>
+
 </template>
 
 <!-- AI Coding-->
 
 ---
-layout: center
+layout: section
 ---
 
-# <span class="text-orange-500 font-bold">Agent = Model + Harness</span>
+# Agent 框架
 
-- Model 是大脑，负责思考
+<!-- ## Agent 框架的架构 -->
 
-- Harness 是身体，负责感知+执行
-
-- Agent 是大脑和身体的结合，如何设计和实现一个 Agent？
-
-<div class="section-image">
-  <img src="./images/open-harness.png" alt="Harness" />
+<div class="text-gray-500 mt-4">
+Coding Agent 框架的架构
 </div>
 
 ---
-layout: center
+layout: default
 ---
 
-# 架构总览
+# <span class="text-orange-500">Agent = Model + Harness</span>
 
-## 四阶段学习路径
+- Agent 是大脑和身体的结合
 
-```mermaid {scale: 0.75}
+- Model 是大脑，负责思考+推理
+
+- Harness 是身体，负责感知+执行
+
+- 如何设计和实现一个 Agent 框架？需要解决哪些问题？需要包含哪些功能？为什么要这样设计和实现？
+
+<div class="section-image">
+  <img src="./images/harness.png" alt="Harness" />
+</div>
+
+---
+layout: default
+---
+
+# <a href="https://learn.shareai.run/" target="_blank"><span class="text-orange-500">Learn Claude Code</span></a>
+
+<div class="mt-18">
+
+```mermaid {scale: 0.8}
 graph LR
   A["🔵 阶段1: 核心单Agent<br/>s01-s06"] --> B["🟢 阶段2: 生产加固<br/>s07-s11"]
   B --> C["🟠 阶段3: 任务管理<br/>s12-s14"]
   C --> D["🔴 阶段4: 多Agent平台<br/>s15-s19"]
 ```
 
-<v-clicks>
+</div>
+
+<v-clicks class="mt-8 text-xl flex flex-col justify-left">
 
 - **阶段 1** — 先做出一个真能工作的 agent
 - **阶段 2** — 再补安全、扩展、记忆和恢复
-- **阶段 3** — 把临时清单升级成持久化任务系统
-- **阶段 4** — 从单 agent 升级成真正的平台
+- **阶段 3** — 临时清单升级成持久化任务系统
+- **阶段 4** — 从单 agent 升级成多 agent 平台
 
 </v-clicks>
 
----
+<div v-click class="mt-16 text-xl text-orange-500">
 
-# 系统三层架构
-
-```mermaid {scale: 0.7}
-graph TB
-  User["👤 用户"] --> ML["Agent Loop (s01)"]
-  subgraph Layer1["第一层：主循环"]
-    ML["1.组装输入 → 2.调模型 → 3.看stop_reason → 4.执行工具 → 5.回写messages → 6.继续"]
-  end
-  subgraph Layer2["第二层：横切机制"]
-    P["权限 s07"] ~~~ H["Hook s08"] ~~~ M["Memory s09"] ~~~ PR["Prompt s10"] ~~~ ER["恢复 s11"] ~~~ CC["压缩 s06"]
-  end
-  subgraph Layer3["第三层：更大的工作平台"]
-    T["任务图 s12"] ~~~ BG["后台 s13"] ~~~ CR["Cron s14"] ~~~ TM["团队 s15-s17"] ~~~ WT["Worktree s18"] ~~~ MCP["MCP s19"]
-  end
-  ML --> Layer2
-  Layer2 --> Layer3
-```
-
----
-
-# 一条请求的完整流动
-
-<v-clicks>
-
-1. 用户发来任务
-2. 组装 system prompt + messages + tools
-3. 模型返回文本或 `tool_use`
-4. **tool_use** → 权限 → Hook → 执行工具 → tool_result 写回 messages
-5. 主循环继续
-6. 如果太大 → todo / subagent / compact / background / team / MCP
-7. 直到模型结束
-
-</v-clicks>
-
-<div v-click class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-sm">
-
-**一句话记住全仓库**：先做出能工作的最小循环，再一层一层给它补上规划、隔离、安全、记忆、任务、协作和外部能力。
+核心原则：每一章节都是上一章节自然长出来的下一层
 
 </div>
 
@@ -517,6 +516,42 @@ layout: section
 
 <div class="text-gray-500 mt-4">
 先让 agent 能跑起来
+</div>
+
+---
+layout: center
+---
+
+# 阶段 1 要解决什么？
+
+<v-clicks>
+
+想象你有一个天才助手——能推理、能写代码、能设计方案
+
+**但它什么都不能"做"。**
+
+每次它建议你跑一个命令，你得手动复制、执行、再把结果粘回去。
+
+你就是那个循环。**这个阶段的目标就是把你从循环里解放出来。**
+
+</v-clicks>
+
+<div v-click class="mt-6 grid grid-cols-3 gap-3 text-sm">
+<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**s01** 最小循环
+
+</div>
+<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**s02** 工具 · **s03** 规划
+
+</div>
+<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**s04** 隔离 · **s05** 知识 · **s06** 压缩
+
+</div>
 </div>
 
 ---
@@ -611,7 +646,7 @@ layout: none
 
 # s02: 工具使用 (Tool Use)
 
-> 加一个工具，只加一个 handler —— 循环不用动
+> 只有 bash，`rm -rf /` 谁来拦？路径逃逸谁来管？—— 你需要专用工具和安全沙箱
 
 ```mermaid {scale: 0.7}
 graph LR
@@ -630,7 +665,6 @@ graph LR
 <v-clicks>
 
 - **Dispatch Map** = `{tool_name: handler_function}`
-- 一次查找替代所有 if/elif 链
 - 新增工具 = 新增 handler + 新增 schema，循环永远不变
 
 </v-clicks>
@@ -697,7 +731,7 @@ layout: none
 
 # s03: 会话内规划 (TodoWrite)
 
-> 计划不是替模型思考，而是把"正在做什么"明确写出来
+> 你说"重构这个模块：加类型、文档、测试、main guard"，它做完前两步就开始即兴发挥
 
 <div class="grid grid-cols-2 gap-6">
 <div>
@@ -763,7 +797,7 @@ layout: none
 
 # s04: 子智能体 (Subagent)
 
-> 一个大任务，不一定要塞进一个上下文里做完
+> 问"项目用什么测试框架？"读了 5 个文件，但答案只有一个词："pytest"。那 5 个文件凭什么留在上下文里？
 
 ```mermaid {scale: 0.7}
 graph LR
@@ -798,7 +832,7 @@ layout: none
 
 # s05: 按需知识加载 (Skills)
 
-> 不是把所有知识塞进 prompt，而是需要时再加载
+> 你不会每次做饭前把所有菜谱从头看到尾——agent 的领域知识也一样
 
 <div class="grid grid-cols-2 gap-6">
 <div>
@@ -854,7 +888,7 @@ layout: none
 
 # s06: 上下文压缩 (Context Compact)
 
-> 活跃上下文不是越多越好，而是把仍然有用的部分留下
+> 读了 30 个文件、跑了 20 条命令后，10 万 tokens 烧完了——但活儿才干了一半
 
 <div class="grid grid-cols-3 gap-4 mt-4">
 
@@ -921,6 +955,72 @@ layout: none
 <EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s06/" />
 
 ---
+
+# 阶段 1 完成：你有了一个能工作的单 Agent
+
+<div class="grid grid-cols-2 gap-6">
+<div>
+
+## 六章带来了什么
+
+| 章节 | 新增能力 |
+|------|----------|
+| **s01** | 最小可运行循环 |
+| **s02** | 工具分发 + 路径沙箱 |
+| **s03** | 结构化计划 + 漂移提醒 |
+| **s04** | 上下文隔离委派 |
+| **s05** | 按需知识加载 |
+| **s06** | 四级上下文压缩 |
+
+</div>
+<div>
+
+## 现在你的 agent 能
+
+<v-clicks>
+
+- 读写文件、执行命令
+- 按计划完成多步任务
+- 遇到子问题时隔离探索
+- 需要领域知识时按需加载
+- 长时间工作而不撑爆上下文
+
+</v-clicks>
+
+<div v-click class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
+
+**但它还没有安全管控、没有记忆、出错就崩。**
+
+这就是阶段 2 要解决的。
+
+</div>
+
+</div>
+</div>
+
+---
+
+# 回顾：一条请求的完整流动
+
+<v-clicks>
+
+1. 用户发来任务
+2. 组装 system prompt + messages + tools
+3. 模型返回文本或 `tool_use`
+4. **tool_use** → 执行工具 → tool_result 写回 messages
+5. 主循环继续
+6. 如果太大 → todo / subagent / compact
+7. 直到模型结束
+
+</v-clicks>
+
+<div v-click class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-sm">
+
+**一句话记住**：先做出能工作的最小循环，再一层一层给它补上规划、隔离、安全、记忆、任务、协作和外部能力。
+
+</div>
+
+---
 layout: section
 ---
 
@@ -929,14 +1029,60 @@ layout: section
 ## s07 — s11
 
 <div class="text-gray-500 mt-4">
-让 agent 不只能跑，而是更安全、更稳、更可扩展
+能跑 ≠ 能上线。让 agent 更安全、更稳、更可扩展
+</div>
+
+---
+layout: center
+---
+
+# 阶段 2 要解决什么？
+
+<v-clicks>
+
+你的 agent 很能干——但它**没有刹车**。
+
+模型 hallucinate 了一个路径，`rm -rf` 就直接执行了。
+
+每次新会话，用户偏好全忘了。输出被截断就直接崩溃。
+
+**这个阶段给循环套上安全带、装上记忆、教它自愈。**
+
+</v-clicks>
+
+<div v-click class="mt-6 grid grid-cols-5 gap-2 text-sm">
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**s07** 权限
+
+</div>
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**s08** Hook
+
+</div>
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**s09** 记忆
+
+</div>
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**s10** Prompt
+
+</div>
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**s11** 恢复
+
+</div>
 </div>
 
 ---
 
 # s07: 权限系统 (Permission System)
 
-> 任何工具调用，都不应该直接执行；中间必须先过权限管道
+> 模型说"删掉这个目录"——但它 hallucinate 了路径。没有权限管道，意图直接变成执行
 
 ```mermaid {scale: 0.7}
 graph LR
@@ -1025,7 +1171,7 @@ def check_permission(tool_name, tool_input):
 
 # s08: Hook 系统
 
-> 不改主循环代码，也能在关键时机插入额外行为
+> 安全团队要审计 bash、QA 要自动跑 lint、运维要日志——难道每个需求都改主循环？
 
 <div class="grid grid-cols-2 gap-6">
 <div>
@@ -1069,7 +1215,7 @@ HOOKS = {
 
 # s09: 记忆系统 (Memory)
 
-> 只有跨会话仍然有价值、不能轻易从代码推出来的信息，才值得留下
+> 你告诉它三次"别改 test snapshots"，下次开会话，它又改了——因为它每次都是新的
 
 <div class="grid grid-cols-2 gap-6">
 <div>
@@ -1113,7 +1259,7 @@ HOOKS = {
 
 # s10: 系统提示词构建 (System Prompt)
 
-> prompt 不是一整块静态文本，而是一条组装流水线
+> 角色说明、工具文档、技能目录、记忆、CLAUDE.md——全塞一个字符串里，半年后谁敢改？
 
 ```python {1-8|10-12}
 class SystemPromptBuilder:
@@ -1148,7 +1294,7 @@ class SystemPromptBuilder:
 
 # s11: 错误恢复 (Error Recovery)
 
-> 错误不是例外，而是主循环必须预留出来的一条正常分支
+> 大文件写到一半 max_tokens 截断、上下文爆了、API 超时——如果每次都崩溃，用户就不敢用了
 
 ```mermaid {scale: 0.65}
 graph TD
@@ -1200,6 +1346,62 @@ def backoff_delay(attempt):
 </div>
 
 ---
+
+# 阶段 2 完成：你的 Agent 现在能自我治理了
+
+<div class="grid grid-cols-5 gap-3 text-sm">
+
+<div v-click class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
+
+**s07 权限**
+
+deny → mode → allow → ask
+
+</div>
+
+<div v-click class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
+
+**s08 Hook**
+
+不改循环也能扩展
+
+</div>
+
+<div v-click class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
+
+**s09 记忆**
+
+跨会话持久知识
+
+</div>
+
+<div v-click class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
+
+**s10 Prompt**
+
+组装流水线
+
+</div>
+
+<div v-click class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
+
+**s11 恢复**
+
+出错不崩溃
+
+</div>
+
+</div>
+
+<div v-click class="mt-6 p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-center">
+
+**如果你在这里停下来做产品，已经是一个真正有用的 agent harness 了。**
+
+但真实工作有结构：任务之间有依赖、有些事要后台跑、有些事要定时做。这是阶段 3。
+
+</div>
+
+---
 layout: section
 ---
 
@@ -1212,10 +1414,46 @@ layout: section
 </div>
 
 ---
+layout: center
+---
+
+# 阶段 3 要解决什么？
+
+<v-clicks>
+
+s03 的 TodoWrite 是"会话内清单"——压缩一次就丢了。
+
+真实工作有**结构**：任务 B 等任务 A，C 和 D 能并行，E 等 C+D 都完成。
+
+有些命令要跑 90 秒（`pytest`），难道 agent 傻等？
+
+有些事要"每周一早 9 点跑"——难道用户每次手动提？
+
+</v-clicks>
+
+<div v-click class="mt-6 grid grid-cols-3 gap-3 text-sm">
+<div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
+
+**s12** 持久任务图
+
+</div>
+<div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
+
+**s13** 后台执行
+
+</div>
+<div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
+
+**s14** 定时调度
+
+</div>
+</div>
+
+---
 
 # s12: 任务系统 (Task System)
 
-> Todo 只能提醒"有事要做"，Task 能告诉你"先做什么、谁在等谁"
+> s03 的 Todo 只知道"有事要做"；Task 能告诉你"先做什么、谁在等谁、完成后自动解锁下游"
 
 <div class="grid grid-cols-2 gap-6">
 <div>
@@ -1275,7 +1513,7 @@ layout: none
 
 # s13: 后台任务 (Background Tasks)
 
-> 主循环仍然只有一条，并行的是等待，不是主循环本身
+> 用户说"跑测试，同时帮我建配置文件"——但你的 agent 只会傻等 90 秒测试跑完
 
 ```mermaid {scale: 0.65}
 graph LR
@@ -1332,7 +1570,7 @@ layout: none
 
 # s14: 定时调度 (Cron Scheduler)
 
-> 后台任务解决"稍后拿结果"，定时调度解决"将来某时开始做事"
+> 后台任务解决"现在开始的慢任务"，但"每周一 9 点跑报告"怎么办？——agent 需要学会"记住未来"
 
 ```python {1-8|10-15}
 # ScheduleRecord
@@ -1363,6 +1601,53 @@ def check_jobs(self, now):
 </div>
 
 ---
+
+# 阶段 3 完成：从纯反应式到可持续运行
+
+<div class="grid grid-cols-3 gap-4 text-sm">
+
+<div v-click class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
+
+**s12 任务图**
+
+依赖关系 + 自动解锁
+
+持久化到磁盘
+
+</div>
+
+<div v-click class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
+
+**s13 后台执行**
+
+daemon 线程 + 通知队列
+
+drain-before-call 模式
+
+</div>
+
+<div v-click class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
+
+**s14 定时调度**
+
+cron 表达式 + 触发注入
+
+"记住未来"
+
+</div>
+
+</div>
+
+<div v-click class="mt-6 p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm">
+
+| 概念 | 区别 |
+|------|------|
+| **Todo** vs **Task** | 临时会话步骤 vs 持久化工作节点（有依赖、有 owner） |
+| **Task** vs **Runtime Task** | "要做什么"（目标）vs"正在跑的执行槽位"（运行时） |
+
+</div>
+
+---
 layout: section
 ---
 
@@ -1375,10 +1660,56 @@ layout: section
 </div>
 
 ---
+layout: center
+---
+
+# 阶段 4 要解决什么？
+
+<v-clicks>
+
+一个 agent 忙不过来了。
+
+前端、后端、测试——需要**多个 agent 并行工作**。
+
+但它们不能共享一个对话、不能都改同一个文件、也不能自说自话。
+
+**这个阶段解决：谁在做、怎么协调、在哪做、外部能力怎么接入。**
+
+</v-clicks>
+
+<div v-click class="mt-6 grid grid-cols-5 gap-2 text-sm">
+<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**s15** 团队
+
+</div>
+<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**s16** 协议
+
+</div>
+<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**s17** 自治
+
+</div>
+<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**s18** 隔离
+
+</div>
+<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**s19** MCP
+
+</div>
+</div>
+
+---
 
 # s15: 智能体团队 (Agent Teams)
 
-> Subagent 适合一次性委派；团队解决"有人长期在线、反复接活"
+> s04 的 Subagent 是"用完即弃"；团队成员**长期在线、有身份、有邮箱、能反复接活**
 
 ```mermaid {scale: 0.6}
 graph TB
@@ -1422,7 +1753,7 @@ layout: none
 
 # s16: 团队协议 (Team Protocols)
 
-> 从自由聊天升级成结构化协作
+> Lead 说"请停下"，Alice 无视了；Bob 直接开始数据库迁移没人审批——自由聊天不够，需要结构化握手
 
 <div class="grid grid-cols-2 gap-6">
 <div>
@@ -1480,7 +1811,7 @@ layout: none
 
 # s17: 自治智能体 (Autonomous Agents)
 
-> 空闲的队友会自己去找下一份工作
+> 任务板上 10 个待办，Lead 一个一个分配——Lead 成了瓶颈。让队友自己去任务板找活干
 
 ```mermaid {scale: 0.65}
 graph TD
@@ -1517,7 +1848,7 @@ layout: none
 
 # s18: Worktree 任务隔离
 
-> Task 管"做什么"，Worktree 管"在哪做且互不干扰"
+> Alice 在重构 auth，Bob 在做登录页——两人同时改 `config.py`，文件冲突了。每个任务需要自己的"车道"
 
 <div class="grid grid-cols-2 gap-6">
 <div>
@@ -1577,7 +1908,7 @@ layout: none
 
 # s19: MCP 与插件系统
 
-> 工具不必都写死在主程序里。外部进程也可以把能力接进你的 agent
+> 想查数据库？写个 handler。想控浏览器？再写一个。每次加能力都改代码？——让外部进程自己报到
 
 ```mermaid {scale: 0.65}
 graph LR
@@ -1612,6 +1943,97 @@ graph LR
 <div v-click class="mt-3 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm text-center">
 
 **关键：MCP 工具虽然来自外部，但仍然必须走同一条权限管道和 tool_result 回流！**
+
+</div>
+
+---
+
+# 阶段 4 完成：从单 Agent 到完整平台
+
+<div class="grid grid-cols-5 gap-2 text-sm">
+
+<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+
+**s15 团队**
+
+名册 + 邮箱 + 独立循环
+
+</div>
+
+<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+
+**s16 协议**
+
+request_id 握手
+
+shutdown + plan
+
+</div>
+
+<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+
+**s17 自治**
+
+IDLE 轮询 + 自动认领
+
+身份重注入
+
+</div>
+
+<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+
+**s18 Worktree**
+
+控制面 vs 执行面
+
+git worktree 隔离
+
+</div>
+
+<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+
+**s19 MCP**
+
+统一路由 + 权限一致
+
+mcp__前缀
+
+</div>
+
+</div>
+
+<div v-click class="mt-6 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg text-sm">
+
+| 概念 | 区别 |
+|------|------|
+| **Subagent** vs **Teammate** | 用完即弃 vs 长期存在、有身份、有邮箱 |
+| **Worktree** vs **Task** | "在哪做"（执行车道）vs"做什么"（工作目标） |
+
+</div>
+
+---
+
+# 全景回顾：系统三层架构
+
+```mermaid {scale: 0.7}
+graph TB
+  User["👤 用户"] --> ML["Agent Loop (s01)"]
+  subgraph Layer1["第一层：主循环"]
+    ML["1.组装输入 → 2.调模型 → 3.看stop_reason → 4.执行工具 → 5.回写messages → 6.继续"]
+  end
+  subgraph Layer2["第二层：横切机制"]
+    P["权限 s07"] ~~~ H["Hook s08"] ~~~ M["Memory s09"] ~~~ PR["Prompt s10"] ~~~ ER["恢复 s11"] ~~~ CC["压缩 s06"]
+  end
+  subgraph Layer3["第三层：更大的工作平台"]
+    T["任务图 s12"] ~~~ BG["后台 s13"] ~~~ CR["Cron s14"] ~~~ TM["团队 s15-s17"] ~~~ WT["Worktree s18"] ~~~ MCP["MCP s19"]
+  end
+  ML --> Layer2
+  Layer2 --> Layer3
+```
+
+<div class="mt-2 text-sm text-center text-gray-500">
+
+现在再看这张图，每一个方块你都知道它是什么、为什么存在、最小实现长什么样。
 
 </div>
 
@@ -1726,11 +2148,17 @@ class: text-center
 
 </div>
 
-<div class="mt-12 text-gray-500">
+<div class="mt-8 text-gray-500">
 
 好的章节顺序，不是把所有机制排成一列，
 
 而是让每一章都像前一章**自然长出来的下一层**。
+
+</div>
+
+<div class="mt-6 text-sm text-gray-400">
+
+如果你能从 s01 开始，不看代码重建到 s19，你就真正理解了这套设计。
 
 </div>
 

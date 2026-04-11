@@ -1,0 +1,249 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" width="1200" height="760">
+  <style>
+    text { font-family: 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+    .title { font-size: 20px; font-weight: 600; fill: #f9fafb; }
+    .subtitle { font-size: 13px; fill: #9ca3af; }
+    .stage-label { font-size: 14px; font-weight: 600; fill: #9ca3af; letter-spacing: 1px; }
+    .node-title { font-size: 13px; font-weight: 600; fill: #f3f4f6; }
+    .node-sub { font-size: 11px; fill: #9ca3af; }
+    .node-code { font-size: 10px; fill: #6b7280; font-family: 'Menlo', 'Consolas', monospace; }
+    .legend-text { font-size: 11px; fill: #9ca3af; }
+    .arrow-label { font-size: 10px; fill: #9ca3af; }
+  </style>
+  <defs>
+    <marker id="arr-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#fb923c"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/>
+    </marker>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="760" fill="#0f172a"/>
+
+  <!-- Title -->
+  <text x="600" y="36" text-anchor="middle" class="title">Coding Agent Architecture Overview</text>
+  <text x="600" y="56" text-anchor="middle" class="subtitle">Building Coding Agent Harness from Scratch (s01 → s19)</text>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 1: Single-Agent Core (s01-s06) — Blue tint -->
+  <!-- ============================================================ -->
+  <rect x="30" y="74" width="555" height="340" rx="12" fill="#1e293b" stroke="#1e3a5f" stroke-width="1" stroke-dasharray="6,3"/>
+  <text x="50" y="96" class="stage-label">STAGE 1 — SINGLE-AGENT CORE</text>
+
+  <!-- s01 Agent Loop -->
+  <rect x="55" y="112" width="155" height="68" rx="8" fill="#1a2332" stroke="#60a5fa" stroke-width="2" filter="url(#shadow)"/>
+  <text x="132" y="134" text-anchor="middle" class="node-title">Agent Loop</text>
+  <text x="132" y="149" text-anchor="middle" class="node-sub">prompt → LLM → dispatch</text>
+  <text x="132" y="170" text-anchor="middle" class="node-code">s01_agent_loop.py</text>
+
+  <!-- s02 Tool Dispatch -->
+  <rect x="230" y="112" width="155" height="68" rx="8" fill="#1a2332" stroke="#60a5fa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="307" y="134" text-anchor="middle" class="node-title">Tool Dispatch</text>
+  <text x="307" y="149" text-anchor="middle" class="node-sub">name → function router</text>
+  <text x="307" y="170" text-anchor="middle" class="node-code">s02_tool_dispatch.py</text>
+
+  <!-- s03 Planning / Todo -->
+  <rect x="405" y="112" width="155" height="68" rx="8" fill="#1a2332" stroke="#60a5fa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="482" y="134" text-anchor="middle" class="node-title">Planning / Todo</text>
+  <text x="482" y="149" text-anchor="middle" class="node-sub">multi-step decomposition</text>
+  <text x="482" y="170" text-anchor="middle" class="node-code">s03_planning_todo.py</text>
+
+  <!-- s04 Subagent -->
+  <rect x="55" y="200" width="155" height="68" rx="8" fill="#1a2332" stroke="#60a5fa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="132" y="222" text-anchor="middle" class="node-title">Subagent</text>
+  <text x="132" y="237" text-anchor="middle" class="node-sub">child loop, forked context</text>
+  <text x="132" y="258" text-anchor="middle" class="node-code">s04_subagent.py</text>
+
+  <!-- s05 Skill Loading -->
+  <rect x="230" y="200" width="155" height="68" rx="8" fill="#1a2332" stroke="#60a5fa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="307" y="222" text-anchor="middle" class="node-title">Skill Loading</text>
+  <text x="307" y="237" text-anchor="middle" class="node-sub">SKILL.md hot-inject</text>
+  <text x="307" y="258" text-anchor="middle" class="node-code">s05_skill_loading.py</text>
+
+  <!-- s06 Context Compact -->
+  <rect x="405" y="200" width="155" height="68" rx="8" fill="#1a2332" stroke="#60a5fa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="482" y="222" text-anchor="middle" class="node-title">Context Compact</text>
+  <text x="482" y="237" text-anchor="middle" class="node-sub">summarize &amp; trim tokens</text>
+  <text x="482" y="258" text-anchor="middle" class="node-code">s06_context_compact.py</text>
+
+  <!-- Arrows within Stage 1 -->
+  <path d="M210,146 L228,146" stroke="#60a5fa" stroke-width="1.5" fill="none" marker-end="url(#arr-blue)"/>
+  <path d="M385,146 L403,146" stroke="#60a5fa" stroke-width="1.5" fill="none" marker-end="url(#arr-blue)"/>
+  <path d="M132,180 L132,198" stroke="#60a5fa" stroke-width="1.5" fill="none" marker-end="url(#arr-blue)"/>
+  <path d="M307,180 L307,198" stroke="#60a5fa" stroke-width="1.5" fill="none" marker-end="url(#arr-blue)"/>
+  <path d="M482,180 L482,198" stroke="#60a5fa" stroke-width="1.5" fill="none" marker-end="url(#arr-blue)"/>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 2: Safety & Extension (s07-s11) — Green tint -->
+  <!-- ============================================================ -->
+  <rect x="615" y="74" width="555" height="340" rx="12" fill="#132a20" stroke="#14532d" stroke-width="1" stroke-dasharray="6,3"/>
+  <text x="635" y="96" class="stage-label">STAGE 2 — SAFETY &amp; EXTENSION</text>
+
+  <!-- s07 Permission -->
+  <rect x="640" y="112" width="155" height="68" rx="8" fill="#1a2332" stroke="#34d399" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="717" y="134" text-anchor="middle" class="node-title">Permission System</text>
+  <text x="717" y="149" text-anchor="middle" class="node-sub">allow / deny / ask policy</text>
+  <text x="717" y="170" text-anchor="middle" class="node-code">s07_permission_system.py</text>
+
+  <!-- s08 Hooks -->
+  <rect x="815" y="112" width="155" height="68" rx="8" fill="#1a2332" stroke="#34d399" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="892" y="134" text-anchor="middle" class="node-title">Hook System</text>
+  <text x="892" y="149" text-anchor="middle" class="node-sub">pre/post tool callbacks</text>
+  <text x="892" y="170" text-anchor="middle" class="node-code">s08_hook_system.py</text>
+
+  <!-- s09 Memory -->
+  <rect x="990" y="112" width="155" height="68" rx="8" fill="#1a2332" stroke="#34d399" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="1067" y="134" text-anchor="middle" class="node-title">Memory System</text>
+  <text x="1067" y="149" text-anchor="middle" class="node-sub">frontmatter .md CRUD</text>
+  <text x="1067" y="170" text-anchor="middle" class="node-code">s09_memory_system.py</text>
+
+  <!-- s10 System Prompt -->
+  <rect x="640" y="200" width="155" height="68" rx="8" fill="#1a2332" stroke="#34d399" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="717" y="222" text-anchor="middle" class="node-title">System Prompt</text>
+  <text x="717" y="237" text-anchor="middle" class="node-sub">pipeline assembly</text>
+  <text x="717" y="258" text-anchor="middle" class="node-code">s10_system_prompt.py</text>
+
+  <!-- s11 Error Recovery -->
+  <rect x="815" y="200" width="155" height="68" rx="8" fill="#1a2332" stroke="#34d399" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="892" y="222" text-anchor="middle" class="node-title">Error Recovery</text>
+  <text x="892" y="237" text-anchor="middle" class="node-sub">continue, compact, backoff</text>
+  <text x="892" y="258" text-anchor="middle" class="node-code">s11_error_recovery.py</text>
+
+  <!-- Arrows within Stage 2 -->
+  <path d="M795,146 L813,146" stroke="#34d399" stroke-width="1.5" fill="none" marker-end="url(#arr-green)"/>
+  <path d="M970,146 L988,146" stroke="#34d399" stroke-width="1.5" fill="none" marker-end="url(#arr-green)"/>
+  <path d="M717,180 L717,198" stroke="#34d399" stroke-width="1.5" fill="none" marker-end="url(#arr-green)"/>
+  <path d="M892,180 L892,198" stroke="#34d399" stroke-width="1.5" fill="none" marker-end="url(#arr-green)"/>
+
+  <!-- Memory feeds into prompt -->
+  <path d="M1067,180 C1067,192 900,192 800,200" stroke="#34d399" stroke-width="1" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-green)"/>
+
+  <!-- Stage 1 → Stage 2 connector -->
+  <path d="M585,230 L638,230" stroke="#fb923c" stroke-width="2" fill="none" marker-end="url(#arr-orange)"/>
+  <rect x="588" y="218" width="50" height="14" rx="3" fill="#0f172a" opacity="0.9"/>
+  <text x="613" y="228" text-anchor="middle" class="arrow-label" fill="#fb923c">grows</text>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 3: Runtime Work (s12-s14) — Orange tint -->
+  <!-- ============================================================ -->
+  <rect x="30" y="432" width="555" height="188" rx="12" fill="#2a1f0e" stroke="#7c2d12" stroke-width="1" stroke-dasharray="6,3"/>
+  <text x="50" y="454" class="stage-label">STAGE 3 — DURABLE RUNTIME WORK</text>
+
+  <!-- s12 Task System -->
+  <rect x="55" y="470" width="155" height="68" rx="8" fill="#1a2332" stroke="#fb923c" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="132" y="492" text-anchor="middle" class="node-title">Task System</text>
+  <text x="132" y="507" text-anchor="middle" class="node-sub">persistent work graph</text>
+  <text x="132" y="528" text-anchor="middle" class="node-code">s12_task_system.py</text>
+
+  <!-- s13 Background -->
+  <rect x="230" y="470" width="155" height="68" rx="8" fill="#1a2332" stroke="#fb923c" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="307" y="492" text-anchor="middle" class="node-title">Background Tasks</text>
+  <text x="307" y="507" text-anchor="middle" class="node-sub">threaded, non-blocking</text>
+  <text x="307" y="528" text-anchor="middle" class="node-code">s13_background_tasks.py</text>
+
+  <!-- s14 Cron -->
+  <rect x="405" y="470" width="155" height="68" rx="8" fill="#1a2332" stroke="#fb923c" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="482" y="492" text-anchor="middle" class="node-title">Cron Scheduler</text>
+  <text x="482" y="507" text-anchor="middle" class="node-sub">time-based triggers</text>
+  <text x="482" y="528" text-anchor="middle" class="node-code">s14_cron_scheduler.py</text>
+
+  <!-- Arrows within Stage 3 -->
+  <path d="M210,504 L228,504" stroke="#fb923c" stroke-width="1.5" fill="none" marker-end="url(#arr-orange)"/>
+  <path d="M385,504 L403,504" stroke="#fb923c" stroke-width="1.5" fill="none" marker-end="url(#arr-orange)"/>
+
+  <!-- Stage 1 → Stage 3 connector -->
+  <path d="M307,340 L307,430" stroke="#fb923c" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-orange)"/>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 4: Teams & Isolation (s15-s19) — Purple tint -->
+  <!-- ============================================================ -->
+  <rect x="615" y="432" width="555" height="260" rx="12" fill="#1f1635" stroke="#3b0764" stroke-width="1" stroke-dasharray="6,3"/>
+  <text x="635" y="454" class="stage-label">STAGE 4 — TEAMS, AUTONOMY &amp; PLUGINS</text>
+
+  <!-- s15 Agent Teams -->
+  <rect x="640" y="470" width="155" height="68" rx="8" fill="#1a2332" stroke="#a78bfa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="717" y="492" text-anchor="middle" class="node-title">Agent Teams</text>
+  <text x="717" y="507" text-anchor="middle" class="node-sub">named agents, mailboxes</text>
+  <text x="717" y="528" text-anchor="middle" class="node-code">s15_agent_teams.py</text>
+
+  <!-- s16 Protocols -->
+  <rect x="815" y="470" width="155" height="68" rx="8" fill="#1a2332" stroke="#a78bfa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="892" y="492" text-anchor="middle" class="node-title">Team Protocols</text>
+  <text x="892" y="507" text-anchor="middle" class="node-sub">shutdown, plan approval</text>
+  <text x="892" y="528" text-anchor="middle" class="node-code">s16_team_protocols.py</text>
+
+  <!-- s17 Autonomous -->
+  <rect x="990" y="470" width="155" height="68" rx="8" fill="#1a2332" stroke="#a78bfa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="1067" y="492" text-anchor="middle" class="node-title">Autonomous Agents</text>
+  <text x="1067" y="507" text-anchor="middle" class="node-sub">idle poll, auto-claim</text>
+  <text x="1067" y="528" text-anchor="middle" class="node-code">s17_autonomous_agents.py</text>
+
+  <!-- s18 Worktree -->
+  <rect x="640" y="560" width="155" height="68" rx="8" fill="#1a2332" stroke="#a78bfa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="717" y="582" text-anchor="middle" class="node-title">Worktree Isolation</text>
+  <text x="717" y="597" text-anchor="middle" class="node-sub">dir-level execution lanes</text>
+  <text x="717" y="618" text-anchor="middle" class="node-code">s18_worktree_task_isolation.py</text>
+
+  <!-- s19 MCP -->
+  <rect x="815" y="560" width="155" height="68" rx="8" fill="#1a2332" stroke="#a78bfa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="892" y="582" text-anchor="middle" class="node-title">MCP &amp; Plugin</text>
+  <text x="892" y="597" text-anchor="middle" class="node-sub">external capability routing</text>
+  <text x="892" y="618" text-anchor="middle" class="node-code">s19_mcp_plugin.py</text>
+
+  <!-- s_full Capstone -->
+  <rect x="990" y="560" width="155" height="68" rx="10" fill="#1f1635" stroke="#a78bfa" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="1067" y="582" text-anchor="middle" class="node-title" fill="#a78bfa">Capstone</text>
+  <text x="1067" y="597" text-anchor="middle" class="node-sub">all mechanisms combined</text>
+  <text x="1067" y="618" text-anchor="middle" class="node-code">s_full.py</text>
+
+  <!-- Arrows within Stage 4 -->
+  <path d="M795,504 L813,504" stroke="#a78bfa" stroke-width="1.5" fill="none" marker-end="url(#arr-purple)"/>
+  <path d="M970,504 L988,504" stroke="#a78bfa" stroke-width="1.5" fill="none" marker-end="url(#arr-purple)"/>
+  <path d="M717,538 L717,558" stroke="#a78bfa" stroke-width="1.5" fill="none" marker-end="url(#arr-purple)"/>
+  <path d="M892,538 L892,558" stroke="#a78bfa" stroke-width="1.5" fill="none" marker-end="url(#arr-purple)"/>
+  <path d="M970,594 L988,594" stroke="#a78bfa" stroke-width="1.5" fill="none" marker-end="url(#arr-purple)"/>
+
+  <!-- Stage 2 → Stage 4 connector -->
+  <path d="M892,340 L892,430" stroke="#a78bfa" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-purple)"/>
+
+  <!-- Stage 3 → Stage 4 connector (task system feeds teams) -->
+  <path d="M560,504 L638,504" stroke="#fb923c" stroke-width="1.5" fill="none" marker-end="url(#arr-orange)"/>
+  <rect x="563" y="492" width="74" height="14" rx="3" fill="#0f172a" opacity="0.9"/>
+  <text x="600" y="502" text-anchor="middle" class="arrow-label" fill="#fb923c">task board</text>
+
+  <!-- ============================================================ -->
+  <!-- Central Loop Model -->
+  <!-- ============================================================ -->
+  <rect x="155" y="310" width="330" height="85" rx="10" fill="#1e293b" stroke="#e2e8f0" stroke-width="2" filter="url(#shadow)"/>
+  <text x="320" y="336" text-anchor="middle" class="node-title" fill="#f9fafb">Core Agent Loop Pattern</text>
+  <text x="320" y="355" text-anchor="middle" class="node-sub">user → LLM → tool_use → execute → tool_result → continue</text>
+  <text x="320" y="375" text-anchor="middle" class="node-sub" fill="#60a5fa">"The model does the reasoning. The harness gives the model a working environment."</text>
+
+  <!-- ============================================================ -->
+  <!-- Legend -->
+  <!-- ============================================================ -->
+  <g transform="translate(30, 710)">
+    <text x="0" y="12" class="stage-label" fill="#e2e8f0">LEGEND</text>
+    <line x1="80" y1="8" x2="110" y2="8" stroke="#60a5fa" stroke-width="2" marker-end="url(#arr-blue)"/>
+    <text x="118" y="12" class="legend-text">Stage 1: Core loop + tools</text>
+    <line x1="290" y1="8" x2="320" y2="8" stroke="#34d399" stroke-width="2" marker-end="url(#arr-green)"/>
+    <text x="328" y="12" class="legend-text">Stage 2: Safety + extension</text>
+    <line x1="500" y1="8" x2="530" y2="8" stroke="#fb923c" stroke-width="2" marker-end="url(#arr-orange)"/>
+    <text x="538" y="12" class="legend-text">Stage 3: Runtime work</text>
+    <line x1="690" y1="8" x2="720" y2="8" stroke="#a78bfa" stroke-width="2" marker-end="url(#arr-purple)"/>
+    <text x="728" y="12" class="legend-text">Stage 4: Teams + autonomy</text>
+    <line x1="910" y1="8" x2="940" y2="8" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="948" y="12" class="legend-text">Feedback / loop</text>
+  </g>
+</svg>

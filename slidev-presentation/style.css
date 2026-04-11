@@ -55,6 +55,13 @@
 }
 
 .section-image img {
-  width: 60%;
+  width: 50%;
   object-fit: contain;
+}
+
+.slidev-layout blockquote {
+  margin-top: 1rem;
+  margin-bottom: 1.2rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
