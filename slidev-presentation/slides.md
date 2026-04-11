@@ -502,7 +502,7 @@ graph LR
 
 <div v-click class="mt-16 text-xl text-orange-500">
 
-核心原则：每一章节都是上一章节自然长出来的下一层
+核心原则：每一章节都是上一章节自然长出来的下一层，从最小的 Agent 开始，到复杂的多 Agent 平台
 
 </div>
 
@@ -554,18 +554,22 @@ layout: center
 </div>
 </div>
 
+<!-- s01 agent loop -->
+
+---
+layout: default
 ---
 
 # s01: 智能体循环 (The Agent Loop)
 
-> 没有循环，就没有 agent
+> 真正的 agent 起点，是把真实工具结果重新喂回模型，而不只是输出一段文本，没有循环，就没有 agent。
 
-<div class="grid grid-cols-2 gap-6">
+<div class="grid grid-cols-[1fr_1.2fr] gap-4">
 <div>
 
-## 最小心智模型
+## 最小的心智循环
 
-```mermaid {scale: 0.65}
+```mermaid {scale: 0.6}
 graph TD
   A["user message"] --> B["LLM"]
   B -->|"普通回答"| C["结束"]
@@ -576,49 +580,46 @@ graph TD
 ```
 
 </div>
-<div>
 
-## 关键数据结构
-
-```python {all|1-3|4-5|all}
-state = {
-    "messages": [...],
-    "turn_count": 1,
-    "transition_reason": None,
-}
-```
-
-<v-click>
-
-**核心洞察**：工具结果必须重新进入消息历史，成为下一轮推理的输入。
-
-</v-click>
-
-</div>
+<div style="transform: scale(0.8); transform-origin: top left; width: 133%; height: 400px;">
+  <EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s01/" />
 </div>
 
+</div>
+
+---
+layout: default
 ---
 
 # s01: 最小 Agent Loop 实现
 
-```python {1-3|5-12|14-16|18-24|all}
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+```python {1|3-4|5-18|20-23|25-34|36-39|all}
+messages = [{"role": "user", "content": query}]
+
 def agent_loop(state):
     while True:
         # 1. 调用模型
         response = client.messages.create(
-            model=MODEL, system=SYSTEM,
+            model=MODEL, 
+            system=SYSTEM,
+            tools=TOOLS, 
             messages=state["messages"],
-            tools=TOOLS, max_tokens=8000,
+            max_tokens=8000,
         )
 
         # 2. 追加 assistant 回复
         state["messages"].append({
-            "role": "assistant", "content": response.content,
+            "role": "assistant", 
+            "content": response.content,
         })
 
         # 3. 如果不是 tool_use，结束
         if response.stop_reason != "tool_use":
-            return
+          state["transition_reason"] = None
+          return
 
         # 4. 执行工具，回写结果
         results = []
@@ -634,13 +635,42 @@ def agent_loop(state):
         # 5. 工具结果作为新消息写回
         state["messages"].append({"role": "user", "content": results})
         state["turn_count"] += 1
+        state["transition_reason"] = "tool_result"
 ```
 
----
-layout: none
----
+</div>
+<div>
 
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s01/" />
+**Message**：消息历史不是聊天记录展示层，而是模型下一轮要读的上下文
+
+```python
+{"role": "user", "content": "..."}
+{"role": "assistant", "content": [...]}
+{"role": "tool_result", "content": [...]}
+```
+
+**Tool Result**：模型返回的工具结果
+
+```python
+{
+    "type": "tool_result",
+    "tool_use_id": "...",
+    "content": "...",
+}
+```
+
+**LoopState**：显式收拢循环状态
+
+```python
+state = {
+    "messages": [...],
+    "turn_count": 1,
+    "transition_reason": None,
+}
+```
+
+</div>
+</div>
 
 ---
 
@@ -682,7 +712,7 @@ graph LR
 def safe_path(p: str) -> Path:
     path = (WORKDIR / p).resolve()
     if not path.is_relative_to(WORKDIR):
-        raise ValueError(f"Path escapes: {p}")
+        raise ValueError(f"Path escapes workspace: {p}")
     return path
 ```
 
@@ -693,12 +723,10 @@ def safe_path(p: str) -> Path:
 
 ```python {1-6|8-12}
 TOOL_HANDLERS = {
-    "bash":      lambda **kw: run_bash(kw["command"]),
-    "read_file": lambda **kw: run_read(kw["path"]),
-    "write_file":lambda **kw: run_write(kw["path"],
-                                        kw["content"]),
-    "edit_file": lambda **kw: run_edit(kw["path"],
-                        kw["old_text"], kw["new_text"]),
+    "bash":       lambda **kw: run_bash(kw["command"]),
+    "read_file":  lambda **kw: run_read(kw["path"], kw.get("limit")),
+    "write_file": lambda **kw: run_write(kw["path"], kw["content"]),
+    "edit_file":  lambda **kw: run_edit(kw["path"], kw["old_text"], kw["new_text"]),
 }
 
 # 循环中按名称查找
@@ -858,21 +886,22 @@ graph TD
 
 ## 最小注册表
 
-```python {1-6|8-10}
+```python {1-6|8-14}
 class SkillRegistry:
-    def __init__(self, skills_dir):
-        self.skills = {}
-        for path in skills_dir.rglob("SKILL.md"):
-            meta, body = parse_frontmatter(
-                path.read_text())
-            name = meta.get("name")
-            self.skills[name] = {
-                "manifest": {
-                    "name": name,
-                    "description": meta["description"],
-                },
-                "body": body,
-            }
+    def __init__(self, skills_dir: Path):
+        self.skills_dir = skills_dir
+        self.documents: dict[str, SkillDocument] = {}
+        self._load_all()
+
+    def _load_all(self) -> None:
+        if not self.skills_dir.exists():
+            return
+        for path in sorted(self.skills_dir.rglob("SKILL.md")):
+            meta, body = self._parse_frontmatter(path.read_text())
+            name = meta.get("name", path.parent.name)
+            description = meta.get("description", "No description")
+            manifest = SkillManifest(name=name, description=description, path=path)
+            self.documents[name] = SkillDocument(manifest=manifest, body=body.strip())
 ```
 
 </div>
@@ -1261,17 +1290,24 @@ HOOKS = {
 
 > 角色说明、工具文档、技能目录、记忆、CLAUDE.md——全塞一个字符串里，半年后谁敢改？
 
-```python {1-8|10-12}
+```python {1-10|12-14}
 class SystemPromptBuilder:
     def build(self) -> str:
-        parts = []
-        parts.append(self._build_core())       # 核心身份
-        parts.append(self._build_tools())       # 工具列表
-        parts.append(self._build_skills())      # 技能目录
-        parts.append(self._build_memory())      # 记忆内容
-        parts.append(self._build_claude_md())   # CLAUDE.md 指令
-        parts.append(self._build_dynamic())     # 动态环境 (日期/cwd/模式)
-        return "\n\n".join(p for p in parts if p)
+        sections = []
+        core = self._build_core()
+        if core: sections.append(core)
+        tools = self._build_tool_listing()
+        if tools: sections.append(tools)
+        skills = self._build_skill_listing()
+        if skills: sections.append(skills)
+        memory = self._build_memory_section()
+        if memory: sections.append(memory)
+        claude_md = self._build_claude_md()
+        if claude_md: sections.append(claude_md)
+        sections.append(DYNAMIC_BOUNDARY)
+        dynamic = self._build_dynamic_context()
+        if dynamic: sections.append(dynamic)
+        return "\n\n".join(sections)
 
 # 真正送给模型的完整输入管道:
 # prompt blocks + normalized messages + attachments + reminders
@@ -1337,9 +1373,11 @@ recovery_state = {
 **退避延迟**
 
 ```python
-def backoff_delay(attempt):
-    return min(1.0 * (2 ** attempt),
-               30.0) + random(0, 1)
+def backoff_delay(attempt: int) -> float:
+    delay = min(BACKOFF_BASE_DELAY * (2 ** attempt),
+                BACKOFF_MAX_DELAY)
+    jitter = random.uniform(0, 1)
+    return delay + jitter
 ```
 
 </div>
@@ -1827,12 +1865,12 @@ graph TD
 ## 认领条件（缺一不可）
 
 ```python {1-6}
-def is_claimable_task(task, role=None):
+def is_claimable_task(task: dict, role: str | None = None) -> bool:
     return (
-        task["status"] == "pending"        # 还没开始
-        and not task["owner"]              # 还没人认领
-        and not task["blockedBy"]          # 没有前置阻塞
-        and _task_allows_role(task, role)   # 角色匹配
+        task.get("status") == "pending"
+        and not task.get("owner")
+        and not task.get("blockedBy")
+        and _task_allows_role(task, role)
     )
 ```
 
