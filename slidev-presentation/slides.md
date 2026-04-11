@@ -581,7 +581,7 @@ graph TD
 
 </div>
 
-<div style="transform: scale(0.9); transform-origin: top left; width: 112%; height: 400px;">
+<div style="transform: scale(0.8); transform-origin: top left; width: 125%; height: 400px;">
   <EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s01/" />
 </div>
 
@@ -701,7 +701,7 @@ layout: default
 
 新增工具 = 新增 handler + 新增 schema，核心的循环永远不变
 
-```mermaid {scale: 0.55}
+```mermaid {scale: 0.4}
 graph TD
   LLM["🤖 LLM"] -->|"tool_use"| D["Dispatch Map"]
   D --> B["bash"]
@@ -718,7 +718,7 @@ graph TD
 </div>
 <div>
 
-<div style="transform: scale(0.7); transform-origin: top left; width: 110%; height: 380px;">
+<div style="transform: scale(0.8); transform-origin: top left; width: 125%; height: 400px;">
   <EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s02/" />
 </div>
 
@@ -806,65 +806,107 @@ layout: default
 
 > 你说"重构这个模块：加类型、文档、测试、编译通过"，结果 Agent 做完前两步之后，就开始即兴发挥
 
-<div class="grid grid-cols-2 gap-6">
+<div class="grid grid-cols-[1fr_1.2fr] gap-4">
 <div>
 
-## 计划状态
-
-```python {1-5|7-9}
-PlanItem = {
-    "content": "Read the failing test",
-    "status": "pending" | "in_progress"
-             | "completed",
-    "activeForm": "Reading the failing test",
-}
-
-PlanningState = {
-    "items": [...],
-    "rounds_since_update": 0,
-}
+```mermaid {scale: 0.5}
+graph TD
+  U["用户提出任务"] --> W["模型编写计划<br/>todo tool"]
+  W --> L["Agent Loop"]
+  L --> T["执行工具"]
+  T -->|"更新计划"| L
+  L -->|"全部完成"| E["结束"]
+  L -.->|"3轮没更新"| R["注入提醒"]
+  R --> L
+  style W fill:#f97316,color:#fff
+  style R fill:#f97316,color:#fff
 ```
 
-<v-click>
+<v-clicks>
 
-**约束**：同一时间，最多一个 `in_progress`
+- **不是任务系统**，只是当前会话的外显计划
+- **约束**：同一时间最多一个 `in_progress`
+- **提醒**：连续 3 轮不更新 → 注入 reminder
 
-</v-click>
+</v-clicks>
 
 </div>
 <div>
 
-## 提醒机制
-
-```python {1-4}
-# 连续3轮没更新计划 → 提醒
-if rounds_since_update >= 3:
-    results.insert(0, {
-        "type": "text",
-        "text": "<reminder>Refresh your "
-                "plan before continuing."
-                "</reminder>",
-    })
-```
-
-<v-click>
-
-```text
-[ ] 还没做
-[>] 正在做
-[x] 已完成
-```
-
-</v-click>
+<div style="transform: scale(0.8); transform-origin: top left; width: 125%; height: 400px;">
+  <EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s03/" />
+</div>
 
 </div>
 </div>
 
 ---
-layout: none
+layout: default
 ---
 
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s03/" />
+# s03: 核心代码
+
+<div class="grid grid-cols-2 gap-4">
+<div>
+
+## TodoManager.update — 整份重写计划
+
+```python {1-2|4-12|14-15|17-19}
+def update(self, items: list) -> str:
+    if len(items) > 12:
+        raise ValueError("Keep the session plan short (max 12 items)")
+    normalized = []
+    in_progress_count = 0
+    for index, raw_item in enumerate(items):
+        content = str(raw_item.get("content", "")).strip()
+        status = str(raw_item.get("status", "pending")).lower()
+        active_form = str(raw_item.get("activeForm", "")).strip()
+        if status == "in_progress":
+            in_progress_count += 1
+        normalized.append(PlanItem(
+            content=content, status=status, active_form=active_form,
+        ))
+    if in_progress_count > 1:
+        raise ValueError("Only one plan item can be in_progress")
+    self.state.items = normalized
+    self.state.rounds_since_update = 0
+    return self.render()
+```
+
+</div>
+<div>
+
+## 提醒 + 注入主循环
+
+```python {1-5|7-14}
+def reminder(self) -> str | None:
+    if not self.state.items:
+        return None
+    if self.state.rounds_since_update < PLAN_REMINDER_INTERVAL:
+        return None
+    return "<reminder>Refresh your current plan before continuing.</reminder>"
+
+# --- 主循环中 ---
+if used_todo:
+    TODO.state.rounds_since_update = 0
+else:
+    TODO.note_round_without_update()
+    reminder = TODO.reminder()
+    if reminder:
+        results.insert(0, {"type": "text", "text": reminder})
+```
+
+## 接入分发表
+
+```python
+TOOL_HANDLERS = {
+    ...
+    "todo": lambda **kw: TODO.update(kw["items"]),
+}
+```
+
+</div>
+</div>
 
 ---
 
