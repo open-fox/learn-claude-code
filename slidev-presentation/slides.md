@@ -765,7 +765,7 @@ layout: default
 注册新的工具，并补充安全路径检查，防止逃逸出工作目录
 
 ```python {1-8,12-15|22-27,29-30}
-# 工具注册表
+# s02 新增：工具注册表
 TOOL_HANDLERS = {
     "bash":       lambda **kw: run_bash(kw["command"]),
     "read_file":  lambda **kw: run_read(kw["path"], kw.get("limit")),
@@ -774,7 +774,7 @@ TOOL_HANDLERS = {
                                         kw["new_text"]),
 }
 
-# 循环中按名称查找
+# s02 循环中按名称查找
 for block in response.content:
     if block.type == "tool_use":
         handler = TOOL_HANDLERS.get(block.name)
@@ -786,7 +786,7 @@ for block in response.content:
             "content": output,
         })
 
-# 路径沙箱，防止逃逸出工作目录
+# s02 路径沙箱，防止逃逸出工作目录
 def safe_path(p: str) -> Path:
     path = (WORKDIR / p).resolve()
     if not path.is_relative_to(WORKDIR):
@@ -873,7 +873,7 @@ def agent_loop(messages: list) -> None:
             return
 
         results = []
-        # 新增：跟踪本轮是否调用了 todo
+        # s03 新增：跟踪本轮是否调用了 todo
         used_todo = False
         for block in response.content:
             if block.type != "tool_use":
@@ -885,7 +885,7 @@ def agent_loop(messages: list) -> None:
             if block.name == "todo":
                 used_todo = True
 
-        # 新增：注入更新执行计划的提醒
+        # s03 新增：注入更新执行计划的提醒
         if used_todo:
             TODO.state.rounds_since_update = 0
         else:
@@ -902,7 +902,7 @@ def agent_loop(messages: list) -> None:
 
 ## 新增数据结构
 
-```python {18-23}
+```python {18-24}
 @dataclass
 class PlanItem:
     content: str
@@ -920,6 +920,7 @@ class TodoManager:
     def update(self, items) -> str: ...   # 校验 + 重写整份计划
     def render(self) -> str: ...          # [ ] [>] [x] 渲染
 
+    # s03 新增：注入更新执行计划的提醒
     def reminder(self) -> str | None:
         if not self.state.items:
             return None
@@ -933,10 +934,8 @@ class TodoManager:
 ```python
 TOOL_HANDLERS = {
     "bash":       ...,
-    "read_file":  ...,
-    "write_file": ...,
-    "edit_file":  ...,
-    "todo": lambda **kw: TODO.update(kw["items"]), # 新增工具 todo
+    # s03 新增工具 todo
+    "todo": lambda **kw: TODO.update(kw["items"]),
 }
 ```
 
@@ -991,7 +990,7 @@ def agent_loop(messages: list):
             model=MODEL, 
             system=SYSTEM, 
             messages=messages,
-            # 变更：使用 PARENT_TOOLS
+            # s04 变更：使用 PARENT_TOOLS
             tools=PARENT_TOOLS, 
             max_tokens=8000,
         )
@@ -1001,7 +1000,7 @@ def agent_loop(messages: list):
         results = []
         for block in response.content:
             if block.type == "tool_use":
-                # 新增：处理 task 工具调用，创建 Subagent
+                # s04 新增：处理 task 工具调用，创建 Subagent
                 if block.name == "task":
                     desc = block.input.get("description", "subtask")
                     prompt = block.input.get("prompt", "")
@@ -1055,7 +1054,7 @@ PARENT_TOOLS = CHILD_TOOLS + [
     {
       "name": "task", 
       "description": "Spawn a subagent with fresh context.",
-      "input_schema": {"type": "object", "properties": {"prompt": {"type": "string"}...}, 
+      "input_schema": {"type": "object", "properties": {...}}, 
       "required": ["prompt"]}
     },
 ]
@@ -1066,22 +1065,22 @@ PARENT_TOOLS = CHILD_TOOLS + [
 
 ---
 
-# s05: 按需知识加载 (Skills)
+# s05: 技能系统  (Skills)
 
-> 你不会每次做饭前把所有菜谱从头看到尾——agent 的领域知识也一样
+> 你不会每次做饭前把所有菜谱从头到尾看一遍，agent 的领域知识也一样
 
 <div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
-**问题**：10 个 skill × 2000 tokens = 20000 tokens 永远占着上下文，但每次只用 1 个
+**问题**：代码审查需要一套审查清单，代码提交需要一套提交约定，如果把这些知识包全部塞进系统提示词，会占用大量 tokens
 
-**方案**：两层架构
+**方案**：把技能说明从系统提示词中拆出来，改成 2 层架构，系统提示词只告诉模型有哪些技能，模型按需加载完整技能说明
 
 <v-clicks>
 
 - **Layer 1 目录**：始终在 system prompt，~120 tokens
-- **Layer 2 正文**：模型判断需要时调用 `load_skill` 加载
-- 新增工具 `load_skill`，循环不变
+- **Layer 2 正文**：模型调用 `load_skill` 工具按需加载
+- 新增工具 `load_skill`，Agent 核心循环保持不变
 
 </v-clicks>
 
@@ -1102,29 +1101,32 @@ layout: default
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
 
-## agent_loop 无变化（主循环不变）
+## agent_loop 不变，system prompt 变更
 
-```python
+```python {1-10,16,18}
+# s05 新增：技能注册表，从 skills 目录发现所有技能
+SKILL_REGISTRY = SkillRegistry(WORKDIR / "skills")
+
+# s05 新增：system prompt 注入 skill 列表
+SYSTEM = f"""You are a coding agent at {WORKDIR}.
+Use load_skill when a task needs specialized instructions.
+
+Skills available:
+{SKILL_REGISTRY.describe_available()}
+"""
+
 def agent_loop(messages: list) -> None:
     while True:
         response = client.messages.create(
-            model=MODEL, system=SYSTEM,   # SYSTEM 含 skill 目录
-            messages=messages, tools=TOOLS, max_tokens=8000,
+            model=MODEL, 
+            system=SYSTEM,
+            messages=messages, 
+            tools=TOOLS, 
+            max_tokens=8000,
         )
-        ...  # 标准循环：append → stop_reason → dispatch → results
-```
-
-## 注册新工具
-
-```python
-TOOL_HANDLERS = {
-    "bash":       ...,
-    "read_file":  ...,
-    "write_file": ...,
-    "edit_file":  ...,
-    # s05 新增
-    "load_skill": lambda **kw: SKILL_REGISTRY.load_full_text(kw["name"]),
-}
+        
+        # 标准循环：append → stop_reason → dispatch → results
+        ...  
 ```
 
 </div>
@@ -1154,8 +1156,21 @@ class SkillRegistry:
         self.documents: dict[str, SkillDocument] = {}
         self._load_all()
 
-    def describe_available(self) -> str: ...  # Layer 1
-    def load_full_text(self, name) -> str: ... # Layer 2
+    # Layer 1 目录：返回技能列表
+    def describe_available(self) -> str: ...   
+
+    # Layer 2 正文：返回技能正文
+    def load_full_text(self, name) -> str: ... 
+```
+
+## 新增工具
+
+```python
+TOOL_HANDLERS = {
+    "bash":       ...,
+    # s05 新增工具 load_skill
+    "load_skill": lambda **kw: SKILL_REGISTRY.load_full_text(kw["name"]),
+}
 ```
 
 </div>
