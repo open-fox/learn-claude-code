@@ -1376,7 +1376,7 @@ layout: section
 ## s07 — s11
 
 <div class="text-gray-500 mt-4">
-能跑 ≠ 能上线。让 agent 更安全、更稳、更可扩展
+能跑 ≠ 能上线，让 agent 更安全、更稳定、更可扩展
 </div>
 
 ---
@@ -1429,70 +1429,106 @@ layout: center
 
 # s07: 权限系统 (Permission System)
 
-> 模型说"删掉这个目录"——但它 hallucinate 了路径。没有权限管道，意图直接变成执行
+> 模型说"删掉这个目录"，但它 hallucinate 了路径，没有权限管控，意图直接变成执行
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
-<div>
+问题：模型可能出现幻觉，导致写错文件、删错文件、执行危险命令
 
-**问题**：工具调用直接执行，没有安全拦截
+方案：任何工具调用，都不应该直接执行，中间必须先过四级权限管控
 
-**方案**：四级权限管道
+<div class="grid grid-cols-4 gap-4 mt-16 mb-16">
+<div v-click class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
 
-<v-clicks>
+**deny rules**
 
-- **1. deny rules**：绝对禁止（sudo、rm -rf）
-- **2. mode check**：plan 模式禁写、auto 模式允许读
-- **3. allow rules**：匹配放行
-- **4. ask user**：都没命中就问用户
-- Bash 单独有 `BashSecurityValidator`
-
-</v-clicks>
+sudo、rm -rf → 绝对禁止
 
 </div>
+<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
 
-<div class="embed-viz">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s07/" />
+**mode check**
+
+plan / auto / default
+
+</div>
+<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**allow rules**
+
+规则匹配 → 放行
+
+</div>
+<div v-click class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
+
+**ask user**
+
+都没命中 → 问用户
+
+</div>
 </div>
 
-</div>
+```mermaid {scale: 0.8}
+graph LR
+  TC["tool_call"] --> D["1. deny rules"]
+  D -->|"命中"| DENY["❌ 拒绝"]
+  D -->|"未命中"| M["2. mode check"]
+  M -->|"plan+写"| DENY
+  M -->|"auto+读"| ALLOW["✅ 放行"]
+  M -->|"default 或<br/>auto+写"| A["3. allow rules"]
+  A -->|"命中"| ALLOW
+  A -->|"未命中"| ASK["🙋‍♂️ ask user"]
+  style DENY fill:#ef4444,color:#fff
+  style ALLOW fill:#22c55e,color:#fff
+  style ASK fill:#f97316,color:#fff
+  style D fill:#fca5a5,color:#000
+  style M fill:#bfdbfe,color:#000
+  style A fill:#bbf7d0,color:#000
+```
 
 ---
 layout: default
 ---
 
-# s07: 核心代码 — 主循环的变更
+# s07: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
 
 ## agent_loop 变更
 
-```python {7-8|10-11|13-16|18-21}
+```python {13-30}
 def agent_loop(messages: list, perms: PermissionManager):
     while True:
         response = client.messages.create(...)
         messages.append({"role": "assistant", "content": response.content})
         if response.stop_reason != "tool_use":
             return
+
         results = []
         for block in response.content:
             if block.type != "tool_use":
                 continue
+
             # s07 新增：权限管道
-            decision = perms.check(block.name, block.input)
+            decision = perms.check(block.name, block.input or {})
 
-            if decision["behavior"] == "deny":
+            if decision["behavior"] == "deny": # 拒绝执行
                 output = f"Permission denied: {decision['reason']}"
-            elif decision["behavior"] == "ask":
-                if perms.ask_user(block.name, block.input):
-                    output = handler(**block.input)
+                print(f"  [DENIED] {block.name}: {decision['reason']}")
+            elif decision["behavior"] == "ask": # 询问用户
+                if perms.ask_user(block.name, block.input or {}):
+                    handler = TOOL_HANDLERS.get(block.name)
+                    output = handler(**(block.input or {})) if handler else f"Unknown: {block.name}"
+                    print(f"> {block.name}: {str(output)[:200]}")
                 else:
-                    output = "Permission denied by user"
-            else:  # allow
-                output = handler(**block.input)
+                    output = f"Permission denied by user for {block.name}"
+                    print(f"  [USER DENIED] {block.name}")
+            else:  # 允许执行
+                handler = TOOL_HANDLERS.get(block.name)
+                output = handler(**(block.input or {})) if handler else f"Unknown: {block.name}"
+                print(f"> {block.name}: {str(output)[:200]}")
 
-            results.append({"type": "tool_result",
-                "tool_use_id": block.id, "content": str(output)})
+            results.append({...})
+
         messages.append({"role": "user", "content": results})
 ```
 
