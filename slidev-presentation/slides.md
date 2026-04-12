@@ -1875,47 +1875,58 @@ The user explicitly prefers tabs over spaces.
 
 ---
 
-# s10: 系统提示词构建 (System Prompt)
+# s10: 系统提示词 (System Prompt)
 
-> 角色说明、工具文档、技能目录、记忆、CLAUDE.md——全塞一个字符串里，半年后谁敢改？
-
-**问题**：system prompt 是一整块硬编码字符串，来源越来越多却无法分段维护、测试和缓存
-
-**方案**：分段组装流水线 — 6 段来源按顺序拼接，`DYNAMIC_BOUNDARY` 分隔静态和动态部分
+> 角色说明、工具文档、技能列表、记忆、CLAUDE.md，全塞一个系统提示词里，半年后谁敢改？
 
 <div class="grid grid-cols-[1fr_500px] gap-4">
 <div>
 
+**问题**：系统提示词是一整块硬编码字符串，来源越来越多却无法分段维护、测试和缓存
+
+**方案**：系统提示词的关键不是“写一段很长的话”，而是“把不同来源的信息按清晰边界组装起来”
+
+分段组装流水线：6 段来源按顺序拼接，用 `DYNAMIC_BOUNDARY` 分隔 静态段 和 动态段
+
 <v-clicks>
 
 - **core** — 身份 + 规则（几乎不变）
-- **tools** — 工具列表（版本更新时变）
-- **skills** — 技能目录（安装时变）
-- **memory** — 记忆内容（会话内变）
-- **CLAUDE.md** — 指令链：`~/.claude/` → 项目根 → 子目录
-- **dynamic** — 日期、目录、模式（每轮变）
+
+- **tools** — 工具列表
+
+- **skills** — 技能列表
+
+- **memory** — 记忆内容
+
+- **CLAUDE.md** — 规则文件（ = AGENTS.md）
+
+- **dynamic** — 日期、目录、模式、提醒（每轮会话重建）
 
 </v-clicks>
 
-<div v-click class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
+<div v-click class="mt-2 p-2 rounded text-orange-500 text-xl">
 
-**关键**：静态前缀可缓存，动态后缀每轮重建
+静态前缀可缓存复用，效率高、成本低，动态后缀则每轮重建
 
 </div>
 
 </div>
 <div>
 
-```mermaid {scale: 0.4}
-graph TD
-  C["1. core<br/>身份 + 规则"] --> B["build()"]
-  T["2. tools<br/>工具列表"] --> B
-  SK["3. skills<br/>技能目录"] --> B
-  M["4. memory<br/>记忆内容"] --> B
-  CL["5. CLAUDE.md<br/>指令链"] --> B
-  B --> BD["=== DYNAMIC_BOUNDARY ==="]
-  BD --> D["6. dynamic<br/>日期/目录/模式"]
-  D --> SP["最终 system prompt"]
+```mermaid {scale: 0.5}
+%%{init: {"flowchart": {"rankSpacing": 30, "nodeSpacing": 30}} }%%
+graph LR
+  subgraph Static["静态段（可缓存复用）"]
+    direction TB
+    C["1. core — 身份 + 规则"] --- T["2. tools — 工具列表"] --- SK["3. skills — 技能列表"] --- M["4. memory — 记忆内容"] --- CL["5. CLAUDE.md — 规则文件"]
+  end
+  Static --> BD["DYNAMIC_BOUNDARY"]
+  BD --> Dynamic
+  subgraph Dynamic["动态段（每轮会话重建）"]
+    direction TB
+    D1["1. 当前日期"] --- D2["2. 工作目录"] --- D3["3. 当前模式"] --- D4["4. 操作系统"] --- D5["5. 本轮提醒"]
+  end
+  Dynamic --> SP["最终 system prompt"]
   style BD fill:#f97316,color:#fff
   style SP fill:#22c55e,color:#fff
 ```
@@ -1927,7 +1938,7 @@ graph TD
 layout: default
 ---
 
-# s10: 核心代码 — SystemPromptBuilder
+# s10: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
@@ -1937,32 +1948,35 @@ layout: default
 ```python {3-4}
 def agent_loop(messages: list):
     while True:
-        # s10 新增：用 builder 组装 system prompt
+        # s10 新增：用 builder 组装系统提示词
         system = prompt_builder.build()
         response = client.messages.create(
-            model=MODEL, system=system,
-            messages=messages, tools=TOOLS, max_tokens=8000,
+            model=MODEL, 
+            system=system,
+            messages=messages, 
+            tools=TOOLS, 
+            max_tokens=8000,
         )
         ...  # 标准循环
 ```
 
-## build() 方法
+## build 方法
 
 ```python
 def build(self) -> str:
     sections = []
-    core = self._build_core()                # 身份 + 规则
+    core = self._build_core()                # 1、core 身份 + 规则
     if core: sections.append(core)
-    tools = self._build_tool_listing()       # 工具列表
+    tools = self._build_tool_listing()       # 2、tools 工具列表
     if tools: sections.append(tools)
-    skills = self._build_skill_listing()     # 技能目录
+    skills = self._build_skill_listing()     # 3、skills 技能列表
     if skills: sections.append(skills)
-    memory = self._build_memory_section()    # 记忆内容
+    memory = self._build_memory_section()    # 4、memory 记忆内容
     if memory: sections.append(memory)
-    claude_md = self._build_claude_md()      # CLAUDE.md
+    claude_md = self._build_claude_md()      # 5、CLAUDE.md 规则文件
     if claude_md: sections.append(claude_md)
-    sections.append(DYNAMIC_BOUNDARY)        # 分隔线
-    dynamic = self._build_dynamic_context()  # 日期/目录
+    sections.append(DYNAMIC_BOUNDARY)        # 6、分隔线
+    dynamic = self._build_dynamic_context()  # 7、动态内容 日期/目录
     if dynamic: sections.append(dynamic)
     return "\n\n".join(sections)
 ```
@@ -1970,35 +1984,43 @@ def build(self) -> str:
 </div>
 <div>
 
-## SystemPromptBuilder
+## _build_claude_md
+
+规则文件，三级查找叠加
 
 ```python
-DYNAMIC_BOUNDARY = "=== DYNAMIC_BOUNDARY ==="
-
-class SystemPromptBuilder:
-    def __init__(self, workdir, tools):
-        self.workdir = workdir
-        self.tools = tools
-        self.skills_dir = workdir / "skills"
-        self.memory_dir = workdir / ".memory"
+def _build_claude_md(self) -> str:
+    sources = []
+    # 1. 用户全局级
+    user_claude = Path.home() / ".claude" / "CLAUDE.md"
+    if user_claude.exists():
+        sources.append(("user global", user_claude.read_text()))
+    # 2. 项目根目录级
+    project_claude = self.workdir / "CLAUDE.md"
+    if project_claude.exists():
+        sources.append(("project root", project_claude.read_text()))
+    # 3. 当前子目录级
+    if cwd != self.workdir:
+        subdir_claude = cwd / "CLAUDE.md"
+        if subdir_claude.exists():
+            sources.append(("subdir", subdir_claude.read_text()))
+    ...  # 全部拼接，不覆盖
 ```
 
-## 6 段来源
+## _build_dynamic_context
 
-| 段 | 来源 | 变化频率 |
-|----|------|----------|
-| 1. core | 硬编码 | 几乎不变 |
-| 2. tools | TOOLS 列表 | 版本更新 |
-| 3. skills | skills/ 目录 | 安装时 |
-| 4. memory | .memory/ | 会话内 |
-| 5. CLAUDE.md | 文件链 | 人工编辑 |
-| 6. dynamic | 运行时 | 每轮变 |
+动态内容，每轮会话重建
 
-<div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
-
-**CLAUDE.md 链**：`~/.claude/CLAUDE.md` → 项目根 → 子目录
-
-</div>
+```python
+def _build_dynamic_context(self) -> str:
+    lines = [
+        f"Current date: {datetime.date.today().isoformat()}",
+        f"Working directory: {self.workdir}",
+        f"Model: {MODEL}",
+        f"Platform: {os.uname().sysname}",
+    ]
+    return "# Dynamic context\n" + "\n".join(lines)
+```
 
 </div>
 </div>
