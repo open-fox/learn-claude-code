@@ -2029,52 +2029,69 @@ def _build_dynamic_context(self) -> str:
 
 # s11: 错误恢复 (Error Recovery)
 
-> 大文件写到一半 max_tokens 截断、上下文爆了、API 超时——如果每次都崩溃，用户就不敢用了
+> 大文件写到一半 max_tokens 截断、上下文爆了、API 超时，如果每次遇到问题就崩溃，用户就不敢用了
 
-**问题**：模型输出截断、上下文过长、网络抖动——三种常见错误直接让主循环停住
+**问题**：模型输出截断、上下文过长、网络抖动，这三种常见错误直接让主循环停住
 
-**方案**：错误先分类，再选恢复路径，每条路径有独立重试预算，全部耗尽才真正失败
+**方案**：先对错误分类，再选恢复路径，每条路径有独立的重试预算，全部耗尽才真正失败
 
-```mermaid {scale: 0.7}
-graph LR
-  LLM["LLM 调用"] -->|"max_tokens"| CON["续写恢复"]
-  LLM -->|"prompt_too_long"| CMP["压缩恢复"]
-  LLM -->|"timeout/rate_limit"| BAK["退避重试"]
-  CON -->|"≤3次"| LLM
-  CMP -->|"≤3次"| LLM
-  BAK -->|"≤3次"| LLM
-  CON -->|"耗尽"| FAIL["最终失败"]
-  CMP -->|"耗尽"| FAIL
-  BAK -->|"耗尽"| FAIL
-  style CON fill:#bfdbfe,color:#000
-  style CMP fill:#bbf7d0,color:#000
-  style BAK fill:#fef3c7,color:#000
-  style FAIL fill:#ef4444,color:#fff
-```
+<div class="grid grid-cols-3 gap-4 mt-4">
 
-<div class="grid grid-cols-3 gap-3 mt-2 text-sm">
-<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+<div v-click class="p-3 rounded-lg border border-blue-300 dark:border-blue-700">
+
+<div class="text-center mb-2 text-sm text-gray-500">问题 1</div>
+
+**输出被截断** — 模型还没说完，但 `max_tokens` 用完了
+
+<div class="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
 
 **续写恢复**
 
-注入 `CONTINUATION_MESSAGE`，告诉模型"不要重来，接着写"
+注入 `CONTINUATION_MESSAGE`："不要重来，直接从中断点接着写"
+
+每种最多重试 **3 次**
 
 </div>
-<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+</div>
+
+<div v-click class="p-3 rounded-lg border border-green-300 dark:border-green-700">
+
+<div class="text-center mb-2 text-sm text-gray-500">问题 2</div>
+
+**上下文爆了** — 对话历史太长，`prompt_too_long` 请求直接失败
+
+<div class="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
 
 **压缩恢复**
 
-`auto_compact()` 摘要旧上下文，缩短后重试
+`auto_compact()` 把旧对话摘要为一份仍可继续工作的 summary，缩短后重试
 
 </div>
-<div v-click class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
+</div>
+
+<div v-click class="p-3 rounded-lg border border-amber-300 dark:border-amber-700">
+
+<div class="text-center mb-2 text-sm text-gray-500">问题 3</div>
+
+**网络抖动** — timeout、rate limit、服务暂时不可用
+
+<div class="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
 
 **退避重试**
 
-`backoff_delay()` 指数等待 + 随机 jitter
+`backoff_delay()` 指数等待 + 随机 jitter，不要立刻连续重打
 
 </div>
 </div>
+
+</div>
+
+<div v-click class="mt-3 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm text-center">
+
+**全部耗尽才真正失败** — 每条路径有独立的重试预算（默认 3 次），三条路径互不干扰
+
+</div>
+
 
 ---
 layout: default
@@ -2130,9 +2147,8 @@ BACKOFF_MAX_DELAY = 30.0   # seconds
 TOKEN_THRESHOLD = 50000
 
 CONTINUATION_MESSAGE = (
-    "Output limit hit. Continue directly "
-    "from where you stopped -- no recap, "
-    "no repetition."
+  "Output limit hit. Continue directly from where you stopped. "
+  "Do not restart or repeat."
 )
 ```
 
