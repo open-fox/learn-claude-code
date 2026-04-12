@@ -865,7 +865,7 @@ layout: default
 layout: default
 ---
 
-# s03: 核心代码 — 主循环的变更
+# s03: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
@@ -955,36 +955,104 @@ TOOL_HANDLERS = {
 
 # s04: 子智能体 (Subagent)
 
-> 问"项目用什么测试框架？"读了 5 个文件，但答案只有一个词："pytest"。那 5 个文件凭什么留在上下文里？
+> 问"项目用什么测试框架？"，Agent 读了 5 个文件，但答案只有一个词："pytest"，那 5 个文件为什么还留在上下文里？
 
-```mermaid {scale: 0.7}
-graph LR
-  P["父 Agent<br/>messages[3条]"] -->|"task prompt"| S["子 Agent<br/>messages[新建]"]
-  S -->|"读文件/搜索/执行"| W["独立工作"]
-  W -->|"summary 返回"| P
-```
+<div class="grid grid-cols-[1fr_1.2fr] gap-4">
+<div>
+
+**问题**：Agent 为回答一个小问题读了 5 个文件，这些中间过程全堆在父上下文里，后续推理越来越差
+
+**方案**：上下文隔离
 
 <v-clicks>
 
-- **核心价值**：上下文隔离 — 子 agent 的中间噪声不会污染父上下文
-- 子 agent 自己的 `messages[]`，从空白或 fork 父上下文开始
-- 只把摘要带回，不是全部历史
+- 派生子 agent，用 **fresh `messages=[]`**
+- 子 agent 独立工作，完成后**只返回摘要**
+- 子上下文丢弃，父上下文保持干净
+- 子 agent **没有 `task` 工具**，防止递归
 
 </v-clicks>
 
-```python {1-3|4-5}
-class SubagentContext:
-    messages: list     # 子智能体自己的上下文
-    tools: list        # 可调用的工具（通常更少）
-    handlers: dict     # 工具对应的函数
-    max_turns: int     # 防止无限跑
+</div>
+<div>
+
+<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s04/" :frameWidth="900" :frameHeight="750" />
+
+</div>
+</div>
+
+---
+layout: default
+---
+
+# s04: 核心代码 — 主循环的变更
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {5-8|10-11}{at:1}
+def agent_loop(messages: list):
+    while True:
+        response = client.messages.create(
+            model=MODEL, system=SYSTEM,
+            # s04 变更：使用 PARENT_TOOLS 而非 TOOLS
+            tools=PARENT_TOOLS, max_tokens=8000,
+            messages=messages,
+        )
+        messages.append({"role": "assistant", "content": response.content})
+        if response.stop_reason != "tool_use":
+            return
+        results = []
+        for block in response.content:
+            if block.type == "tool_use":
+                # s04 新增：task 工具走子智能体
+                if block.name == "task":
+                    output = run_subagent(block.input["prompt"])
+                else:
+                    handler = TOOL_HANDLERS.get(block.name)
+                    output = handler(**block.input) if handler else ...
+                results.append({"type": "tool_result",
+                    "tool_use_id": block.id, "content": str(output)})
+        messages.append({"role": "user", "content": results})
 ```
 
----
-layout: none
----
+</div>
+<div>
 
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s04/" />
+## run_subagent — 独立循环
+
+```python {1-2|3-12|13-14}
+def run_subagent(prompt: str) -> str:
+    sub_messages = [{"role": "user", "content": prompt}]
+    for _ in range(30):  # 安全上限
+        response = client.messages.create(
+            model=MODEL, system=SUBAGENT_SYSTEM,
+            messages=sub_messages,
+            tools=CHILD_TOOLS, max_tokens=8000,
+        )
+        sub_messages.append({"role": "assistant", "content": response.content})
+        if response.stop_reason != "tool_use":
+            break
+        ...  # 执行工具，写回 sub_messages
+    # 只把最终文本带回父上下文
+    return "".join(b.text for b in response.content
+                   if hasattr(b, "text")) or "(no summary)"
+```
+
+## 工具过滤
+
+```python
+# 子智能体：基础工具，没有 task
+CHILD_TOOLS = [bash, read_file, write_file, edit_file]
+
+# 父智能体：基础工具 + task
+PARENT_TOOLS = CHILD_TOOLS + [task]
+```
+
+</div>
+</div>
 
 ---
 
