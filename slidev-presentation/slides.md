@@ -529,7 +529,7 @@ graph LR
 
 <div v-click class="mt-16 text-xl text-orange-500">
 
-核心原则：每一章节都是上一章节自然长出来的下一层，从最小的单 Agent 开始，到复杂的多 Agent 平台
+核心原则：每一章节都是上一章节自然迭代出来的，从最小的单 Agent 开始，到复杂的多 Agent 平台
 
 </div>
 
@@ -589,12 +589,14 @@ layout: default
 
 # s01: 智能体循环 (The Agent Loop)
 
-> 真正的 agent 起点，是把真实工具结果重新喂回模型，而不只是输出一段文本，没有循环，就没有 agent
+> 没有循环，就没有 agent，真正的 agent 起点是把真实工具结果重新喂回模型
 
 <div class="grid grid-cols-[1fr_1.2fr] gap-4">
 <div>
 
-最小的心智循环，不要让人来做 AI 的测试员
+问题：模型能思考，但不会打开文件、运行命令，是个“只会说话，不会干活”的程序，需要人来做中转
+
+方案：把“模型 + 工具”连接成一个能持续推进任务的主循环，最小的心智循环，不要让人来做 AI 的测试员
 
 ```mermaid {scale: 0.6}
 graph TD
@@ -722,12 +724,14 @@ layout: default
 
 # s02: 工具使用 (Tool Use)
 
-> 只有 bash，`rm -rf /` 谁来拦？路径逃逸谁来管？高危高频的文件操作需要专用工具
+> 只有 bash 工具，`rm -rf /` 谁来拦？路径逃逸谁来管？高危高频的文件操作需要专用工具
 
 <div class="grid grid-cols-[1fr_1.2fr] gap-4">
 <div>
 
-新增工具 = 新增 handler + 新增 schema，核心的循环永远不变
+问题：只有 bash 工具，所有操作都走 shell，每次 bash 调用都是不受约束的，存在严重的安全隐患
+
+方案：专用工具 (read_file, write_file) 可以在工具层面做路径沙箱，新增工具只是新增处理方法，核心循环保持不变
 
 ```mermaid {scale: 0.4}
 graph TD
@@ -830,10 +834,14 @@ layout: default
 
 # s03: 会话内规划 (TodoWrite)
 
-> 你说"重构这个模块：加类型、文档、测试、编译通过"，结果 Agent 做完前两步之后，就开始即兴发挥
+> 你对模型说"重构这个模块：加类型、文档、测试、保证编译通过"，结果 Agent 做完前两步之后，就开始即兴发挥
 
 <div class="grid grid-cols-[1fr_1.2fr] gap-4">
 <div>
+
+原因：模型的注意力始终受上下文影响，如果没有一块显式、可反复更新的计划状态，大任务就很容易漂
+
+方案：在会话内做规划，先把要做的任务写出来，在过程中不断更新任务状态，并在合适时机注入提醒
 
 ```mermaid {scale: 0.5}
 graph TD
