@@ -748,13 +748,11 @@ graph TD
 ```
 
 </div>
-<div>
 
 <div class="embed-viz">
 <iframe src="https://build-your-own-agent.vercel.app/en/embed/s02/" style="--viz-h: 1000px; --viz-scale: 0.45" />
 </div>
 
-</div>
 </div>
 
 ---
@@ -852,13 +850,11 @@ layout: default
 </v-clicks>
 
 </div>
-<div>
 
 <div class="embed-viz">
 <iframe src="https://build-your-own-agent.vercel.app/en/embed/s03/" />
 </div>
 
-</div>
 </div>
 
 ---
@@ -974,13 +970,11 @@ TOOL_HANDLERS = {
 </v-clicks>
 
 </div>
-<div>
 
 <div class="embed-viz">
 <iframe src="https://build-your-own-agent.vercel.app/en/embed/s04/" />
 </div>
 
-</div>
 </div>
 
 ---
@@ -1080,56 +1074,96 @@ PARENT_TOOLS = CHILD_TOOLS + [
 
 > 你不会每次做饭前把所有菜谱从头看到尾——agent 的领域知识也一样
 
-<div class="grid grid-cols-2 gap-6">
+<div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
-## 两层架构
+**问题**：10 个 skill × 2000 tokens = 20000 tokens 永远占着上下文，但每次只用 1 个
 
-```mermaid {scale: 0.6}
-graph TD
-  SP["System Prompt<br/>(轻量目录)"] -->|"model 判断需要"| LS["load_skill('code-review')"]
-  LS -->|"tool_result"| C["完整 skill 正文<br/>注入上下文"]
+**方案**：两层架构
+
+<v-clicks>
+
+- **Layer 1 目录**：始终在 system prompt，~120 tokens
+- **Layer 2 正文**：模型判断需要时调用 `load_skill` 加载
+- 新增工具 `load_skill`，循环不变
+
+</v-clicks>
+
+</div>
+
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s05/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s05: 核心代码 — 按需加载
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 无变化（主循环不变）
+
+```python
+def agent_loop(messages: list) -> None:
+    while True:
+        response = client.messages.create(
+            model=MODEL, system=SYSTEM,   # SYSTEM 含 skill 目录
+            messages=messages, tools=TOOLS, max_tokens=8000,
+        )
+        ...  # 标准循环：append → stop_reason → dispatch → results
 ```
 
-<v-click>
+## 注册新工具
 
-**Layer 1**：目录 — 始终存在，~120 tokens
-
-**Layer 2**：正文 — 按需加载，300-500 tokens
-
-</v-click>
+```python
+TOOL_HANDLERS = {
+    "bash":       ...,
+    "read_file":  ...,
+    "write_file": ...,
+    "edit_file":  ...,
+    # s05 新增
+    "load_skill": lambda **kw: SKILL_REGISTRY.load_full_text(kw["name"]),
+}
+```
 
 </div>
 <div>
 
-## 最小注册表
+## 新增数据结构
 
-```python {1-6|8-14}
+```python
+@dataclass
+class SkillManifest:
+    name: str
+    description: str
+    path: Path
+
+@dataclass
+class SkillDocument:
+    manifest: SkillManifest
+    body: str
+```
+
+## SkillRegistry
+
+```python
 class SkillRegistry:
     def __init__(self, skills_dir: Path):
         self.skills_dir = skills_dir
         self.documents: dict[str, SkillDocument] = {}
         self._load_all()
 
-    def _load_all(self) -> None:
-        if not self.skills_dir.exists():
-            return
-        for path in sorted(self.skills_dir.rglob("SKILL.md")):
-            meta, body = self._parse_frontmatter(path.read_text())
-            name = meta.get("name", path.parent.name)
-            description = meta.get("description", "No description")
-            manifest = SkillManifest(name=name, description=description, path=path)
-            self.documents[name] = SkillDocument(manifest=manifest, body=body.strip())
+    def describe_available(self) -> str: ...  # Layer 1
+    def load_full_text(self, name) -> str: ... # Layer 2
 ```
 
 </div>
 </div>
-
----
-layout: none
----
-
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s05/" />
 
 ---
 
@@ -1137,69 +1171,111 @@ layout: none
 
 > 读了 30 个文件、跑了 20 条命令后，10 万 tokens 烧完了——但活儿才干了一半
 
-<div class="grid grid-cols-3 gap-4 mt-4">
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
 
-<div v-click class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-sm">
+**问题**：上下文无限增长，模型推理变差、成本失控
 
-### 🔶 第 1 层：大结果写磁盘
+**方案**：三级压缩策略
 
-```python
-def persist_large_output(id, output):
-    if len(output) <= THRESHOLD:
-        return output
-    path = save_to_disk(id, output)
-    preview = output[:2000]
-    return f"<persisted-output>\n"
-           f"Saved to: {path}\n"
-           f"Preview:\n{preview}\n"
-           f"</persisted-output>"
-```
+<v-clicks>
+
+- **Level 1**：大结果写磁盘，只留预览（`persist_large_output`）
+- **Level 2**：旧 tool_result 替换为占位符（`micro_compact`）
+- **Level 3**：整体摘要压缩（`compact_history`）
+- 新增工具 `compact`，可手动触发；超阈值自动触发
+
+</v-clicks>
 
 </div>
 
-<div v-click class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
-
-### 🔷 第 2 层：旧结果微压缩
-
-```python
-def micro_compact(messages):
-    tool_results = collect_results(messages)
-    for result in tool_results[:-3]:
-        result["content"] = \
-          "[Earlier result omitted]"
-    return messages
-```
-
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s06/" />
 </div>
-
-<div v-click class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm">
-
-### 🟢 第 3 层：整体摘要压缩
-
-```python
-def compact_history(messages):
-    summary = summarize(messages)
-    return [{
-      "role": "user",
-      "content": "Compacted.\n" + summary
-    }]
-```
-
-</div>
-
-</div>
-
-<div v-click class="mt-3 text-sm text-center text-gray-500">
-
-压缩后必须保住：当前目标、已完成动作、已修改文件、关键决定、下一步
 
 </div>
 
 ---
-layout: none
+layout: default
 ---
 
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s06/" />
+# s06: 核心代码 — 主循环的变更
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {2-3|5-7|14-15|19-21}
+def agent_loop(messages: list, state: CompactState):
+    while True:
+        # s06 新增：每轮开始前微压缩
+        messages[:] = micro_compact(messages)
+
+        # s06 新增：超阈值自动压缩
+        if estimate_context_size(messages) > CONTEXT_LIMIT:
+            messages[:] = compact_history(messages, state)
+
+        response = client.messages.create(...)
+        messages.append({"role": "assistant", "content": response.content})
+        if response.stop_reason != "tool_use":
+            return
+
+        results = []
+        manual_compact = False
+        for block in response.content:
+            ...
+            # s06 新增：compact 工具触发手动压缩
+            if block.name == "compact":
+                manual_compact = True
+
+        messages.append({"role": "user", "content": results})
+        if manual_compact:
+            messages[:] = compact_history(messages, state)
+```
+
+</div>
+<div>
+
+## 新增数据结构
+
+```python
+@dataclass
+class CompactState:
+    has_compacted: bool = False
+    last_summary: str = ""
+    recent_files: list[str] = field(default_factory=list)
+
+# 常量
+CONTEXT_LIMIT = 50000
+KEEP_RECENT_TOOL_RESULTS = 3
+PERSIST_THRESHOLD = 30000
+```
+
+## 三级压缩函数
+
+```python
+# Level 1: 大输出写磁盘
+def persist_large_output(tool_use_id, output): ...
+
+# Level 2: 旧结果替换占位符
+def micro_compact(messages): ...
+
+# Level 3: LLM 摘要压缩
+def compact_history(messages, state): ...
+```
+
+## 注册新工具
+
+```python
+TOOL_HANDLERS = {
+    ...,
+    "compact": lambda **kw: "Compacting...",
+}
+```
+
+</div>
+</div>
 
 ---
 
@@ -1331,85 +1407,105 @@ layout: center
 
 > 模型说"删掉这个目录"——但它 hallucinate 了路径。没有权限管道，意图直接变成执行
 
-```mermaid {scale: 0.7}
-graph LR
-  TC["tool_call"] --> D["1. deny rules"]
-  D -->|"命中"| DENY["❌ 拒绝"]
-  D -->|"未命中"| M["2. mode check"]
-  M --> A["3. allow rules"]
-  A -->|"命中"| ALLOW["✅ 放行"]
-  A -->|"未命中"| ASK["4. ask user"]
-```
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
 
-<div class="grid grid-cols-3 gap-3 mt-4">
+**问题**：工具调用直接执行，没有安全拦截
 
-<div v-click class="p-2 rounded bg-gray-50 dark:bg-gray-800 text-sm">
+**方案**：四级权限管道
 
-**default** — 未命中规则时问用户
+<v-clicks>
 
-</div>
-<div v-click class="p-2 rounded bg-gray-50 dark:bg-gray-800 text-sm">
+- **1. deny rules**：绝对禁止（sudo、rm -rf）
+- **2. mode check**：plan 模式禁写、auto 模式允许读
+- **3. allow rules**：匹配放行
+- **4. ask user**：都没命中就问用户
+- Bash 单独有 `BashSecurityValidator`
 
-**plan** — 只允许读，不允许写
+</v-clicks>
 
 </div>
-<div v-click class="p-2 rounded bg-gray-50 dark:bg-gray-800 text-sm">
 
-**auto** — 安全操作自动过，危险再问
-
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s07/" />
 </div>
 
 </div>
 
 ---
+layout: default
+---
 
-# s07: 权限实现 & Bash 安全
+# s07: 核心代码 — 主循环的变更
 
-<div class="grid grid-cols-2 gap-4">
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
 
-```python {1|2-4|6-9|11-14|16}
-def check_permission(tool_name, tool_input):
-    # 1. deny rules 优先
-    for rule in deny_rules:
-        if matches(rule, tool_name, tool_input):
-            return {"behavior": "deny"}
+## agent_loop 变更
 
-    # 2. mode 检查
-    if mode == "plan" and tool_name in WRITES:
-        return {"behavior": "deny"}
-    if mode == "auto" and tool_name in READS:
-        return {"behavior": "allow"}
+```python {7-8|10-11|13-16|18-21}
+def agent_loop(messages: list, perms: PermissionManager):
+    while True:
+        response = client.messages.create(...)
+        messages.append({"role": "assistant", "content": response.content})
+        if response.stop_reason != "tool_use":
+            return
+        results = []
+        for block in response.content:
+            if block.type != "tool_use":
+                continue
+            # s07 新增：权限管道
+            decision = perms.check(block.name, block.input)
 
-    # 3. allow rules
-    for rule in allow_rules:
-        if matches(rule, tool_name, tool_input):
-            return {"behavior": "allow"}
+            if decision["behavior"] == "deny":
+                output = f"Permission denied: {decision['reason']}"
+            elif decision["behavior"] == "ask":
+                if perms.ask_user(block.name, block.input):
+                    output = handler(**block.input)
+                else:
+                    output = "Permission denied by user"
+            else:  # allow
+                output = handler(**block.input)
 
-    # 4. fallback
-    return {"behavior": "ask"}
+            results.append({"type": "tool_result",
+                "tool_use_id": block.id, "content": str(output)})
+        messages.append({"role": "user", "content": results})
 ```
 
 </div>
 <div>
 
-## Bash 特殊处理
+## PermissionManager
 
-<v-clicks>
+```python
+MODES = ("default", "plan", "auto")
 
-- `sudo` — 直接拒绝
-- `rm -rf` — 直接拒绝
-- 命令替换 — 高风险
-- 可疑重定向 — 检查
-- shell 元字符拼接 — 检查
+class PermissionManager:
+    def __init__(self, mode="default", rules=None):
+        self.mode = mode
+        self.rules = rules or DEFAULT_RULES
 
-</v-clicks>
+    def check(self, tool_name, tool_input) -> dict:
+        # 1. deny rules
+        # 2. mode check (plan/auto)
+        # 3. allow rules
+        # 4. ask user
+        return {"behavior": "allow|deny|ask", "reason": "..."}
+```
 
-<div v-click class="mt-3 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">
+## BashSecurityValidator
 
-**bash 不是普通文本，而是可执行动作描述。**
-
-</div>
+```python
+class BashSecurityValidator:
+    VALIDATORS = [
+        ("shell_metachar", r"[;&|`$]"),
+        ("sudo", r"\bsudo\b"),
+        ("rm_rf", r"\brm\s+(-[a-zA-Z]*)?r"),
+        ("cmd_substitution", r"\$\("),
+    ]
+    def validate(self, command) -> list: ...
+    def is_safe(self, command) -> bool: ...
+```
 
 </div>
 </div>
@@ -1420,38 +1516,111 @@ def check_permission(tool_name, tool_input):
 
 > 安全团队要审计 bash、QA 要自动跑 lint、运维要日志——难道每个需求都改主循环？
 
-<div class="grid grid-cols-2 gap-6">
+<div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
-## 3 个核心事件
+**问题**：每次加行为都要改主循环代码
 
-```mermaid {scale: 0.55}
-graph TD
-  TC["model 发起 tool_use"] --> PRE["PreToolUse hook"]
-  PRE -->|"exit 1"| BLK["❌ 阻止执行"]
-  PRE -->|"exit 2"| INJ["💬 注入消息后继续"]
-  PRE -->|"exit 0"| EXEC["执行工具"]
-  EXEC --> POST["PostToolUse hook"]
-  POST -->|"exit 2"| ADD["追加补充说明"]
-  POST -->|"exit 0"| OK["正常结束"]
+**方案**：3 个生命周期事件 + 退出码协议
+
+<v-clicks>
+
+- **SessionStart** — 会话开始时
+- **PreToolUse** — 工具执行前（可阻止）
+- **PostToolUse** — 工具执行后（可追加）
+- 退出码：`0` 继续 / `1` 阻止 / `2` 注入消息
+
+</v-clicks>
+
+</div>
+
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s08/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s08: 核心代码 — 主循环的变更
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {8-9|11-16|19-20|22-25}
+def agent_loop(messages: list, hooks: HookManager):
+    while True:
+        response = client.messages.create(...)
+        messages.append({"role": "assistant", "content": response.content})
+        if response.stop_reason != "tool_use":
+            return
+        results = []
+        for block in response.content:
+            if block.type != "tool_use":
+                continue
+            ctx = {"tool_name": block.name, "tool_input": block.input}
+
+            # s08 新增：PreToolUse hooks
+            pre_result = hooks.run_hooks("PreToolUse", ctx)
+            if pre_result.get("blocked"):
+                output = f"Blocked: {pre_result['block_reason']}"
+                results.append({...})
+                continue
+
+            # 正常执行工具
+            output = handler(**block.input)
+
+            # s08 新增：PostToolUse hooks
+            ctx["tool_output"] = output
+            post_result = hooks.run_hooks("PostToolUse", ctx)
+            for msg in post_result.get("messages", []):
+                output += f"\n[Hook note]: {msg}"
+
+            results.append({...})
+        messages.append({"role": "user", "content": results})
 ```
 
 </div>
 <div>
 
-## 统一返回约定
-
-| 退出码 | 含义 |
-|--------|------|
-| `0` | 正常继续 |
-| `1` | 阻止当前动作 |
-| `2` | 注入补充消息再继续 |
+## HookManager
 
 ```python
-HOOKS = {
-    "SessionStart": [on_session_start],
-    "PreToolUse":  [pre_tool_guard],
-    "PostToolUse": [post_tool_log],
+HOOK_EVENTS = ("PreToolUse", "PostToolUse", "SessionStart")
+
+class HookManager:
+    def __init__(self, config_path=None):
+        self.hooks = {
+            "PreToolUse": [],
+            "PostToolUse": [],
+            "SessionStart": [],
+        }
+        # 从 .hooks.json 加载配置
+
+    def run_hooks(self, event, context) -> dict:
+        # 返回 {"blocked": bool, "messages": [...]}
+        # exit 0 → 继续
+        # exit 1 → 阻止
+        # exit 2 → 注入消息
+        ...
+```
+
+## 配置文件 `.hooks.json`
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {"matcher": "bash", "command": "audit.sh"}
+    ],
+    "PostToolUse": [
+      {"matcher": "*", "command": "log.sh"}
+    ]
+  }
 }
 ```
 
@@ -1464,42 +1633,101 @@ HOOKS = {
 
 > 你告诉它三次"别改 test snapshots"，下次开会话，它又改了——因为它每次都是新的
 
-<div class="grid grid-cols-2 gap-6">
+<div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
-## 4 类 Memory
+**问题**：每次新会话，用户偏好、纠正、项目约定全部丢失
+
+**方案**：4 类跨会话记忆
 
 <v-clicks>
 
-- **user** — 用户偏好（代码风格、回答偏好）
-- **feedback** — 明确纠正（"不要这样改"）
-- **project** — 不易从代码看出的约定
+- **user** — 偏好（"我用 tabs"、"始终用 pytest"）
+- **feedback** — 纠正（"不要改 snapshots"）
+- **project** — 不易从代码推出的约定
 - **reference** — 外部资源指针
+- 新增工具 `save_memory`，记忆注入 system prompt
 
 </v-clicks>
+
+<div v-click class="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-sm">
+
+**不要存**：文件结构、临时任务进度、密钥
+
+</div>
+
+</div>
+
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s09/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s09: 核心代码 — 主循环的变更
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {3-4}
+def agent_loop(messages: list):
+    while True:
+        # s09 新增：每轮重建 system prompt，含最新记忆
+        system = build_system_prompt()
+        response = client.messages.create(
+            model=MODEL, system=system,
+            messages=messages, tools=TOOLS, max_tokens=8000,
+        )
+        ...  # 标准循环
+```
+
+## 注册新工具
+
+```python
+TOOL_HANDLERS = {
+    ...,
+    # s09 新增
+    "save_memory": lambda **kw: memory_mgr.save_memory(
+        kw["name"], kw["description"], kw["type"], kw["content"]),
+}
+```
 
 </div>
 <div>
 
-## ❌ 不要存的
+## MemoryManager
 
-<v-clicks>
+```python
+MEMORY_TYPES = ("user", "feedback", "project", "reference")
 
-- 文件结构/函数签名 → 可重新读
-- 当前任务进度 → 属于 task/plan
-- 临时分支名/PR 号 → 会过时
-- 修 bug 的具体代码 → 看提交记录
-- 密钥/密码 → 安全风险
+class MemoryManager:
+    def __init__(self, memory_dir: Path):
+        self.memories = {}  # name -> {desc, type, content}
 
-</v-clicks>
+    def load_all(self): ...         # 启动时加载 .memory/*.md
+    def load_memory_prompt(self) -> str: ...  # 注入 system prompt
+    def save_memory(self, name, desc, type, content) -> str:
+        # 写 .memory/{name}.md + frontmatter
+        # 更新 MEMORY.md 索引
+        ...
+```
+
+## 存储布局
+
+```text
+.memory/
+  MEMORY.md          ← 索引（≤200行）
+  prefer_tabs.md     ← 单条记忆
+  review_style.md
+```
 
 </div>
-</div>
-
-<div v-click class="mt-4 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-sm text-center">
-
-**memory 用来提供方向，不用来替代当前观察。** 如果 memory 和当前代码冲突，优先相信你看到的真实状态。
-
 </div>
 
 ---
@@ -1508,38 +1736,106 @@ HOOKS = {
 
 > 角色说明、工具文档、技能目录、记忆、CLAUDE.md——全塞一个字符串里，半年后谁敢改？
 
-```python {1-10|12-14}
-class SystemPromptBuilder:
-    def build(self) -> str:
-        sections = []
-        core = self._build_core()
-        if core: sections.append(core)
-        tools = self._build_tool_listing()
-        if tools: sections.append(tools)
-        skills = self._build_skill_listing()
-        if skills: sections.append(skills)
-        memory = self._build_memory_section()
-        if memory: sections.append(memory)
-        claude_md = self._build_claude_md()
-        if claude_md: sections.append(claude_md)
-        sections.append(DYNAMIC_BOUNDARY)
-        dynamic = self._build_dynamic_context()
-        if dynamic: sections.append(dynamic)
-        return "\n\n".join(sections)
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
 
-# 真正送给模型的完整输入管道:
-# prompt blocks + normalized messages + attachments + reminders
-```
+**问题**：system prompt 是一整块硬编码字符串，无法维护
 
-<div v-click class="mt-2 grid grid-cols-2 gap-3 text-sm">
-<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+**方案**：组装流水线 + 动态边界
 
-**稳定说明** — 身份、规则、工具
+<v-clicks>
+
+- 6 段独立组装：core → tools → skills → memory → CLAUDE.md → dynamic
+- `DYNAMIC_BOUNDARY` 分隔静态和动态部分
+- 静态前缀可缓存，动态后缀每轮变
+- 每轮重建，新记忆立即可见
+
+</v-clicks>
 
 </div>
-<div class="p-2 bg-blue-50 dark:bg-blue-800/30 rounded">
 
-**动态提醒** — 当前日期、目录、模式
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s10/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s10: 核心代码 — SystemPromptBuilder
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {3-4}
+def agent_loop(messages: list):
+    while True:
+        # s10 新增：用 builder 组装 system prompt
+        system = prompt_builder.build()
+        response = client.messages.create(
+            model=MODEL, system=system,
+            messages=messages, tools=TOOLS, max_tokens=8000,
+        )
+        ...  # 标准循环
+```
+
+## build() 方法
+
+```python
+def build(self) -> str:
+    sections = []
+    core = self._build_core()                # 身份 + 规则
+    if core: sections.append(core)
+    tools = self._build_tool_listing()       # 工具列表
+    if tools: sections.append(tools)
+    skills = self._build_skill_listing()     # 技能目录
+    if skills: sections.append(skills)
+    memory = self._build_memory_section()    # 记忆内容
+    if memory: sections.append(memory)
+    claude_md = self._build_claude_md()      # CLAUDE.md
+    if claude_md: sections.append(claude_md)
+    sections.append(DYNAMIC_BOUNDARY)        # 分隔线
+    dynamic = self._build_dynamic_context()  # 日期/目录
+    if dynamic: sections.append(dynamic)
+    return "\n\n".join(sections)
+```
+
+</div>
+<div>
+
+## SystemPromptBuilder
+
+```python
+DYNAMIC_BOUNDARY = "=== DYNAMIC_BOUNDARY ==="
+
+class SystemPromptBuilder:
+    def __init__(self, workdir, tools):
+        self.workdir = workdir
+        self.tools = tools
+        self.skills_dir = workdir / "skills"
+        self.memory_dir = workdir / ".memory"
+```
+
+## 6 段来源
+
+| 段 | 来源 | 变化频率 |
+|----|------|----------|
+| 1. core | 硬编码 | 几乎不变 |
+| 2. tools | TOOLS 列表 | 版本更新 |
+| 3. skills | skills/ 目录 | 安装时 |
+| 4. memory | .memory/ | 会话内 |
+| 5. CLAUDE.md | 文件链 | 人工编辑 |
+| 6. dynamic | 运行时 | 每轮变 |
+
+<div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
+
+**CLAUDE.md 链**：`~/.claude/CLAUDE.md` → 项目根 → 子目录
+
+</div>
 
 </div>
 </div>
@@ -1550,45 +1846,91 @@ class SystemPromptBuilder:
 
 > 大文件写到一半 max_tokens 截断、上下文爆了、API 超时——如果每次都崩溃，用户就不敢用了
 
-```mermaid {scale: 0.65}
-graph TD
-  API["LLM 调用"] -->|"max_tokens"| CON["续写恢复<br/>注入 continue 提示"]
-  API -->|"prompt too long"| CMP["压缩恢复<br/>压缩后重试"]
-  API -->|"timeout/rate limit"| BAK["退避重试<br/>等一会儿再试"]
-  API -->|"其他错误"| FAIL["最终失败"]
-  CON --> API
-  CMP --> API
-  BAK --> API
-```
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
 
-<div class="grid grid-cols-3 gap-3 mt-3 text-sm">
-<div v-click class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded">
+**问题**：max_tokens 截断、prompt_too_long、API 超时——三种常见错误
 
-**续写提示**
+**方案**：三条恢复路径
 
-```python
-"Output limit hit. Continue "
-"directly from where you "
-"stopped. Do not restart."
+<v-clicks>
+
+- **max_tokens** → 注入续写提示，继续生成
+- **prompt_too_long** → 自动压缩后重试
+- **timeout/rate_limit** → 指数退避重试
+- 每种最多重试 3 次，全部耗尽才真正失败
+
+</v-clicks>
+
+</div>
+
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s11/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s11: 核心代码 — 主循环的变更
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {2|4-5|7-15|17-23|25-29}
+def agent_loop(messages: list):
+    max_output_recovery_count = 0
+    while True:
+        # s11 新增：API 调用 + 重试包装
+        response = None
+        for attempt in range(MAX_RECOVERY_ATTEMPTS + 1):
+            try:
+                response = client.messages.create(...)
+                break
+            except APIError as e:
+                # 恢复路径 2: prompt_too_long → 压缩重试
+                if "prompt" in str(e) and "long" in str(e):
+                    messages[:] = auto_compact(messages)
+                    continue
+                # 恢复路径 3: 退避重试
+                delay = backoff_delay(attempt)
+                time.sleep(delay)
+                continue
+        ...
+        # 恢复路径 1: max_tokens → 注入续写提示
+        if response.stop_reason == "max_tokens":
+            max_output_recovery_count += 1
+            if max_output_recovery_count <= MAX_RECOVERY_ATTEMPTS:
+                messages.append({"role": "user",
+                    "content": CONTINUATION_MESSAGE})
+                continue
+        max_output_recovery_count = 0
+        ...  # 正常工具执行
 ```
 
 </div>
-<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+<div>
 
-**恢复状态**
+## 恢复常量
 
 ```python
-recovery_state = {
-  "continuation_attempts": 0,
-  "compact_attempts": 0,
-  "transport_attempts": 0,
-}
+MAX_RECOVERY_ATTEMPTS = 3
+BACKOFF_BASE_DELAY = 1.0   # seconds
+BACKOFF_MAX_DELAY = 30.0   # seconds
+TOKEN_THRESHOLD = 50000
+
+CONTINUATION_MESSAGE = (
+    "Output limit hit. Continue directly "
+    "from where you stopped -- no recap, "
+    "no repetition."
+)
 ```
 
-</div>
-<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded">
-
-**退避延迟**
+## 退避函数
 
 ```python
 def backoff_delay(attempt: int) -> float:
@@ -1596,6 +1938,18 @@ def backoff_delay(attempt: int) -> float:
                 BACKOFF_MAX_DELAY)
     jitter = random.uniform(0, 1)
     return delay + jitter
+```
+
+## 自动压缩
+
+```python
+def auto_compact(messages: list) -> list:
+    summary = client.messages.create(
+        model=MODEL,
+        messages=[{"role": "user",
+                   "content": "Summarize..."}],
+    ).content[0].text
+    return [{"role": "user", "content": summary}]
 ```
 
 </div>
@@ -1711,59 +2065,108 @@ s03 的 TodoWrite 是"会话内清单"——压缩一次就丢了。
 
 > s03 的 Todo 只知道"有事要做"；Task 能告诉你"先做什么、谁在等谁、完成后自动解锁下游"
 
-<div class="grid grid-cols-2 gap-6">
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
+
+**问题**：Todo 是会话内清单，压缩一次就丢了；没有依赖关系
+
+**方案**：持久化任务图（JSON 文件 on disk）
+
+<v-clicks>
+
+- 每个 task 有 `blockedBy` / `blocks` 依赖关系
+- 完成一个 task → 自动从下游的 `blockedBy` 移除
+- `is_ready(task)` = pending + 没有前置阻塞
+- 新增工具：`task_create` / `task_update` / `task_list` / `task_get`
+
+</v-clicks>
+
+</div>
+
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s07/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s12: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## 主循环无本质变化（只新增工具）
+
+```python
+TOOL_HANDLERS = {
+    "bash":        ...,
+    "read_file":   ...,
+    "write_file":  ...,
+    "edit_file":   ...,
+    # s12 新增
+    "task_create": lambda **kw: TASKS.create(kw["subject"], ...),
+    "task_update": lambda **kw: TASKS.update(kw["task_id"], ...),
+    "task_list":   lambda **kw: TASKS.list_all(),
+    "task_get":    lambda **kw: TASKS.get(kw["task_id"]),
+}
+```
+
+## 自动解锁
+
+```python
+def _clear_dependency(self, completed_id: int):
+    for f in self.dir.glob("task_*.json"):
+        task = json.loads(f.read_text())
+        if completed_id in task.get("blockedBy", []):
+            task["blockedBy"].remove(completed_id)
+            self._save(task)
+```
+
+</div>
 <div>
 
 ## TaskRecord
 
-```python {1-8|10-12}
+```python
 task = {
     "id": 1,
     "subject": "Write parser",
     "description": "",
-    "status": "pending",
-    "blockedBy": [],   # 还在等谁
-    "blocks": [],      # 它完成后解锁谁
+    "status": "pending",    # pending | in_progress | completed
+    "blockedBy": [],        # 还在等谁
+    "blocks": [],           # 它完成后解锁谁
     "owner": "",
 }
+```
 
-# 最关键的判断规则
-def is_ready(task):
-    return (task["status"] == "pending"
-            and not task["blockedBy"])
+## TaskManager
+
+```python
+class TaskManager:
+    def __init__(self, tasks_dir: Path):
+        self.dir = tasks_dir
+    def create(self, subject, desc) -> str: ...
+    def get(self, task_id) -> str: ...
+    def update(self, task_id, status=None, ...) -> str:
+        ...
+        if status == "completed":
+            self._clear_dependency(task_id)
+    def list_all(self) -> str: ...
+```
+
+## 存储布局
+
+```text
+.tasks/
+  task_1.json  {"id":1, "status":"completed", ...}
+  task_2.json  {"id":2, "blockedBy":[1], ...}
 ```
 
 </div>
-<div>
-
-## 自动解锁
-
-```python {1-7}
-def complete(self, task_id):
-    task = self._load(task_id)
-    task["status"] = "completed"
-    self._save(task)
-    # 解锁后续任务
-    for other in self._all_tasks():
-        if task_id in other["blockedBy"]:
-            other["blockedBy"].remove(task_id)
-            self._save(other)
-```
-
-<v-click>
-
-**任务系统不是静态记录表，而是随着完成事件自动推进的工作图。**
-
-</v-click>
-
 </div>
-</div>
-
----
-layout: none
----
-
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s07/" />
 
 ---
 
@@ -1771,56 +2174,110 @@ layout: none
 
 > 用户说"跑测试，同时帮我建配置文件"——但你的 agent 只会傻等 90 秒测试跑完
 
-```mermaid {scale: 0.65}
-graph LR
-  ML["主循环"] -->|"background_run('pytest')"| BG["后台执行线"]
-  ML -->|"继续其他工作"| ML2["下一轮模型调用"]
-  BG -->|"完成后"| NQ["通知队列"]
-  NQ -->|"drain_notifications()"| ML2
-  ML2 -->|"带回摘要"| LLM["模型继续推理"]
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
+
+**问题**：慢命令（pytest、npm build）阻塞主循环
+
+**方案**：daemon 线程 + 通知队列
+
+<v-clicks>
+
+- `background_run` 启动后台线程，立即返回 task_id
+- 主循环继续其他工作
+- 后台完成 → 推入通知队列
+- 每轮 LLM 调用前 `drain_notifications()` → 注入结果
+- 新增工具：`background_run` / `check_background`
+
+</v-clicks>
+
+</div>
+
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s08/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s13: 核心代码 — 主循环的变更
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {3-10}
+def agent_loop(messages: list):
+    while True:
+        # s13 新增：每轮开始前 drain 后台通知
+        notifs = BG.drain_notifications()
+        if notifs and messages:
+            notif_text = "\n".join(
+                f"[bg:{n['task_id']}] {n['status']}: {n['preview']}"
+                for n in notifs
+            )
+            messages.append({"role": "user",
+                "content": f"<background-results>\n{notif_text}\n</background-results>"})
+
+        response = client.messages.create(...)
+        ...  # 标准循环
 ```
 
-<div class="grid grid-cols-2 gap-4 mt-3">
-<div v-click>
+## 注册新工具
 
 ```python
-# RuntimeTaskRecord
+TOOL_HANDLERS = {
+    ...,
+    # s13 新增
+    "background_run":   lambda **kw: BG.run(kw["command"]),
+    "check_background": lambda **kw: BG.check(kw.get("task_id")),
+}
+```
+
+</div>
+<div>
+
+## BackgroundManager
+
+```python
+class BackgroundManager:
+    def __init__(self):
+        self.tasks = {}       # task_id -> status/result
+        self._notification_queue = []
+        self._lock = threading.Lock()
+
+    def run(self, command) -> str:
+        # 启动 daemon 线程，立即返回 task_id
+        task_id = str(uuid.uuid4())[:8]
+        thread = threading.Thread(
+            target=self._execute,
+            args=(task_id, command), daemon=True)
+        thread.start()
+        return f"Background task {task_id} started"
+
+    def drain_notifications(self) -> list:
+        # 返回并清空通知队列
+        ...
+```
+
+## RuntimeTaskRecord
+
+```python
 task = {
     "id": "a1b2c3d4",
     "command": "pytest",
-    "status": "running",
+    "status": "running",      # running | completed | error
     "result_preview": "",
-    "output_file": "",
+    "output_file": ".runtime-tasks/a1b2c3d4.log",
 }
 ```
 
 </div>
-<div v-click>
-
-```python
-# Notification
-notification = {
-    "type": "background_completed",
-    "task_id": "a1b2c3d4",
-    "status": "completed",
-    "preview": "tests passed",
-}
-```
-
-<div class="mt-2 text-sm text-gray-500">
-
-通知只放摘要，完整输出放文件
-
 </div>
-
-</div>
-</div>
-
----
-layout: none
----
-
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s08/" />
 
 ---
 
@@ -1828,32 +2285,112 @@ layout: none
 
 > 后台任务解决"现在开始的慢任务"，但"每周一 9 点跑报告"怎么办？——agent 需要学会"记住未来"
 
-```python {1-8|10-15}
-# ScheduleRecord
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
+
+**问题**：agent 只能响应当前请求，不能"记住未来要做的事"
+
+**方案**：cron 表达式 + 后台检查线程 + 通知注入
+
+<v-clicks>
+
+- `cron_create("0 9 * * 1", "Run weekly report")` 注册定时任务
+- 后台线程每秒检查一次是否到期
+- 到期 → 推入通知队列 → 注入主循环
+- 支持 recurring / one-shot、session-only / durable
+- 新增工具：`cron_create` / `cron_delete` / `cron_list`
+
+</v-clicks>
+
+</div>
+
+<div class="embed-viz" style="--viz-h: 1000px; --viz-scale: 0.45">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s09/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s14: 核心代码 — 主循环的变更
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {3-6}
+def agent_loop(messages: list):
+    while True:
+        # s14 新增：drain 定时任务通知
+        notifications = scheduler.drain_notifications()
+        for note in notifications:
+            messages.append({"role": "user", "content": note})
+
+        response = client.messages.create(...)
+        ...  # 标准循环
+```
+
+## 注册新工具
+
+```python
+TOOL_HANDLERS = {
+    ...,
+    # s14 新增
+    "cron_create": lambda **kw: scheduler.create(
+        kw["cron"], kw["prompt"],
+        kw.get("recurring", True), kw.get("durable", False)),
+    "cron_delete": lambda **kw: scheduler.delete(kw["id"]),
+    "cron_list":   lambda **kw: scheduler.list_tasks(),
+}
+```
+
+</div>
+<div>
+
+## ScheduleRecord
+
+```python
 schedule = {
     "id": "job_001",
-    "cron": "0 9 * * 1",              # 每周一9点
+    "cron": "0 9 * * 1",       # 每周一 9 点
     "prompt": "Run weekly status report.",
     "recurring": True,
     "durable": True,
-    "last_fired_at": None,
+    "last_fired": None,
 }
-
-# 检查循环
-def check_jobs(self, now):
-    for job in self.jobs:
-        if cron_matches(job["cron"], now):
-            self.queue.put({
-                "type": "scheduled_prompt",
-                "schedule_id": job["id"],
-                "prompt": job["prompt"],
-            })
 ```
 
-<div v-click class="mt-3 p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-sm text-center">
+## CronScheduler
 
-**调度器做的是"记住未来"，不是"取代主循环"。** 触发后仍然回到同一条主循环。
+```python
+class CronScheduler:
+    def __init__(self):
+        self.tasks = []
+        self.queue = Queue()
+    def start(self): ...          # 启动后台检查线程
+    def create(self, cron, prompt, ...) -> str: ...
+    def drain_notifications(self) -> list: ...
+```
 
+## cron_matches
+
+```python
+def cron_matches(expr: str, dt: datetime) -> bool:
+    # 5 字段匹配: min hour dom month dow
+    # 支持 * / */N / N-M / N,M
+    ...
+```
+
+<div class="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-sm">
+
+**调度器做的是"记住未来"，触发后仍然回到同一条主循环。**
+
+</div>
+
+</div>
 </div>
 
 ---
@@ -1967,43 +2504,102 @@ layout: center
 
 > s04 的 Subagent 是"用完即弃"；团队成员**长期在线、有身份、有邮箱、能反复接活**
 
-```mermaid {scale: 0.6}
-graph TB
-  Lead["👑 Lead"] -->|"send message"| AI["🟢 Alice inbox"]
-  Lead -->|"send message"| BI["🔵 Bob inbox"]
-  subgraph Alice["Alice (coder)"]
-    AI --> AL["自己的 messages[]"]
-    AL --> ALoop["自己的 agent loop"]
-  end
-  subgraph Bob["Bob (tester)"]
-    BI --> BL["自己的 messages[]"]
-    BL --> BLoop["自己的 agent loop"]
-  end
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
+
+**问题**：Subagent 是一次性的，没有身份、没有邮箱、不能长期在线
+
+**方案**：持久化名册 + JSONL 邮箱 + 独立循环
+
+<v-clicks>
+
+- **名册** `.team/config.json`：成员列表、角色、状态
+- **邮箱** `.team/inbox/alice.jsonl`：append-only 收件箱
+- 每个队友独立线程运行自己的 agent loop
+- 新增工具：`spawn_teammate` / `send_message` / `read_inbox` / `broadcast`
+
+</v-clicks>
+
+</div>
+
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s09/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s15: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更（Lead 循环）
+
+```python {3-7}
+def agent_loop(messages: list):
+    while True:
+        # s15 新增：每轮 drain lead 的邮箱
+        inbox = BUS.read_inbox("lead")
+        if inbox:
+            messages.append({"role": "user",
+                "content": f"<inbox>{json.dumps(inbox)}</inbox>"})
+
+        response = client.messages.create(...)
+        ...  # 标准循环
 ```
 
-<div class="grid grid-cols-3 gap-3 mt-3 text-sm">
-<div v-click class="p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
+## Lead 工具（9 个）
 
-**名册** — 成员列表 `.team/config.json`
+```python
+TOOL_HANDLERS = {
+    "bash": ..., "read_file": ..., "write_file": ..., "edit_file": ...,
+    # s15 新增
+    "spawn_teammate":  lambda **kw: TEAM.spawn(kw["name"], kw["role"], kw["prompt"]),
+    "list_teammates":  lambda **kw: TEAM.list_all(),
+    "send_message":    lambda **kw: BUS.send("lead", kw["to"], kw["content"]),
+    "read_inbox":      lambda **kw: json.dumps(BUS.read_inbox("lead")),
+    "broadcast":       lambda **kw: BUS.broadcast("lead", kw["content"], ...),
+}
+```
 
 </div>
-<div v-click class="p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
+<div>
 
-**邮箱** — JSONL 收件箱 `.team/inbox/alice.jsonl`
+## MessageBus（JSONL 邮箱）
+
+```python
+class MessageBus:
+    def send(self, sender, to, content, msg_type="message"):
+        msg = {"type": msg_type, "from": sender,
+               "content": content, "timestamp": time.time()}
+        # append 到 .team/inbox/{to}.jsonl
+
+    def read_inbox(self, name) -> list:
+        # 读取并清空 .team/inbox/{name}.jsonl
+```
+
+## TeammateManager
+
+```python
+class TeammateManager:
+    def spawn(self, name, role, prompt) -> str:
+        # 写入 config.json
+        # 启动独立线程 → _teammate_loop
+        ...
+
+    def _teammate_loop(self, name, role, prompt):
+        messages = [{"role": "user", "content": prompt}]
+        for _ in range(50):
+            inbox = BUS.read_inbox(name)
+            ...  # 标准 agent loop
+```
 
 </div>
-<div v-click class="p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
-
-**独立循环** — 每个队友自己的 agent loop
-
 </div>
-</div>
-
----
-layout: none
----
-
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s09/" />
 
 ---
 
@@ -2011,57 +2607,115 @@ layout: none
 
 > Lead 说"请停下"，Alice 无视了；Bob 直接开始数据库迁移没人审批——自由聊天不够，需要结构化握手
 
-<div class="grid grid-cols-2 gap-6">
+<div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
+
+**问题**：自由消息无法保证"请求必须被回应"
+
+**方案**：request_id 关联的结构化握手
+
+<v-clicks>
+
+- **shutdown 协议**：Lead 发 request → 队友 approve/reject
+- **plan_approval 协议**：队友提交计划 → Lead 审批
+- 每个 request 有持久化状态：`pending → approved | rejected`
+- `.team/requests/{request_id}.json` 存储请求记录
+
+</v-clicks>
+
+</div>
+
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s10/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s16: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## Lead 新增工具（+3 个）
+
+```python
+TOOL_HANDLERS = {
+    ...  # s15 的 9 个
+    # s16 新增
+    "shutdown_request": lambda **kw:
+        handle_shutdown_request(kw["teammate"]),
+    "shutdown_response": lambda **kw:
+        _check_shutdown_status(kw["request_id"]),
+    "plan_approval": lambda **kw:
+        handle_plan_review(kw["request_id"],
+            kw["approve"], kw.get("feedback", "")),
+}
+```
+
+## shutdown 流程
+
+```python
+def handle_shutdown_request(teammate: str) -> str:
+    req_id = str(uuid.uuid4())[:8]
+    REQUEST_STORE.create({
+        "request_id": req_id, "kind": "shutdown",
+        "from": "lead", "to": teammate,
+        "status": "pending", ...
+    })
+    BUS.send("lead", teammate, "Please shut down.",
+             "shutdown_request", {"request_id": req_id})
+    return f"Shutdown request {req_id} sent"
+```
+
+</div>
+<div>
+
+## RequestStore
+
+```python
+class RequestStore:
+    def __init__(self, base_dir: Path):
+        self.dir = base_dir   # .team/requests/
+
+    def create(self, record: dict) -> dict:
+        # 写 {request_id}.json
+    def get(self, request_id) -> dict | None: ...
+    def update(self, request_id, **changes): ...
+```
 
 ## 协议信封
 
-```python {1-7}
+```python
+# shutdown_request
 message = {
     "type": "shutdown_request",
-    "from": "lead",
-    "to": "alice",
+    "from": "lead", "to": "alice",
     "request_id": "req_001",
-    "payload": {},
     "timestamp": 1710000000.0,
 }
-```
 
-</div>
-<div>
-
-## 请求状态机
-
-```mermaid {scale: 0.6}
-stateDiagram-v2
-  [*] --> pending
-  pending --> approved
-  pending --> rejected
-  pending --> expired
-```
-
-```python
-request = {
+# shutdown_response
+response = {
     "request_id": "req_001",
-    "kind": "shutdown",
-    "status": "pending",
+    "approve": True,
+    "reason": "Work complete",
 }
 ```
 
+## 队友新增工具
+
+```python
+# 队友可以：
+"shutdown_response"  # 回应关机请求
+"plan_approval"      # 提交计划审批
+```
+
 </div>
 </div>
-
-<div v-click class="mt-2 text-sm text-center text-gray-500">
-
-教学版先做 2 类协议：**shutdown**（优雅关机）和 **plan_approval**（计划审批）
-
-</div>
-
----
-layout: none
----
-
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s10/" />
 
 ---
 
@@ -2069,21 +2723,77 @@ layout: none
 
 > 任务板上 10 个待办，Lead 一个一个分配——Lead 成了瓶颈。让队友自己去任务板找活干
 
-```mermaid {scale: 0.65}
-graph TD
-  W["WORK 阶段"] -->|"工作做完"| I["IDLE 阶段"]
-  I -->|"看邮箱有消息"| W
-  I -->|"扫描任务板有 ready task"| CL["认领任务"]
-  CL -->|"补身份 + 任务提示"| W
-  I -->|"长时间无事"| SD["shutdown"]
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
+
+**问题**：所有任务都由 Lead 分配，Lead 成了瓶颈
+
+**方案**：WORK/IDLE 状态机 + 自动认领
+
+<v-clicks>
+
+- **WORK 阶段**：正常 agent loop
+- **IDLE 阶段**：每 5 秒轮询邮箱和任务板
+- 有消息 → 恢复 WORK；有 unclaimed task → 认领后恢复
+- 60 秒无事 → shutdown
+- 压缩后自动重注入身份（`<identity>` block）
+
+</v-clicks>
+
+</div>
+
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s11/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s17: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## 队友循环变更（WORK → IDLE → WORK）
+
+```python {3-8|10-19}
+def _loop(self, name, role, prompt):
+    messages = [{"role": "user", "content": prompt}]
+    while True:
+        # WORK 阶段：标准 agent loop
+        for _ in range(50):
+            ...  # 正常执行，直到 stop_reason != tool_use
+            if idle_requested:
+                break
+
+        # IDLE 阶段：轮询
+        self._set_status(name, "idle")
+        for _ in range(IDLE_TIMEOUT // POLL_INTERVAL):
+            time.sleep(POLL_INTERVAL)
+            inbox = BUS.read_inbox(name)
+            if inbox:
+                ensure_identity_context(messages, ...)
+                resume = True; break
+            unclaimed = scan_unclaimed_tasks(role)
+            if unclaimed:
+                claim_task(unclaimed[0]["id"], name, ...)
+                resume = True; break
+
+        if not resume:
+            self._set_status(name, "shutdown"); return
+        self._set_status(name, "working")
 ```
 
-<div v-click>
+</div>
+<div>
 
-## 认领条件（缺一不可）
+## 认领条件
 
-```python {1-6}
-def is_claimable_task(task: dict, role: str | None = None) -> bool:
+```python
+def is_claimable_task(task: dict, role=None) -> bool:
     return (
         task.get("status") == "pending"
         and not task.get("owner")
@@ -2092,13 +2802,30 @@ def is_claimable_task(task: dict, role: str | None = None) -> bool:
     )
 ```
 
+## 身份重注入
+
+```python
+def ensure_identity_context(messages, name, role, team):
+    if "<identity>" in str(messages[0].get("content", "")):
+        return  # 已有身份
+    messages.insert(0, {
+        "role": "user",
+        "content": f"<identity>You are '{name}', "
+                   f"role: {role}, team: {team}."
+                   f"</identity>"
+    })
+```
+
+## 新增工具
+
+```python
+# 队友新增
+"idle":       # 信号：进入 IDLE 阶段
+"claim_task": # 手动认领任务
+```
+
 </div>
-
----
-layout: none
----
-
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s11/" />
+</div>
 
 ---
 
@@ -2106,59 +2833,116 @@ layout: none
 
 > Alice 在重构 auth，Bob 在做登录页——两人同时改 `config.py`，文件冲突了。每个任务需要自己的"车道"
 
-<div class="grid grid-cols-2 gap-6">
+<div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
-## 两张表
+**问题**：多个队友在同一个目录工作，文件冲突
+
+**方案**：git worktree = 每个任务一个隔离目录
+
+<v-clicks>
+
+- **Task** 是控制面（做什么），**Worktree** 是执行面（在哪做）
+- `worktree_create` → `git worktree add -b wt/{name}`
+- `worktree_run` → `subprocess.run(cmd, cwd=wt_path)`
+- `worktree_closeout` → keep（保留）或 remove（删除）
+- 任务状态和车道状态**分开管理**
+
+</v-clicks>
+
+</div>
+
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s12/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s18: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## 主循环无本质变化（新增工具）
 
 ```python
-# 任务板 (.tasks/)
-task = {
-    "id": 12,
-    "subject": "Refactor auth",
-    "worktree": "auth-refactor",
-    "worktree_state": "active",
+TOOL_HANDLERS = {
+    ...,  # 基础 4 个 + task 4 个
+    # s18 新增：worktree 系列
+    "worktree_create":   lambda **kw: WORKTREES.create(kw["name"], ...),
+    "worktree_list":     lambda **kw: WORKTREES.list_all(),
+    "worktree_enter":    lambda **kw: WORKTREES.enter(kw["name"]),
+    "worktree_run":      lambda **kw: WORKTREES.run(kw["name"], kw["command"]),
+    "worktree_closeout": lambda **kw: WORKTREES.closeout(
+        kw["name"], kw["action"], ...),
+    "worktree_status":   lambda **kw: WORKTREES.status(kw["name"]),
+    "worktree_events":   lambda **kw: EVENTS.list_recent(...),
+    "task_bind_worktree": ...,
 }
+```
 
-# Worktree 注册表 (.worktrees/)
-worktree = {
-    "name": "auth-refactor",
-    "path": ".worktrees/auth-refactor",
-    "branch": "wt/auth-refactor",
-    "task_id": 12,
-    "status": "active",
-}
+## 生命周期
+
+```text
+1. task_create("Refactor auth")
+2. worktree_create("auth-refactor", task_id=12)
+3. worktree_enter("auth-refactor")
+4. worktree_run("auth-refactor", "pytest")
+5. worktree_closeout("auth-refactor", "keep"|"remove")
 ```
 
 </div>
 <div>
 
-## 生命周期
+## 两张注册表
 
-<v-clicks>
+```python
+# .tasks/task_12.json
+task = {
+    "id": 12,
+    "subject": "Refactor auth",
+    "worktree": "auth-refactor",
+    "worktree_state": "active",  # 独立于 status
+}
 
-1. **创建任务** → `tasks.create(...)`
-2. **分配 worktree** → `worktrees.create(..., task_id)`
-3. **进入车道** → `worktree_enter(name)`
-4. **在隔离目录执行** → `subprocess.run(cmd, cwd=wt_path)`
-5. **收尾** → `worktree_closeout(action="keep"|"remove")`
+# .worktrees/index.json
+worktree = {
+    "name": "auth-refactor",
+    "path": ".worktrees/auth-refactor",
+    "branch": "wt/auth-refactor",
+    "task_id": 12,
+    "status": "active",  # active | kept | removed
+}
+```
 
-</v-clicks>
+## WorktreeManager
 
-<div v-click class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-sm">
+```python
+class WorktreeManager:
+    def create(self, name, task_id=None, base_ref="HEAD"):
+        # git worktree add -b wt/{name} ...
+        # 写入 index.json
+        # 绑定 task
+    def run(self, name, command) -> str:
+        # subprocess.run(cmd, cwd=wt_path)
+    def closeout(self, name, action, ...):
+        # action="keep" | "remove"
+```
 
-任务状态和车道状态**不能混成一个字段**！任务可能 `completed` 但 worktree 仍 `kept`
+## EventBus
+
+```python
+class EventBus:
+    def emit(self, event, task_id=None, wt_name=None): ...
+    # worktree.create / worktree.run / worktree.remove
+```
 
 </div>
-
 </div>
-</div>
-
----
-layout: none
----
-
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s12/" />
 
 ---
 
@@ -2166,40 +2950,114 @@ layout: none
 
 > 想查数据库？写个 handler。想控浏览器？再写一个。每次加能力都改代码？——让外部进程自己报到
 
-```mermaid {scale: 0.65}
-graph LR
-  LLM["🤖 LLM"] -->|"tool_use"| R["Tool Router"]
-  R -->|"native tool"| NH["本地 Handler"]
-  R -->|"mcp__postgres__query"| MC["MCP Client"]
-  MC --> ES["外部 Server"]
-  ES -->|"result"| MC
-  NH --> TR["统一 tool_result"]
-  MC --> TR
-  TR -->|"写回 messages"| LLM
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
+
+**问题**：每加一个外部能力都要改代码
+
+**方案**：MCP 协议 — 外部进程自己报到，统一路由
+
+<v-clicks>
+
+- **MCPClient**：连接外部 stdio 进程，发现它的工具
+- **mcp__ 前缀**：`mcp__postgres__query` 路由到 postgres server
+- **PluginLoader**：从 `.claude-plugin/plugin.json` 发现配置
+- **统一权限**：MCP 工具走同一条 `CapabilityPermissionGate`
+- native + MCP 合并成一个 tool pool
+
+</v-clicks>
+
+</div>
+
+<div class="embed-viz" style="--viz-h: 1000px; --viz-scale: 0.45">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s12/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s19: 核心代码 — 统一路由
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {2|8-9|11-15}
+def agent_loop(messages: list):
+    # s19 新增：合并 native + MCP 工具
+    tools = build_tool_pool()
+    while True:
+        response = client.messages.create(
+            model=MODEL, system=system,
+            messages=messages, tools=tools, max_tokens=8000)
+        ...
+        for block in response.content:
+            # s19 新增：统一权限检查
+            decision = permission_gate.check(block.name, block.input)
+            if decision["behavior"] == "deny":
+                output = f"Permission denied"
+            elif decision["behavior"] == "ask" and not ...:
+                output = f"Permission denied by user"
+            else:
+                # s19 新增：统一路由
+                output = handle_tool_call(block.name, block.input)
+            results.append({...})
 ```
 
-<div class="grid grid-cols-3 gap-3 mt-4 text-sm">
-<div v-click class="p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
+## 统一路由
 
-**Plugin** — 发现配置
-
-</div>
-<div v-click class="p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
-
-**MCP Server** — 连接进程
-
-</div>
-<div v-click class="p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
-
-**MCP Tool** — 具体调用
+```python
+def handle_tool_call(tool_name, tool_input) -> str:
+    if mcp_router.is_mcp_tool(tool_name):   # mcp__ 前缀
+        return mcp_router.call(tool_name, tool_input)
+    handler = NATIVE_HANDLERS.get(tool_name)
+    return handler(**tool_input) if handler else "Unknown"
+```
 
 </div>
+<div>
+
+## MCPClient
+
+```python
+class MCPClient:
+    def __init__(self, server_name, command, args):
+        ...
+    def connect(self): ...         # 启动进程 + initialize
+    def list_tools(self) -> list:  # tools/list
+    def call_tool(self, name, args) -> str:  # tools/call
+    def get_agent_tools(self) -> list:
+        # 给每个 tool 加 mcp__{server}__{tool} 前缀
+```
+
+## MCPToolRouter
+
+```python
+class MCPToolRouter:
+    def __init__(self):
+        self.clients = {}  # server_name -> MCPClient
+    def is_mcp_tool(self, name) -> bool:
+        return name.startswith("mcp__")
+    def call(self, tool_name, args) -> str:
+        _, server, tool = tool_name.split("__", 2)
+        return self.clients[server].call_tool(tool, args)
+```
+
+## CapabilityPermissionGate
+
+```python
+class CapabilityPermissionGate:
+    def check(self, tool_name, tool_input) -> dict:
+        intent = self.normalize(tool_name, tool_input)
+        # read → allow; write → ask; high → ask
+        # MCP 和 native 走同一条管道
+```
+
 </div>
-
-<div v-click class="mt-3 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm text-center">
-
-**关键：MCP 工具虽然来自外部，但仍然必须走同一条权限管道和 tool_result 回流！**
-
 </div>
 
 ---
