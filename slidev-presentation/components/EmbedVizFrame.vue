@@ -34,12 +34,14 @@ function measure() {
   const slideContent = el.closest('.slidev-slide-content') as HTMLElement | null
   const parent = el.parentElement as HTMLElement | null
 
+  // Width: prefer parent (respects grid column), fallback to slideContent
   hostWidth.value =
-    slideContent?.clientWidth ||
     parent?.clientWidth ||
     el.clientWidth ||
+    slideContent?.clientWidth ||
     980
 
+  // Height: prefer slideContent (full slide height), fallback to parent
   hostHeight.value =
     slideContent?.clientHeight ||
     parent?.clientHeight ||
@@ -97,7 +99,6 @@ onBeforeUnmount(() => {
     :style="{
       width: '100%',
       height: '100%',
-      minHeight: '552px',
       paddingTop: `${props.marginTop}px`,
       boxSizing: 'border-box',
       overflow: 'hidden',

@@ -591,7 +591,7 @@ layout: default
 
 > 没有循环，就没有 agent，真正的 agent 起点是把真实工具结果重新喂回模型
 
-<div class="grid grid-cols-[1fr_1.2fr] gap-4">
+<div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 问题：模型能思考，但不会打开文件、运行命令，是个“只会说话，不会干活”的程序，需要人来做中转
@@ -611,8 +611,8 @@ graph TD
 
 </div>
 
-<div style="transform: scale(0.8); transform-origin: top left; width: 125%; height: 400px;">
-  <EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s01/" />
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s01/" />
 </div>
 
 </div>
@@ -726,7 +726,7 @@ layout: default
 
 > 只有 bash 工具，`rm -rf /` 谁来拦？路径逃逸谁来管？高危高频的文件操作需要专用工具
 
-<div class="grid grid-cols-[1fr_1.2fr] gap-4">
+<div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 问题：只有 bash 工具，所有操作都走 shell，每次 bash 调用都是不受约束的，存在严重的安全隐患
@@ -750,8 +750,8 @@ graph TD
 </div>
 <div>
 
-<div style="transform: scale(0.8); transform-origin: top left; width: 125%; height: 400px;">
-  <EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s02/" />
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s02/" style="--viz-h: 1000px; --viz-scale: 0.45" />
 </div>
 
 </div>
@@ -836,7 +836,7 @@ layout: default
 
 > 你对模型说"重构这个模块：加类型、文档、测试、保证编译通过"，结果 Agent 做完前两步之后，就开始即兴发挥
 
-<div class="grid grid-cols-[1fr_1.2fr] gap-4">
+<div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 原因：模型的注意力始终受上下文影响，如果没有一块显式、可反复更新的计划状态，大任务就很容易漂
@@ -854,8 +854,8 @@ layout: default
 </div>
 <div>
 
-<div style="transform: scale(0.8); transform-origin: top left; width: 125%; height: 400px;">
-  <EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s03/" />
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s03/" />
 </div>
 
 </div>
@@ -957,7 +957,7 @@ TOOL_HANDLERS = {
 
 > 问"项目用什么测试框架？"，Agent 读了 5 个文件，但答案只有一个词："pytest"，那 5 个文件为什么还留在上下文里？
 
-<div class="grid grid-cols-[1fr_1.2fr] gap-4">
+<div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 **问题**：Agent 为回答一个小问题读了 5 个文件，这些中间过程全堆在父上下文里，后续推理越来越差
@@ -976,7 +976,9 @@ TOOL_HANDLERS = {
 </div>
 <div>
 
-<EmbedVizFrame url="https://build-your-own-agent.vercel.app/en/embed/s04/" :frameWidth="900" :frameHeight="750" />
+<div class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s04/" />
+</div>
 
 </div>
 </div>
