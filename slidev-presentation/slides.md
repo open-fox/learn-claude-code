@@ -2395,56 +2395,78 @@ s03 的 TodoWrite 是"会话内清单"——压缩一次就丢了。
 
 # s12: 任务系统 (Task System)
 
-> s03 的 Todo 只知道"有事要做"；Task 能告诉你"先做什么、谁在等谁、完成后自动解锁下游"
-
-<div v-click>
-
-**问题**：Todo 是会话内临时清单，压缩一次就丢了；没有依赖关系，不能跨会话持久
-
-</div>
-
-
-<div v-click>
-
-**方案**：可持久化的任务图 — JSON 文件 on disk，`blockedBy`/`blocks` 双向依赖，完成时自动解锁
-
-</div>
-
+> s03 的 Todo 只能提醒你“有事要做”，任务系统才能告诉你“先做什么、谁在等谁、哪一步还卡着”
 
 <div class="grid grid-cols-[1fr_450px] gap-4">
 <div>
 
-<v-clicks>
+<div v-click>
+
+**问题**：Todo 是会话内临时清单，压缩一次就丢了，并且任务之间没有依赖关系，也不能跨会话
+
+</div>
+
+<div v-click>
+
+**方案**：可持久化的任务图，写入磁盘文件，`blockedBy`/`blocks` 双向依赖，完成时自动解锁
 
 - 每个 task 有 `blockedBy` / `blocks` 依赖关系
 - `is_ready(task)` = pending + 没有前置阻塞
 - 完成一个 task → 自动从下游的 `blockedBy` 移除
-- 持久化到 `.tasks/task_N.json`
-- 新增工具：`task_create` / `task_update` / `task_list` / `task_get`
+- 每个任务的状态持久化到 `.tasks/task_N.json`
+- 核心循环不变，新增工具：`task_create` / `task_update` / `task_list` / `task_get`
 
-</v-clicks>
+</div>
 
-<div v-click class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-sm">
+<div v-click="4" class="mt-8 text-orange-500 text-lg">
 
-**todo 更像本轮计划，task 更像长期工作板**
+todo 更像本轮计划，task 更像长期工作板
 
 </div>
 
 </div>
-<div>
 
-```mermaid {scale: 0.45}
-graph TD
-  A["Task 1: 写解析器<br/>status: completed"] --> B["Task 2: 语义检查<br/>status: pending<br/>blockedBy: []"]
-  A --> C["Task 3: 测试<br/>status: pending<br/>blockedBy: []"]
-  A --> D["Task 4: 文档<br/>status: pending<br/>blockedBy: []"]
-  B & C & D --> E["Task 5: 整体验收<br/>status: pending<br/>blockedBy: [2,3,4]"]
-  style A fill:#22c55e,color:#fff
-  style B fill:#bfdbfe,color:#000
-  style C fill:#bfdbfe,color:#000
-  style D fill:#bfdbfe,color:#000
-  style E fill:#fca5a5,color:#000
-```
+<div v-click="3">
+
+<div class="text-sm space-y-2">
+
+  <div class="bg-green-600 text-white rounded px-2 py-2 text-center">
+    Task 1: 写解析器<br/>
+    <span class="text-xs">status: completed<br/>blockedBy: [] · blocks: [2,3,4]</span>
+  </div>
+
+  <div class="grid grid-cols-3 gap-2 mt-1">
+  <div class="text-center">
+  <div class="text-gray-500 mt-1 mb-2">▼ 解锁</div>
+  <div class="bg-blue-200 text-black rounded px-2 py-2">
+    Task 2: 语义检查<br/>
+    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [] · blocks: [5]</span>
+  </div>
+  </div>
+  <div class="text-center">
+  <div class="text-gray-500 mt-1 mb-2">▼ 解锁</div>
+  <div class="bg-blue-200 text-black rounded px-2 py-2">
+    Task 3: 测试<br/>
+    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [] · blocks: [5]</span>
+  </div>
+  </div>
+  <div class="text-center">
+  <div class="text-gray-500 mt-1 mb-2">▼ 解锁</div>
+  <div class="bg-blue-200 text-black rounded px-2 py-2">
+    Task 4: 文档<br/>
+    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [] · blocks: [5]</span>
+  </div>
+  </div>
+  </div>
+
+  <div class="text-center text-gray-500">▼ ▼ ▼ 全部完成后解锁</div>
+
+  <div class="bg-red-200 text-black rounded px-2 py-2 text-center">
+    Task 5: 整体验收<br/>
+    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [2,3,4] · blocks: []</span>
+  </div>
+
+</div>
 
 </div>
 </div>
@@ -2458,7 +2480,7 @@ layout: default
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
 
-## 主循环无本质变化（只新增工具）
+## 新增工具
 
 ```python
 TOOL_HANDLERS = {
@@ -2466,7 +2488,7 @@ TOOL_HANDLERS = {
     "read_file":   ...,
     "write_file":  ...,
     "edit_file":   ...,
-    # s12 新增
+    # s12 新增工具
     "task_create": lambda **kw: TASKS.create(kw["subject"], ...),
     "task_update": lambda **kw: TASKS.update(kw["task_id"], ...),
     "task_list":   lambda **kw: TASKS.list_all(),
@@ -2474,19 +2496,13 @@ TOOL_HANDLERS = {
 }
 ```
 
-## 自动解锁
+## 任务存储结构
 
-```python
-def _clear_dependency(self, completed_id: int):
-    for f in self.dir.glob("task_*.json"):
-        task = json.loads(f.read_text())
-        if completed_id in task.get("blockedBy", []):
-            task["blockedBy"].remove(completed_id)
-            self._save(task)
+```text
+.tasks/
+  task_1.json  {"id":1, "status":"completed", ...}
+  task_2.json  {"id":2, "blockedBy":[1], ...}
 ```
-
-</div>
-<div>
 
 ## TaskRecord
 
@@ -2496,11 +2512,14 @@ task = {
     "subject": "Write parser",
     "description": "",
     "status": "pending",    # pending | in_progress | completed
-    "blockedBy": [],        # 还在等谁
+    "blockedBy": [],        # 它还在等谁完成
     "blocks": [],           # 它完成后解锁谁
     "owner": "",
 }
 ```
+
+</div>
+<div>
 
 ## TaskManager
 
@@ -2514,15 +2533,19 @@ class TaskManager:
         ...
         if status == "completed":
             self._clear_dependency(task_id)
-    def list_all(self) -> str: ...
+    def list_all(self) -> str: 
+        ...
 ```
 
-## 存储布局
+## 自动解锁
 
-```text
-.tasks/
-  task_1.json  {"id":1, "status":"completed", ...}
-  task_2.json  {"id":2, "blockedBy":[1], ...}
+```python
+def _clear_dependency(self, completed_id: int):
+    for f in self.dir.glob("task_*.json"):
+        task = json.loads(f.read_text())
+        if completed_id in task.get("blockedBy", []):
+            task["blockedBy"].remove(completed_id)
+            self._save(task)
 ```
 
 </div>
