@@ -2017,7 +2017,7 @@ The user explicitly prefers tabs over spaces.
 
 <div v-click="4" class="mt-2 p-2 rounded text-orange-500 text-xl">
 
-静态前缀可缓存复用，效率高、成本低，动态后缀则每轮重建
+静态前缀可缓存复用，效率高、成本低，动态后缀则每轮会话重建
 
 </div>
 
@@ -2026,23 +2026,41 @@ The user explicitly prefers tabs over spaces.
 
 <div v-click="3">
 
-```mermaid {scale: 0.5}
-%%{init: {"flowchart": {"rankSpacing": 30, "nodeSpacing": 30}} }%%
-graph LR
-  subgraph Static["静态段（可缓存复用）"]
-    direction TB
-    C["1. core — 身份 + 规则"] --- T["2. tools — 工具列表"] --- SK["3. skills — 技能列表"] --- M["4. memory — 记忆内容"] --- CL["5. CLAUDE.md — 规则文件"]
-  end
-  Static --> BD["DYNAMIC_BOUNDARY"]
-  BD --> Dynamic
-  subgraph Dynamic["动态段（每轮会话重建）"]
-    direction TB
-    D1["1. 当前日期"] --- D2["2. 工作目录"] --- D3["3. 当前模式"] --- D4["4. 操作系统"] --- D5["5. 本轮提醒"]
-  end
-  Dynamic --> SP["最终 system prompt"]
-  style BD fill:#f97316,color:#fff
-  style SP fill:#22c55e,color:#fff
-```
+<div class="text-xs space-y-1">
+
+<div class="border border-gray-600 rounded p-2">
+<div class="text-gray-400 text-center mb-1">静态段（可缓存复用）</div>
+<div class="space-y-1">
+<div class="bg-gray-800 rounded px-2 py-1">1. core — 身份 + 规则</div>
+<div class="bg-gray-800 rounded px-2 py-1">2. tools — 工具列表</div>
+<div class="bg-gray-800 rounded px-2 py-1">3. skills — 技能列表</div>
+<div class="bg-gray-800 rounded px-2 py-1">4. memory — 记忆内容</div>
+<div class="bg-gray-800 rounded px-2 py-1">5. CLAUDE.md — 规则文件</div>
+</div>
+</div>
+
+<div class="text-center">▼</div>
+
+<div class="bg-orange-500 text-white text-center rounded px-2 py-1 font-bold">DYNAMIC_BOUNDARY</div>
+
+<div class="text-center">▼</div>
+
+<div class="border border-gray-600 rounded p-2">
+<div class="text-gray-400 text-center mb-1">动态段（每轮会话重建）</div>
+<div class="space-y-1">
+<div class="bg-gray-800 rounded px-2 py-1">1. 当前日期</div>
+<div class="bg-gray-800 rounded px-2 py-1">2. 工作目录</div>
+<div class="bg-gray-800 rounded px-2 py-1">3. 当前模式</div>
+<div class="bg-gray-800 rounded px-2 py-1">4. 操作系统</div>
+<div class="bg-gray-800 rounded px-2 py-1">5. 本轮提醒</div>
+</div>
+</div>
+
+<div class="text-center">▼</div>
+
+<div class="bg-green-500 text-white text-center rounded px-2 py-1 font-bold">最终 system prompt</div>
+
+</div>
 
 </div>
 
