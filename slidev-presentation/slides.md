@@ -996,14 +996,17 @@ TOOL_HANDLERS = {
 
 </div>
 
-<v-clicks>
+<v-click at="+0">
 
 - Subagent 有自己的消息列表
+
 - Subagent 有自己的工具列表
+
 - Subagent 完成后只返回摘要
+
 - Subagent 没有 task 工具，防止递归创建 Subagent
 
-</v-clicks>
+</v-click>
 
 </div>
 
@@ -1062,7 +1065,7 @@ def agent_loop(messages: list):
 
 ## Subagent 实现
 
-```python
+```python {all|2-3|9-10|17-19}{at:3}
 def run_subagent(prompt: str) -> str:
     # Subagent 独立的消息列表
     sub_messages = [{"role": "user", "content": prompt}]
@@ -1084,7 +1087,7 @@ def run_subagent(prompt: str) -> str:
                    if hasattr(b, "text")) or "(no summary)"
 ```
 
-## 新增工具
+## 注册新工具
 
 ```python
 # 子智能体：基础工具，没有 task 工具
@@ -1125,13 +1128,15 @@ PARENT_TOOLS = CHILD_TOOLS + [
 
 </div>
 
-<v-clicks>
+<v-click at="+0">
 
 - **Layer 1 目录**：始终在 system prompt，~120 tokens
+
 - **Layer 2 正文**：模型调用 `load_skill` 工具按需加载
+
 - 新增工具 `load_skill`，Agent 核心循环保持不变
 
-</v-clicks>
+</v-click>
 
 </div>
 
@@ -1145,12 +1150,12 @@ PARENT_TOOLS = CHILD_TOOLS + [
 layout: default
 ---
 
-# s05: 核心代码 — 按需加载
+# s05: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
 
-## agent_loop 不变，system prompt 变更
+## agent_loop 不变
 
 ```python {1-10,16,18}
 # s05 新增：技能注册表，从 skills 目录发现所有技能
@@ -1212,7 +1217,7 @@ class SkillRegistry:
     def load_full_text(self, name) -> str: ... 
 ```
 
-## 新增工具
+## 注册新工具
 
 ```python
 TOOL_HANDLERS = {
@@ -1246,14 +1251,17 @@ TOOL_HANDLERS = {
 
 </div>
 
-<v-clicks>
+<v-click at="+0">
 
 - Level 1：大结果写磁盘，只留预览（`persist_large_output`）
+
 - Level 2：旧工具调用结果替换为占位符（`micro_compact`）
+
 - Level 3：消息历史太长，整体摘要压缩（`compact_history`）
+
 - 新增工具 `compact`，上下文超阈值自动触发，也可以手动触发
 
-</v-clicks>
+</v-click>
 
 </div>
 
@@ -1274,7 +1282,7 @@ layout: default
 
 ## agent_loop 变更
 
-```python {2-4|6-9|17-27,30-33}
+```python {2-4|6-9|17-27,30-34}
 def agent_loop(messages: list, state: CompactState) -> None:
     while True:
         # s06 新增：每轮开始前微压缩，将旧结果替换为占位符
