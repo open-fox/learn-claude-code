@@ -843,23 +843,10 @@ layout: default
 
 方案：在会话内做规划，先把要做的任务写出来，在过程中不断更新任务状态，并在合适时机注入提醒
 
-```mermaid {scale: 0.5}
-graph TD
-  U["用户提出任务"] --> W["模型编写计划<br/>todo tool"]
-  W --> L["Agent Loop"]
-  L --> T["执行工具"]
-  T -->|"更新计划"| L
-  L -->|"全部完成"| E["结束"]
-  L -.->|"3轮没更新"| R["注入提醒"]
-  R --> L
-  style W fill:#f97316,color:#fff
-  style R fill:#f97316,color:#fff
-```
-
 <v-clicks>
 
-- **不是任务系统**，只是当前会话的外显计划
-- **约束**：同一时间最多一个 `in_progress`
+- 不是任务系统，只是当前会话的计划外显
+- **约束**：同一时间最多一个任务正在执行
 - **提醒**：连续 3 轮不更新 → 注入 reminder
 
 </v-clicks>
@@ -878,64 +865,86 @@ graph TD
 layout: default
 ---
 
-# s03: 核心代码
+# s03: 核心代码 — 主循环的变更
 
-<div class="grid grid-cols-2 gap-4">
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
 
-## TodoManager.update — 整份重写计划
+## agent_loop 变更
 
-```python {1-2|4-12|14-15|17-19}
-def update(self, items: list) -> str:
-    if len(items) > 12:
-        raise ValueError("Keep the session plan short (max 12 items)")
-    normalized = []
-    in_progress_count = 0
-    for index, raw_item in enumerate(items):
-        content = str(raw_item.get("content", "")).strip()
-        status = str(raw_item.get("status", "pending")).lower()
-        active_form = str(raw_item.get("activeForm", "")).strip()
-        if status == "in_progress":
-            in_progress_count += 1
-        normalized.append(PlanItem(
-            content=content, status=status, active_form=active_form,
-        ))
-    if in_progress_count > 1:
-        raise ValueError("Only one plan item can be in_progress")
-    self.state.items = normalized
-    self.state.rounds_since_update = 0
-    return self.render()
+```python {9-19|21-28}{at:1}
+def agent_loop(messages: list) -> None:
+    while True:
+        response = client.messages.create(...)
+        messages.append({"role": "assistant", "content": response.content})
+        if response.stop_reason != "tool_use":
+            return
+
+        results = []
+        # 新增：跟踪本轮是否调用了 todo
+        used_todo = False
+        for block in response.content:
+            if block.type != "tool_use":
+                continue
+            handler = TOOL_HANDLERS.get(block.name)
+            output = handler(**block.input) if handler else ...
+            results.append({"type": "tool_result",
+                "tool_use_id": block.id, "content": str(output)})
+            if block.name == "todo":
+                used_todo = True
+
+        # 新增：注入更新执行计划的提醒
+        if used_todo:
+            TODO.state.rounds_since_update = 0
+        else:
+            TODO.note_round_without_update()
+            reminder = TODO.reminder()
+            if reminder:
+                results.insert(0, {"type": "text", "text": reminder})
+
+        messages.append({"role": "user", "content": results})
 ```
 
 </div>
 <div>
 
-## 提醒 + 注入主循环
+## 新增数据结构
 
-```python {1-5|7-14}
-def reminder(self) -> str | None:
-    if not self.state.items:
-        return None
-    if self.state.rounds_since_update < PLAN_REMINDER_INTERVAL:
-        return None
-    return "<reminder>Refresh your current plan before continuing.</reminder>"
+```python
+@dataclass
+class PlanItem:
+    content: str
+    status: str = "pending"       # pending | in_progress | completed
+    active_form: str = ""
 
-# --- 主循环中 ---
-if used_todo:
-    TODO.state.rounds_since_update = 0
-else:
-    TODO.note_round_without_update()
-    reminder = TODO.reminder()
-    if reminder:
-        results.insert(0, {"type": "text", "text": reminder})
+@dataclass
+class PlanningState:
+    items: list[PlanItem] = field(default_factory=list)
+    rounds_since_update: int = 0  # 连续多少轮过去了，模型还没有更新这份计划
+
+class TodoManager:
+    def __init__(self):
+        self.state = PlanningState()
+    def update(self, items) -> str: ...   # 校验 + 重写整份计划
+    def render(self) -> str: ...          # [ ] [>] [x] 渲染
+
+    def reminder(self) -> str | None:
+        if not self.state.items:
+            return None
+        if self.state.rounds_since_update < PLAN_REMINDER_INTERVAL:
+            return None
+        return "<reminder>Refresh your current plan.</reminder>"
 ```
 
-## 接入分发表
+## 注册新工具
 
 ```python
 TOOL_HANDLERS = {
-    ...
-    "todo": lambda **kw: TODO.update(kw["items"]),
+    "bash":       ...,
+    "read_file":  ...,
+    "write_file": ...,
+    "edit_file":  ...,
+    "todo": lambda **kw: TODO.update(kw["items"]), # 新增工具 todo
 }
 ```
 
