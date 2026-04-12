@@ -1995,17 +1995,9 @@ The user explicitly prefers tabs over spaces.
 
 </div>
 
-
 <div v-click>
 
 **方案**：系统提示词的关键不是"写一段很长的话"，而是"把不同来源的信息按清晰边界组装起来"
-
-</div>
-
-
-分段组装流水线：6 段来源按顺序拼接，用 `DYNAMIC_BOUNDARY` 分隔 静态段 和 动态段
-
-<v-clicks>
 
 - **core** — 身份 + 规则（几乎不变）
 
@@ -2017,11 +2009,13 @@ The user explicitly prefers tabs over spaces.
 
 - **CLAUDE.md** — 规则文件（ = AGENTS.md）
 
+- 用 `DYNAMIC_BOUNDARY` 分隔 静态段 和 动态段
+
 - **dynamic** — 日期、目录、模式、提醒（每轮会话重建）
 
-</v-clicks>
+</div>
 
-<div v-click class="mt-2 p-2 rounded text-orange-500 text-xl">
+<div v-click="4" class="mt-2 p-2 rounded text-orange-500 text-xl">
 
 静态前缀可缓存复用，效率高、成本低，动态后缀则每轮重建
 
@@ -2029,6 +2023,8 @@ The user explicitly prefers tabs over spaces.
 
 </div>
 <div>
+
+<div v-click="3">
 
 ```mermaid {scale: 0.5}
 %%{init: {"flowchart": {"rankSpacing": 30, "nodeSpacing": 30}} }%%
@@ -2047,6 +2043,8 @@ graph LR
   style BD fill:#f97316,color:#fff
   style SP fill:#22c55e,color:#fff
 ```
+
+</div>
 
 </div>
 </div>
