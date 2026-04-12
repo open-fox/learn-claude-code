@@ -1495,7 +1495,9 @@ layout: default
 
 ## agent_loop 变更
 
-```python {13-30}
+```python {1,15-32}
+perms = PermissionManager(mode)
+
 def agent_loop(messages: list, perms: PermissionManager):
     while True:
         response = client.messages.create(...)
@@ -1538,6 +1540,9 @@ def agent_loop(messages: list, perms: PermissionManager):
 ## PermissionManager
 
 ```python
+# plan：最严格，所有写操作直接禁止，只允许读
+# default：最保守，没有命中规则的操作，一律问用户
+# auto：半自动，读文件、搜索这类安全操作自动过，写文件、执行命令要走规则或问用户
 MODES = ("default", "plan", "auto")
 
 class PermissionManager:
@@ -1553,7 +1558,9 @@ class PermissionManager:
         return {"behavior": "allow|deny|ask", "reason": "..."}
 ```
 
-## BashSecurityValidator
+## BashSecurityValidator（Step 0）
+
+bash 命令是自由文本，四级管道之前先过一遍正则检查：
 
 ```python
 class BashSecurityValidator:
