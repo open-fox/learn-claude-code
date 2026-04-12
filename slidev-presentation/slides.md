@@ -590,9 +590,19 @@ layout: default
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
-问题：模型能思考，但不会打开文件、运行命令，是个“只会说话，不会干活”的程序，需要人来做中转
+<div v-click>
 
-方案：把“模型 + 工具”连接成一个能持续推进任务的主循环，最小的心智循环，不要让人来做 AI 的测试员
+**问题**：模型能思考，但不会打开文件、运行命令，是个"只会说话，不会干活"的程序，需要人参与完成任务
+
+</div>
+
+<div v-click>
+
+**方案**：把"模型 + 工具"连接成一个能持续推进任务的主循环，不要让人来做 AI 的测试员，最小的心智循环
+
+</div>
+
+<div v-after>
 
 ```mermaid {scale: 0.6}
 graph TD
@@ -607,7 +617,9 @@ graph TD
 
 </div>
 
-<div class="embed-viz">
+</div>
+
+<div v-click class="embed-viz">
 <iframe src="https://build-your-own-agent.vercel.app/en/embed/s01/" />
 </div>
 
@@ -667,19 +679,18 @@ def agent_loop(state):
 </div>
 <div>
 
+**系统提示词**和**工具**定义
+
 ```python
 SYSTEM = (
     f"You are a coding agent at {os.getcwd()}. "
     "Use bash to inspect and change the workspace. Act first, then report clearly."
 )
+
 TOOLS = [{
     "name": "bash",
     "description": "Run a shell command in the current workspace.",
-    "input_schema": {
-        "type": "object",
-        "properties": {"command": {"type": "string"}},
-        "required": ["command"],
-    },
+    "input_schema": {...},
 }]
 ```
 
@@ -725,9 +736,19 @@ layout: default
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
-问题：只有 bash 工具，所有操作都走 shell，每次 bash 调用都是不受约束的，存在严重的安全隐患
+<div v-click>
 
-方案：专用工具 (read_file, write_file) 可以在工具层面做路径沙箱，新增工具只是新增处理方法，核心循环保持不变
+**问题**：只有 bash 工具，所有操作都走 shell，每次 bash 调用都是不受约束的，存在严重的安全隐患
+
+</div>
+
+<div v-click>
+
+**方案**：专用工具 (read_file, write_file) 可以在工具层面做路径沙箱，新增工具只是新增处理方法，核心循环保持不变
+
+</div>
+
+<div v-after>
 
 ```mermaid {scale: 0.4}
 graph TD
@@ -745,7 +766,9 @@ graph TD
 
 </div>
 
-<div class="embed-viz">
+</div>
+
+<div v-click class="embed-viz">
 <iframe src="https://build-your-own-agent.vercel.app/en/embed/s02/" style="--viz-h: 1000px; --viz-scale: 0.45" />
 </div>
 
@@ -764,7 +787,7 @@ layout: default
 
 注册新的工具，并补充安全路径检查，防止逃逸出工作目录
 
-```python {1-8,12-15|22-27,29-30}
+```python {1-8|10-15|22-27,29-30}
 # s02 新增：工具注册表
 TOOL_HANDLERS = {
     "bash":       lambda **kw: run_bash(kw["command"]),
@@ -774,7 +797,7 @@ TOOL_HANDLERS = {
                                         kw["new_text"]),
 }
 
-# s02 循环中按名称查找
+# s02 循环中按名称查找对应的工具
 for block in response.content:
     if block.type == "tool_use":
         handler = TOOL_HANDLERS.get(block.name)
@@ -828,26 +851,36 @@ layout: default
 
 # s03: 会话内规划 (TodoWrite)
 
-> 你对模型说"重构这个模块：加类型、文档、测试、保证编译通过"，结果 Agent 做完前两步之后，就开始即兴发挥
+> 对模型说"重构这个模块：加类型、文档、测试、保证编译通过"，结果 Agent 做完前两步之后，就开始即兴发挥
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
-原因：模型的注意力始终受上下文影响，如果没有一块显式、可反复更新的计划状态，大任务就很容易漂
+<div v-click>
 
-方案：在会话内做规划，先把要做的任务写出来，在过程中不断更新任务状态，并在合适时机注入提醒
+**问题**：模型没有显式的任务计划状态，注意力始终受上下文影响太大，大任务做着做着方向就漂了
+
+</div>
+
+<div v-click>
+
+**方案**：在会话内做规划，先把要做的任务列表写出来，并不断更新任务状态，在合适时机注入提醒
+
+</div>
 
 <v-clicks>
 
 - 不是任务系统，只是当前会话的计划外显
+
 - **约束**：同一时间最多一个任务正在执行
-- **提醒**：连续 3 轮不更新 → 注入 reminder
+
+- **提醒**：连续 3 轮不更新状态 → 注入提醒
 
 </v-clicks>
 
 </div>
 
-<div class="embed-viz">
+<div v-click class="embed-viz">
 <iframe src="https://build-your-own-agent.vercel.app/en/embed/s03/" />
 </div>
 
@@ -902,7 +935,7 @@ def agent_loop(messages: list) -> None:
 
 ## 新增数据结构
 
-```python {18-24}
+```python {all|18-24}{at:3}
 @dataclass
 class PlanItem:
     content: str
@@ -951,9 +984,17 @@ TOOL_HANDLERS = {
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
+<div v-click>
+
 **问题**：如果中间过程的结果都永久留在对话里，后面的问题会越来越难回答，因为上下文被大量局部任务的噪声填满了
 
+</div>
+
+<div v-click>
+
 **方案**：引入 subagent，把局部任务放进 subagent 的独立上下文里做，做完只把必要结果带回来，保持主 agent 上下文干净
+
+</div>
 
 <v-clicks>
 
@@ -966,7 +1007,7 @@ TOOL_HANDLERS = {
 
 </div>
 
-<div class="embed-viz">
+<div v-click class="embed-viz">
 <iframe src="https://build-your-own-agent.vercel.app/en/embed/s04/" />
 </div>
 
@@ -1072,9 +1113,17 @@ PARENT_TOOLS = CHILD_TOOLS + [
 <div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
+<div v-click>
+
 **问题**：代码审查需要一套审查清单，代码提交需要一套提交约定，如果把这些知识包全部塞进系统提示词，会占用大量 tokens
 
+</div>
+
+<div v-click>
+
 **方案**：把技能说明从系统提示词中拆出来，改成 2 层架构，系统提示词只告诉模型有哪些技能，模型按需加载完整技能说明
+
+</div>
 
 <v-clicks>
 
@@ -1086,7 +1135,7 @@ PARENT_TOOLS = CHILD_TOOLS + [
 
 </div>
 
-<div class="embed-viz">
+<div v-click class="embed-viz">
 <iframe src="https://build-your-own-agent.vercel.app/en/embed/s05/" />
 </div>
 
@@ -1185,9 +1234,17 @@ TOOL_HANDLERS = {
 <div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
+<div v-click>
+
 **问题**：读个大文件，塞进大量文本，跑个长命令，得到大段输出，上下文不断膨胀，如何在保证主线任务连续性的前提下，给上下文腾出空间
 
+</div>
+
+<div v-click>
+
 **方案**：上下文压缩，三层压缩策略
+
+</div>
 
 <v-clicks>
 
@@ -1200,7 +1257,7 @@ TOOL_HANDLERS = {
 
 </div>
 
-<div class="embed-viz">
+<div v-click class="embed-viz">
 <iframe src="https://build-your-own-agent.vercel.app/en/embed/s06/" />
 </div>
 
@@ -1466,6 +1523,8 @@ plan / auto / default
 </div>
 </div>
 
+<div v-click>
+
 ```mermaid {scale: 0.8}
 graph LR
   TC["tool_call"] --> D["1. deny rules"]
@@ -1483,6 +1542,8 @@ graph LR
   style M fill:#bfdbfe,color:#000
   style A fill:#bbf7d0,color:#000
 ```
+
+</div>
 
 ---
 layout: default
@@ -1611,6 +1672,8 @@ hook 不替代主循环，只在固定时机旁路扩展
 </div>
 </div>
 
+<div v-click>
+
 ```mermaid {scale: 0.7}
 graph LR
   TU["model 发起<br/>tool_use"] --> PRE["PreToolUse<br/>hook"]
@@ -1627,6 +1690,8 @@ graph LR
   style PRE fill:#bfdbfe,color:#000
   style POST fill:#bbf7d0,color:#000
 ```
+
+</div>
 
 
 ---
@@ -1884,7 +1949,7 @@ The user explicitly prefers tabs over spaces.
 
 **问题**：系统提示词是一整块硬编码字符串，来源越来越多却无法分段维护、测试和缓存
 
-**方案**：系统提示词的关键不是“写一段很长的话”，而是“把不同来源的信息按清晰边界组装起来”
+**方案**：系统提示词的关键不是"写一段很长的话"，而是"把不同来源的信息按清晰边界组装起来"
 
 分段组装流水线：6 段来源按顺序拼接，用 `DYNAMIC_BOUNDARY` 分隔 静态段 和 动态段
 
@@ -2418,6 +2483,8 @@ class TaskManager:
 
 **方案**：daemon 线程执行慢命令，主循环立即拿到 task_id 继续前进，结果通过通知队列在下一轮注入
 
+<div v-click>
+
 ```mermaid {scale: 0.7}
 graph LR
   ML["主循环"] -->|"background_run('pytest')"| BG["后台线程"]
@@ -2427,6 +2494,8 @@ graph LR
   style BG fill:#f97316,color:#fff
   style NQ fill:#bfdbfe,color:#000
 ```
+
+</div>
 
 <div class="grid grid-cols-3 gap-3 mt-2 text-sm">
 <div v-click class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
@@ -2903,6 +2972,8 @@ class TeammateManager:
 
 **方案**：`request_id` 关联的结构化协议 — 请求-响应 + 状态追踪表（pending → approved | rejected）
 
+<div v-click>
+
 ```mermaid {scale: 0.7}
 graph LR
   L["Lead"] -->|"shutdown_request<br/>req_001"| A["Alice inbox"]
@@ -2913,6 +2984,8 @@ graph LR
   style AH fill:#bfdbfe,color:#000
   style LS fill:#22c55e,color:#fff
 ```
+
+</div>
 
 <div class="grid grid-cols-3 gap-3 mt-2 text-sm">
 <div v-click class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
@@ -3292,6 +3365,8 @@ class EventBus:
 
 **方案**：MCP 协议 — 外部进程暴露工具，统一命名（`mcp__{server}__{tool}`），统一路由，仍走同一条权限管道
 
+<div v-click>
+
 ```mermaid {scale: 0.7}
 graph LR
   LLM["LLM tool_use"] --> R["Tool Router"]
@@ -3306,6 +3381,8 @@ graph LR
   style MC fill:#f97316,color:#fff
   style NH fill:#bbf7d0,color:#000
 ```
+
+</div>
 
 <div class="grid grid-cols-3 gap-3 mt-2 text-sm">
 <div v-click class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
