@@ -2188,7 +2188,6 @@ def _build_dynamic_context(self) -> str:
 
 </div>
 
-
 <div v-click>
 
 **方案**：先对错误分类，再选恢复路径，每条路径有独立的重试预算，全部耗尽才真正失败
@@ -2196,60 +2195,66 @@ def _build_dynamic_context(self) -> str:
 </div>
 
 
-<div class="grid grid-cols-3 gap-4 mt-4">
+<div class="grid grid-cols-3 gap-4 mt-8">
 
 <div v-click class="p-3 rounded-lg border border-blue-300 dark:border-blue-700">
 
-<div class="text-center mb-2 text-sm text-gray-500">问题 1</div>
+<div class="text-center mb-2 text-sm text-gray-500">错误问题 1</div>
 
-**输出被截断** — 模型还没说完，但 `max_tokens` 用完了
+**输出被截断**：模型还没说完，但 `max_tokens` 用完了
 
-<div class="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+<div class="mt-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
 
 **续写恢复**
 
-注入 `CONTINUATION_MESSAGE`："不要重来，直接从中断点接着写"
+注入续写消息："不要重来，直接从中断点接着写"
 
-每种最多重试 **3 次**
+最多重试 **3 次**
 
 </div>
 </div>
 
 <div v-click class="p-3 rounded-lg border border-green-300 dark:border-green-700">
 
-<div class="text-center mb-2 text-sm text-gray-500">问题 2</div>
+<div class="text-center mb-2 text-sm text-gray-500">错误问题 2</div>
 
-**上下文爆了** — 对话历史太长，`prompt_too_long` 请求直接失败
+**上下文爆了**：对话历史太长，`prompt_too_long` 请求直接失败
 
-<div class="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+<div class="mt-4 p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
 
 **压缩恢复**
 
-`auto_compact()` 把旧对话摘要为一份仍可继续工作的 summary，缩短后重试
+`auto_compact()` 把旧对话总结为摘要，缩短后重试
+
+最多重试 **3 次**
 
 </div>
 </div>
 
 <div v-click class="p-3 rounded-lg border border-amber-300 dark:border-amber-700">
 
-<div class="text-center mb-2 text-sm text-gray-500">问题 3</div>
+<div class="text-center mb-2 text-sm text-gray-500">错误问题 3</div>
 
-**网络抖动** — timeout、rate limit、服务暂时不可用
+**网络抖动**：网络超时 (timeout)、限流 (rate limit)、服务抖动
 
-<div class="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
+<div class="mt-4 p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
 
 **退避重试**
 
-`backoff_delay()` 指数等待 + 随机 jitter，不要立刻连续重打
+`backoff_delay()` 指数等待 + 随机 jitter，不要立刻连续重试
+
+最多重试 **3 次**
 
 </div>
 </div>
 
 </div>
 
-<div v-click class="mt-3 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm text-center">
+<div v-click class="mt-8 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm text-center">
 
-**全部耗尽才真正失败** — 每条路径有独立的重试预算（默认 3 次），三条路径互不干扰
+**全部耗尽才是真正失败**
+
+每条路径都有独立的重试预算（默认 3 次），三条路径互不干扰
 
 </div>
 
@@ -2265,7 +2270,7 @@ layout: default
 
 ## agent_loop 变更
 
-```python {2|4-5|7-15|17-23|25-29}
+```python {4-10|11-14|16-19|21-27}
 def agent_loop(messages: list):
     max_output_recovery_count = 0
     while True:
@@ -2280,20 +2285,21 @@ def agent_loop(messages: list):
                 if "prompt" in str(e) and "long" in str(e):
                     messages[:] = auto_compact(messages)
                     continue
-                # 恢复路径 3: 退避重试
+                
+                # 恢复路径 3: 请求失败 → 退避重试
                 delay = backoff_delay(attempt)
                 time.sleep(delay)
                 continue
         ...
-        # 恢复路径 1: max_tokens → 注入续写提示
+        # 恢复路径 1: max_tokens → 注入续写提示消息
         if response.stop_reason == "max_tokens":
             max_output_recovery_count += 1
             if max_output_recovery_count <= MAX_RECOVERY_ATTEMPTS:
-                messages.append({"role": "user",
-                    "content": CONTINUATION_MESSAGE})
+                messages.append({"role": "user", "content": CONTINUATION_MESSAGE})
                 continue
         max_output_recovery_count = 0
-        ...  # 正常工具执行
+        ...  
+        # 正常执行循环
 ```
 
 </div>
@@ -2305,11 +2311,10 @@ def agent_loop(messages: list):
 MAX_RECOVERY_ATTEMPTS = 3
 BACKOFF_BASE_DELAY = 1.0   # seconds
 BACKOFF_MAX_DELAY = 30.0   # seconds
-TOKEN_THRESHOLD = 50000
 
 CONTINUATION_MESSAGE = (
-  "Output limit hit. Continue directly from where you stopped. "
-  "Do not restart or repeat."
+    "Output limit hit. Continue directly from where you stopped. "
+    "Do not restart or repeat."
 )
 ```
 
@@ -2330,68 +2335,12 @@ def auto_compact(messages: list) -> list:
     summary = client.messages.create(
         model=MODEL,
         messages=[{"role": "user",
-                   "content": "Summarize..."}],
+                   "content": "Summarize this conversation for continuity..."}],
     ).content[0].text
     return [{"role": "user", "content": summary}]
 ```
 
 </div>
-</div>
-
----
-
-# 阶段 2 完成：你的 Agent 现在能自我治理了
-
-<div class="grid grid-cols-5 gap-3 text-sm">
-
-<div v-click class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
-
-**s07 权限**
-
-deny → mode → allow → ask
-
-</div>
-
-<div v-click class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
-
-**s08 Hook**
-
-不改循环也能扩展
-
-</div>
-
-<div v-click class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
-
-**s09 记忆**
-
-跨会话持久知识
-
-</div>
-
-<div v-click class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
-
-**s10 Prompt**
-
-组装流水线
-
-</div>
-
-<div v-click class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
-
-**s11 恢复**
-
-出错不崩溃
-
-</div>
-
-</div>
-
-<div v-click class="mt-6 p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-center">
-
-**如果你在这里停下来做产品，已经是一个真正有用的 agent harness 了。**
-
-但真实工作有结构：任务之间有依赖、有些事要后台跑、有些事要定时做。这是阶段 3。
-
 </div>
 
 ---
