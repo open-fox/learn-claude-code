@@ -1823,8 +1823,7 @@ def build_system_prompt() -> str:
 TOOL_HANDLERS = {
     ...,
     # s09 新增工具 save_memory
-    "save_memory": lambda **kw: memory_mgr.save_memory(
-        kw["name"], kw["description"], kw["type"], kw["content"]),
+    "save_memory": lambda **kw: memory_mgr.save_memory(...),
 }
 ```
 
@@ -1880,28 +1879,48 @@ The user explicitly prefers tabs over spaces.
 
 > 角色说明、工具文档、技能目录、记忆、CLAUDE.md——全塞一个字符串里，半年后谁敢改？
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
+**问题**：system prompt 是一整块硬编码字符串，来源越来越多却无法分段维护、测试和缓存
+
+**方案**：分段组装流水线 — 6 段来源按顺序拼接，`DYNAMIC_BOUNDARY` 分隔静态和动态部分
+
+<div class="grid grid-cols-[1fr_500px] gap-4">
 <div>
-
-**问题**：system prompt 是一整块硬编码字符串，无法维护
-
-**方案**：组装流水线 + 动态边界
 
 <v-clicks>
 
-- 6 段独立组装：core → tools → skills → memory → CLAUDE.md → dynamic
-- `DYNAMIC_BOUNDARY` 分隔静态和动态部分
-- 静态前缀可缓存，动态后缀每轮变
-- 每轮重建，新记忆立即可见
+- **core** — 身份 + 规则（几乎不变）
+- **tools** — 工具列表（版本更新时变）
+- **skills** — 技能目录（安装时变）
+- **memory** — 记忆内容（会话内变）
+- **CLAUDE.md** — 指令链：`~/.claude/` → 项目根 → 子目录
+- **dynamic** — 日期、目录、模式（每轮变）
 
 </v-clicks>
 
+<div v-click class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
+
+**关键**：静态前缀可缓存，动态后缀每轮重建
+
 </div>
 
-<div class="embed-viz">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s10/" />
 </div>
+<div>
 
+```mermaid {scale: 0.4}
+graph TD
+  C["1. core<br/>身份 + 规则"] --> B["build()"]
+  T["2. tools<br/>工具列表"] --> B
+  SK["3. skills<br/>技能目录"] --> B
+  M["4. memory<br/>记忆内容"] --> B
+  CL["5. CLAUDE.md<br/>指令链"] --> B
+  B --> BD["=== DYNAMIC_BOUNDARY ==="]
+  BD --> D["6. dynamic<br/>日期/目录/模式"]
+  D --> SP["最终 system prompt"]
+  style BD fill:#f97316,color:#fff
+  style SP fill:#22c55e,color:#fff
+```
+
+</div>
 </div>
 
 ---
@@ -1990,28 +2009,49 @@ class SystemPromptBuilder:
 
 > 大文件写到一半 max_tokens 截断、上下文爆了、API 超时——如果每次都崩溃，用户就不敢用了
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
-<div>
+**问题**：模型输出截断、上下文过长、网络抖动——三种常见错误直接让主循环停住
 
-**问题**：max_tokens 截断、prompt_too_long、API 超时——三种常见错误
+**方案**：错误先分类，再选恢复路径，每条路径有独立重试预算，全部耗尽才真正失败
 
-**方案**：三条恢复路径
+```mermaid {scale: 0.7}
+graph LR
+  LLM["LLM 调用"] -->|"max_tokens"| CON["续写恢复"]
+  LLM -->|"prompt_too_long"| CMP["压缩恢复"]
+  LLM -->|"timeout/rate_limit"| BAK["退避重试"]
+  CON -->|"≤3次"| LLM
+  CMP -->|"≤3次"| LLM
+  BAK -->|"≤3次"| LLM
+  CON -->|"耗尽"| FAIL["最终失败"]
+  CMP -->|"耗尽"| FAIL
+  BAK -->|"耗尽"| FAIL
+  style CON fill:#bfdbfe,color:#000
+  style CMP fill:#bbf7d0,color:#000
+  style BAK fill:#fef3c7,color:#000
+  style FAIL fill:#ef4444,color:#fff
+```
 
-<v-clicks>
+<div class="grid grid-cols-3 gap-3 mt-2 text-sm">
+<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
 
-- **max_tokens** → 注入续写提示，继续生成
-- **prompt_too_long** → 自动压缩后重试
-- **timeout/rate_limit** → 指数退避重试
-- 每种最多重试 3 次，全部耗尽才真正失败
+**续写恢复**
 
-</v-clicks>
+注入 `CONTINUATION_MESSAGE`，告诉模型"不要重来，接着写"
 
 </div>
+<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
 
-<div class="embed-viz">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s11/" />
+**压缩恢复**
+
+`auto_compact()` 摘要旧上下文，缩短后重试
+
 </div>
+<div v-click class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
 
+**退避重试**
+
+`backoff_delay()` 指数等待 + 随机 jitter
+
+</div>
 </div>
 
 ---
@@ -2209,28 +2249,46 @@ s03 的 TodoWrite 是"会话内清单"——压缩一次就丢了。
 
 > s03 的 Todo 只知道"有事要做"；Task 能告诉你"先做什么、谁在等谁、完成后自动解锁下游"
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
+**问题**：Todo 是会话内临时清单，压缩一次就丢了；没有依赖关系，不能跨会话持久
+
+**方案**：可持久化的任务图 — JSON 文件 on disk，`blockedBy`/`blocks` 双向依赖，完成时自动解锁
+
+<div class="grid grid-cols-[1fr_450px] gap-4">
 <div>
-
-**问题**：Todo 是会话内清单，压缩一次就丢了；没有依赖关系
-
-**方案**：持久化任务图（JSON 文件 on disk）
 
 <v-clicks>
 
 - 每个 task 有 `blockedBy` / `blocks` 依赖关系
-- 完成一个 task → 自动从下游的 `blockedBy` 移除
 - `is_ready(task)` = pending + 没有前置阻塞
+- 完成一个 task → 自动从下游的 `blockedBy` 移除
+- 持久化到 `.tasks/task_N.json`
 - 新增工具：`task_create` / `task_update` / `task_list` / `task_get`
 
 </v-clicks>
 
+<div v-click class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-sm">
+
+**todo 更像本轮计划，task 更像长期工作板**
+
 </div>
 
-<div class="embed-viz">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s07/" />
 </div>
+<div>
 
+```mermaid {scale: 0.45}
+graph TD
+  A["Task 1: 写解析器<br/>status: completed"] --> B["Task 2: 语义检查<br/>status: pending<br/>blockedBy: []"]
+  A --> C["Task 3: 测试<br/>status: pending<br/>blockedBy: []"]
+  A --> D["Task 4: 文档<br/>status: pending<br/>blockedBy: []"]
+  B & C & D --> E["Task 5: 整体验收<br/>status: pending<br/>blockedBy: [2,3,4]"]
+  style A fill:#22c55e,color:#fff
+  style B fill:#bfdbfe,color:#000
+  style C fill:#bfdbfe,color:#000
+  style D fill:#bfdbfe,color:#000
+  style E fill:#fca5a5,color:#000
+```
+
+</div>
 </div>
 
 ---
@@ -2318,29 +2376,42 @@ class TaskManager:
 
 > 用户说"跑测试，同时帮我建配置文件"——但你的 agent 只会傻等 90 秒测试跑完
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
-<div>
+**问题**：慢命令（pytest、npm build）同步执行会卡住主循环，模型和用户都在空等
 
-**问题**：慢命令（pytest、npm build）阻塞主循环
+**方案**：daemon 线程执行慢命令，主循环立即拿到 task_id 继续前进，结果通过通知队列在下一轮注入
 
-**方案**：daemon 线程 + 通知队列
+```mermaid {scale: 0.7}
+graph LR
+  ML["主循环"] -->|"background_run('pytest')"| BG["后台线程"]
+  ML -->|"继续其他工作"| ML2["下一轮模型调用"]
+  BG -->|"完成"| NQ["通知队列"]
+  NQ -->|"drain_notifications()"| ML2
+  style BG fill:#f97316,color:#fff
+  style NQ fill:#bfdbfe,color:#000
+```
 
-<v-clicks>
+<div class="grid grid-cols-3 gap-3 mt-2 text-sm">
+<div v-click class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
 
-- `background_run` 启动后台线程，立即返回 task_id
-- 主循环继续其他工作
-- 后台完成 → 推入通知队列
-- 每轮 LLM 调用前 `drain_notifications()` → 注入结果
-- 新增工具：`background_run` / `check_background`
+**启动即返回**
 
-</v-clicks>
+`background_run` → 立即返回 task_id
 
 </div>
+<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
 
-<div class="embed-viz">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s08/" />
+**通知只放摘要**
+
+完整输出写磁盘，通知只带 preview
+
 </div>
+<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
 
+**并行的是等待**
+
+主循环仍然只有一条，并行的是执行与等待
+
+</div>
 </div>
 
 ---
@@ -2429,29 +2500,47 @@ task = {
 
 > 后台任务解决"现在开始的慢任务"，但"每周一 9 点跑报告"怎么办？——agent 需要学会"记住未来"
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
+**问题**：agent 只能响应当前请求，不能"将来某个时间再开始做事"
+
+**方案**：cron 表达式 + 后台检查线程 + 通知注入，触发后仍然回到同一条主循环
+
+<div class="grid grid-cols-[1fr_450px] gap-4">
 <div>
-
-**问题**：agent 只能响应当前请求，不能"记住未来要做的事"
-
-**方案**：cron 表达式 + 后台检查线程 + 通知注入
 
 <v-clicks>
 
-- `cron_create("0 9 * * 1", "Run weekly report")` 注册定时任务
-- 后台线程每秒检查一次是否到期
-- 到期 → 推入通知队列 → 注入主循环
-- 支持 recurring / one-shot、session-only / durable
+- `cron_create("0 9 * * 1", "Run report")` 注册
+- 后台线程每分钟检查一次是否匹配
+- 到期 → 推入通知队列 → 主循环注入
+- 支持 recurring / one-shot
+- 支持 durable（重启后仍在）
 - 新增工具：`cron_create` / `cron_delete` / `cron_list`
 
 </v-clicks>
 
+<div v-click class="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-sm">
+
+**调度器做的是"记住未来"，触发后仍然回到同一条主循环**
+
 </div>
 
-<div class="embed-viz" style="--viz-h: 1000px; --viz-scale: 0.45">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s09/" />
 </div>
+<div>
 
+```mermaid {scale: 0.45}
+graph TD
+  CR["cron_create()"] --> REC["ScheduleRecord<br/>cron: 0 9 * * 1"]
+  REC --> CHK["后台检查线程<br/>每分钟检查"]
+  CHK -->|"时间匹配"| NQ["通知队列"]
+  NQ -->|"drain()"| ML["主循环注入"]
+  ML --> LLM["模型处理"]
+  CHK -->|"不匹配"| CHK
+  style CR fill:#f97316,color:#fff
+  style NQ fill:#bfdbfe,color:#000
+  style CHK fill:#bbf7d0,color:#000
+```
+
+</div>
 </div>
 
 ---
@@ -2648,28 +2737,49 @@ layout: center
 
 > s04 的 Subagent 是"用完即弃"；团队成员**长期在线、有身份、有邮箱、能反复接活**
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
+**问题**：Subagent 是一次性的，干完就消失，无法长期分工协作
+
+**方案**：持久化名册 + JSONL 邮箱 + 每个队友独立线程运行自己的 agent loop
+
+<div class="grid grid-cols-[1fr_450px] gap-4">
 <div>
-
-**问题**：Subagent 是一次性的，没有身份、没有邮箱、不能长期在线
-
-**方案**：持久化名册 + JSONL 邮箱 + 独立循环
 
 <v-clicks>
 
 - **名册** `.team/config.json`：成员列表、角色、状态
 - **邮箱** `.team/inbox/alice.jsonl`：append-only 收件箱
-- 每个队友独立线程运行自己的 agent loop
+- 每个队友有自己的 `messages[]` 和 agent loop
+- 每轮先 drain inbox，再继续工作
 - 新增工具：`spawn_teammate` / `send_message` / `read_inbox` / `broadcast`
 
 </v-clicks>
 
+<div v-click class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">
+
+**subagent 是一次性外包，teammate 是长期在线队友**
+
 </div>
 
-<div class="embed-viz">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s09/" />
 </div>
+<div>
 
+```mermaid {scale: 0.45}
+graph TD
+  Lead["Lead"] -->|"spawn"| A["Alice (coder)<br/>独立 loop"]
+  Lead -->|"spawn"| B["Bob (tester)<br/>独立 loop"]
+  Lead -->|"send_message"| AI["alice.jsonl"]
+  Lead -->|"send_message"| BI["bob.jsonl"]
+  AI -->|"drain inbox"| A
+  BI -->|"drain inbox"| B
+  A -->|"send_message"| LI["lead.jsonl"]
+  B -->|"send_message"| LI
+  LI -->|"drain inbox"| Lead
+  style Lead fill:#f97316,color:#fff
+  style A fill:#bfdbfe,color:#000
+  style B fill:#bbf7d0,color:#000
+```
+
+</div>
 </div>
 
 ---
@@ -2751,28 +2861,43 @@ class TeammateManager:
 
 > Lead 说"请停下"，Alice 无视了；Bob 直接开始数据库迁移没人审批——自由聊天不够，需要结构化握手
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
-<div>
+**问题**：自由文本消息无法保证"请求必须被回应"，多个请求并存时无法对号
 
-**问题**：自由消息无法保证"请求必须被回应"
+**方案**：`request_id` 关联的结构化协议 — 请求-响应 + 状态追踪表（pending → approved | rejected）
 
-**方案**：request_id 关联的结构化握手
+```mermaid {scale: 0.7}
+graph LR
+  L["Lead"] -->|"shutdown_request<br/>req_001"| A["Alice inbox"]
+  A -->|"drain"| AH["Alice 处理"]
+  AH -->|"approve<br/>req_001"| LI["Lead inbox"]
+  LI -->|"drain"| LS["Lead 确认关闭"]
+  style L fill:#f97316,color:#fff
+  style AH fill:#bfdbfe,color:#000
+  style LS fill:#22c55e,color:#fff
+```
 
-<v-clicks>
+<div class="grid grid-cols-3 gap-3 mt-2 text-sm">
+<div v-click class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
 
-- **shutdown 协议**：Lead 发 request → 队友 approve/reject
-- **plan_approval 协议**：队友提交计划 → Lead 审批
-- 每个 request 有持久化状态：`pending → approved | rejected`
-- `.team/requests/{request_id}.json` 存储请求记录
+**shutdown 协议**
 
-</v-clicks>
+Lead 发请求 → 队友 approve/reject
 
 </div>
+<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
 
-<div class="embed-viz">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s10/" />
+**plan_approval 协议**
+
+队友提交计划 → Lead 审批
+
 </div>
+<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
 
+**统一模板**
+
+request_id + 状态机 = 可复用的协议模式
+
+</div>
 </div>
 
 ---
@@ -2867,29 +2992,42 @@ response = {
 
 > 任务板上 10 个待办，Lead 一个一个分配——Lead 成了瓶颈。让队友自己去任务板找活干
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
+**问题**：所有任务都由 Lead 手动分配，Lead 成了瓶颈
+
+**方案**：WORK/IDLE 双阶段循环 — 空闲时先检查邮箱，再按角色扫描任务板自动认领
+
+<div class="grid grid-cols-[1fr_400px] gap-4">
 <div>
-
-**问题**：所有任务都由 Lead 分配，Lead 成了瓶颈
-
-**方案**：WORK/IDLE 状态机 + 自动认领
 
 <v-clicks>
 
-- **WORK 阶段**：正常 agent loop
-- **IDLE 阶段**：每 5 秒轮询邮箱和任务板
-- 有消息 → 恢复 WORK；有 unclaimed task → 认领后恢复
+- **WORK 阶段**：标准 agent loop
+- **IDLE 阶段**：每 5 秒轮询邮箱 + 任务板
+- 有消息 → 恢复 WORK
+- 有 unclaimed ready task → 认领 → 恢复 WORK
 - 60 秒无事 → shutdown
-- 压缩后自动重注入身份（`<identity>` block）
+- 认领需原子锁 + 角色匹配
+- 压缩后自动重注入 `<identity>` block
 
 </v-clicks>
 
 </div>
+<div>
 
-<div class="embed-viz">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s11/" />
+```mermaid {scale: 0.45}
+graph TD
+  W["WORK 阶段"] -->|"工作做完"| I["IDLE 阶段"]
+  I -->|"邮箱有消息"| W
+  I -->|"任务板有 ready task"| CL["认领任务"]
+  CL -->|"补身份 + 任务提示"| W
+  I -->|"60s 无事"| SD["shutdown"]
+  style W fill:#22c55e,color:#fff
+  style I fill:#bfdbfe,color:#000
+  style CL fill:#f97316,color:#fff
+  style SD fill:#6b7280,color:#fff
+```
+
 </div>
-
 </div>
 
 ---
@@ -2977,29 +3115,47 @@ def ensure_identity_context(messages, name, role, team):
 
 > Alice 在重构 auth，Bob 在做登录页——两人同时改 `config.py`，文件冲突了。每个任务需要自己的"车道"
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
+**问题**：多个队友在同一个目录工作，未提交改动互相污染
+
+**方案**：git worktree = 每个任务一个隔离目录，Task 管"做什么"，Worktree 管"在哪做"
+
+<div class="grid grid-cols-[1fr_450px] gap-4">
 <div>
-
-**问题**：多个队友在同一个目录工作，文件冲突
-
-**方案**：git worktree = 每个任务一个隔离目录
 
 <v-clicks>
 
-- **Task** 是控制面（做什么），**Worktree** 是执行面（在哪做）
 - `worktree_create` → `git worktree add -b wt/{name}`
 - `worktree_run` → `subprocess.run(cmd, cwd=wt_path)`
 - `worktree_closeout` → keep（保留）或 remove（删除）
-- 任务状态和车道状态**分开管理**
+- 任务状态（`status`）和车道状态（`worktree_state`）**分开管理**
+- 两张注册表通过 `task_id` 关联
 
 </v-clicks>
 
+<div v-click class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">
+
+**任务 completed 但 worktree kept 是完全合理的**（保留给 reviewer 看）
+
 </div>
 
-<div class="embed-viz">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s12/" />
 </div>
+<div>
 
+```mermaid {scale: 0.45}
+graph TD
+  TC["task_create()"] --> TB["task_bind_worktree()"]
+  TB --> WC["worktree_create()<br/>git worktree add"]
+  WC --> WE["worktree_enter()"]
+  WE --> WR["worktree_run()<br/>cwd=wt_path"]
+  WR --> CO{"closeout?"}
+  CO -->|"keep"| K["保留目录"]
+  CO -->|"remove"| R["删除目录"]
+  style TC fill:#f97316,color:#fff
+  style WC fill:#bfdbfe,color:#000
+  style WR fill:#bbf7d0,color:#000
+```
+
+</div>
 </div>
 
 ---
@@ -3094,29 +3250,47 @@ class EventBus:
 
 > 想查数据库？写个 handler。想控浏览器？再写一个。每次加能力都改代码？——让外部进程自己报到
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
-<div>
+**问题**：所有工具都硬编码在主程序中，无法让外部程序动态接入新能力
 
-**问题**：每加一个外部能力都要改代码
+**方案**：MCP 协议 — 外部进程暴露工具，统一命名（`mcp__{server}__{tool}`），统一路由，仍走同一条权限管道
 
-**方案**：MCP 协议 — 外部进程自己报到，统一路由
+```mermaid {scale: 0.7}
+graph LR
+  LLM["LLM tool_use"] --> R["Tool Router"]
+  R -->|"native tool"| NH["本地 Handler"]
+  R -->|"mcp__postgres__query"| MC["MCPClient"]
+  MC --> ES["外部 Server"]
+  ES --> MC
+  NH --> TR["统一 tool_result"]
+  MC --> TR
+  TR --> LLM
+  style R fill:#bfdbfe,color:#000
+  style MC fill:#f97316,color:#fff
+  style NH fill:#bbf7d0,color:#000
+```
 
-<v-clicks>
+<div class="grid grid-cols-3 gap-3 mt-2 text-sm">
+<div v-click class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
 
-- **MCPClient**：连接外部 stdio 进程，发现它的工具
-- **mcp__ 前缀**：`mcp__postgres__query` 路由到 postgres server
-- **PluginLoader**：从 `.claude-plugin/plugin.json` 发现配置
-- **统一权限**：MCP 工具走同一条 `CapabilityPermissionGate`
-- native + MCP 合并成一个 tool pool
+**Plugin 发现配置**
 
-</v-clicks>
+`.claude-plugin/plugin.json` → server 启动命令
 
 </div>
+<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
 
-<div class="embed-viz" style="--viz-h: 1000px; --viz-scale: 0.45">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s12/" />
+**MCP Server 连接**
+
+`connect()` → `list_tools()` → 标准化名字
+
 </div>
+<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
 
+**统一权限**
+
+MCP + native 走同一条 `PermissionGate`
+
+</div>
 </div>
 
 ---
