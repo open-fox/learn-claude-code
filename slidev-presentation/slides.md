@@ -83,16 +83,6 @@ layout: two-cols
   <img src="./images/open-router-leaderboard.png" alt="OpenRouter Leaderboard" />
 </div>
 
-<!-- ### 3、<span class="text-orange-500">AI 应用生态</span>
-
-现在拼的不只是模型能力，还有 AI 应用生态
-
-- 1 月份，Claude Cowork 推出，AI 应用开始转向 个人 Agent 应用
-
-- 2 月份，OpenClaw 爆火，全民开始养虾，各种 *Claw 产品层出不穷
-
-- 随后，browser use、computer use 等功能逐渐成为 AI 应用的标配 -->
-
 </template>
 
 <!-- LLM -->
@@ -126,8 +116,12 @@ layout: two-cols
 
 如果当前请求的输入前缀和之前的请求完全一致，模型商就可以直接从缓存中读取结果，效率更高，成本更低
 
-<div class="slide-image">
+<!-- <div class="slide-image">
   <img src="./images/prompt-caching.png" alt="Prompt Caching" style="width: 60%" />
+</div> -->
+
+<div class="slide-image">
+  <img src="./images/token-price.png" alt="Input token price" style="width: 60%"/>
 </div>
 
 ### 2、设计提示词的核心原则
@@ -173,15 +167,15 @@ layout: two-cols
 
 Token是大模型处理信息的最小信息单元，也是 AI 时代的结算单位
 
-### 2、Token 不同价
+<!-- ### 2、Token 不同价
 
 Prompt Caching 普及后，重复前缀可复用缓存，cached input tokens 比普通 input token 便宜很多
 
 <div class="slide-image">
   <img src="./images/token-price.png" alt="Input token price" style="width: 60%"/>
-</div>
+</div> -->
 
-### 3、Token Plan
+### 2、Token Plan
 
 模型服务商从提供 Coding Plan 到提供 Token Plan，满足用户使用 AI 应用时多模态输入输出的需求
 
@@ -248,13 +242,13 @@ layout: two-cols
   </table>
 </div>
 
-### 2、<span class="text-orange-500 font-bold">Harness Engineering</span>
+<!-- ### 2、<span class="text-orange-500 font-bold">Harness Engineering</span>
 
 Model 决定做什么，Harness 决定如何做，两者结合就是 Agent 系统
 
 <div class="slide-image">
   <img src="./images/open-harness.png" alt="Harness" />
-</div>
+</div> -->
 
 </template>
 
@@ -444,19 +438,21 @@ layout: two-cols
 
 ### 2、Claude Code 源码泄漏
 
-网上各种源码分析，带动全网开发和设计更加高效的 Agent 框架
+国内外各种源码分析，带动全网开发和设计更加高效的 Agent 框架
 
 [Claude Code Upacked](https://ccunpacked.dev/)
 
-[驾驭工程 — 从 Claude Code 源码到 AI 编码最佳实践](https://zhanghandong.github.io/harness-engineering-from-cc-to-ai-coding/preface.html)
+[Claude Code From Source](https://claude-code-from-source.com/)
 
-<!-- ### 3、<a href="https://youtu.be/CEvIs9y1uog" target="_blank"><span class="text-orange-500">Don't build agents, build skills instead</span></a>
+<!-- [驾驭工程 — 从 Claude Code 源码到 AI 编码最佳实践](https://zhanghandong.github.io/harness-engineering-from-cc-to-ai-coding/preface.html) -->
 
-Claude Code 不仅是一个 Coding Agent，通过技能扩展可以泛化到其他领域，变成其他领域的 Agent
+### 3、<a href="https://learn.shareai.run/" target="_blank"><span class="text-orange-500">Learn Claude Code</span></a>
 
-<div class="slide-image">
-<img src="./images/build-skills.png" alt="Skills" />
-</div> -->
+通过学习这个教程，了解 AI Coding Agent 的架构设计和开发流程
+
+- 教程在 Claude Code 源码泄漏之前就存在，所以不是源码分析教程
+
+- 教程在 Claude Code 源码泄漏之后，新增了 7 个章节，可能是受泄漏的源码启发
 
 </template>
 
@@ -498,7 +494,7 @@ layout: section
 # Agent 框架实现
 
 <div class="text-gray-500 mt-4">
-跟着 Learn Claude Code 教程实现简易的 Coding Agent
+跟着 Learn Claude Code 教程实现简易的 AI Coding Agent
 </div>
 
 ---
