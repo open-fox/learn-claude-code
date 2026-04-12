@@ -933,7 +933,7 @@ class TodoManager:
 
 ```python
 TOOL_HANDLERS = {
-    "bash":       ...,
+    ...,
     # s03 新增工具 todo
     "todo": lambda **kw: TODO.update(kw["items"]),
 }
@@ -1167,7 +1167,7 @@ class SkillRegistry:
 
 ```python
 TOOL_HANDLERS = {
-    "bash":       ...,
+    ...,
     # s05 新增工具 load_skill
     "load_skill": lambda **kw: SKILL_REGISTRY.load_full_text(kw["name"]),
 }
@@ -1210,7 +1210,7 @@ TOOL_HANDLERS = {
 layout: default
 ---
 
-# s06: 核心代码 — 主循环的变更
+# s06: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
@@ -1730,60 +1730,91 @@ result = {
 
 # s09: 记忆系统 (Memory)
 
-> 你告诉它三次"别改 test snapshots"，下次开会话，它又改了——因为它每次都是新的
+> 三次告诉模型"别改 test snapshots"，下次新开会话，它又改了
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
+<div class="grid grid-cols-[1fr_300px] gap-8">
 <div>
 
-**问题**：每次新会话，用户偏好、纠正、项目约定全部丢失
+**问题**：每次新会话都从零开始，用户偏好、纠正、项目约定全部丢失
 
-**方案**：4 类跨会话记忆
+**方案**：持久化记忆文件（`.memory/*.md`），会话启动时加载，`save_memory` 写入，每轮重建 system prompt 注入
 
 <v-clicks>
 
-- **user** — 偏好（"我用 tabs"、"始终用 pytest"）
+- **user** — 偏好（tabs、pytest、简洁回答）
 - **feedback** — 纠正（"不要改 snapshots"）
-- **project** — 不易从代码推出的约定
-- **reference** — 外部资源指针
-- 新增工具 `save_memory`，记忆注入 system prompt
+- **project** — 非显然约定（合规要求、不能动的旧模块）
+- **reference** — 外部指针（看板 URL、监控面板）
+- **不要存**：文件结构、临时任务进度、密钥
 
 </v-clicks>
 
 <div v-click class="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-sm">
 
-**不要存**：文件结构、临时任务进度、密钥
+**原则**：memory 提供方向，不替代当前观察。冲突时优先相信真实状态。
 
 </div>
 
 </div>
+<div>
 
-<div class="embed-viz">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s09/" />
+```mermaid {scale: 0.6}
+graph TD
+  U["用户提到长期信息"] --> SM["调用 save_memory"]
+  SM --> W["写入 .memory/*.md"]
+  W --> DISK[(".memory/ 磁盘")]
+
+  START["每轮会话开始"] --> LOAD["加载记忆 load_memory"]
+  DISK --> LOAD
+  LOAD --> SP["记忆注入系统提示词"]
+  SP --> LLM["调用 LLM"]
+
+  style SM fill:#f97316,color:#fff
+  style DISK fill:#6b7280,color:#fff
+  style SP fill:#bfdbfe,color:#000
+  style LOAD fill:#bbf7d0,color:#000
+```
+
 </div>
-
 </div>
 
 ---
 layout: default
 ---
 
-# s09: 核心代码 — 主循环的变更
+# s09: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
 
 ## agent_loop 变更
 
-```python {3-4}
+```python {1-4}
 def agent_loop(messages: list):
     while True:
-        # s09 新增：每轮重建 system prompt，含最新记忆
-        system = build_system_prompt()
-        response = client.messages.create(
-            model=MODEL, system=system,
-            messages=messages, tools=TOOLS, max_tokens=8000,
-        )
-        ...  # 标准循环
+      # s09 变更：每轮重建 system prompt，含最新记忆
+      system = build_system_prompt()
+      response = client.messages.create(...)
+      messages.append({"role": "assistant", "content": response.content})
+
+      ... # 核心循环保持不变
+
+      messages.append({"role": "user", "content": results})
+```
+
+## build_system_prompt
+
+组装系统提示词，其中包含记忆内容，和指导模型 何时保存记忆 和 何时不保存记忆
+
+```python
+# s09 新增：注入记忆内容
+def build_system_prompt() -> str:
+    parts = [f"You are a coding agent at {WORKDIR}."]
+    memory_section = memory_mgr.load_memory_prompt()
+    if memory_section:
+        parts.append(memory_section)
+    parts.append(MEMORY_GUIDANCE)   # 指导模型何时存/不存
+    return "\n\n".join(parts)
 ```
 
 ## 注册新工具
@@ -1791,7 +1822,7 @@ def agent_loop(messages: list):
 ```python
 TOOL_HANDLERS = {
     ...,
-    # s09 新增
+    # s09 新增工具 save_memory
     "save_memory": lambda **kw: memory_mgr.save_memory(
         kw["name"], kw["description"], kw["type"], kw["content"]),
 }
@@ -1800,21 +1831,24 @@ TOOL_HANDLERS = {
 </div>
 <div>
 
-## MemoryManager
+## 新增数据结构
 
 ```python
 MEMORY_TYPES = ("user", "feedback", "project", "reference")
+```
 
+## MemoryManager
+
+```python
 class MemoryManager:
-    def __init__(self, memory_dir: Path):
-        self.memories = {}  # name -> {desc, type, content}
-
-    def load_all(self): ...         # 启动时加载 .memory/*.md
-    def load_memory_prompt(self) -> str: ...  # 注入 system prompt
-    def save_memory(self, name, desc, type, content) -> str:
-        # 写 .memory/{name}.md + frontmatter
-        # 更新 MEMORY.md 索引
-        ...
+    # 1、 启动时加载 .memory/*.md
+    def load_all(self): ...
+   
+    # 2、按 type 分组，拼成 memory section 注入 system prompt
+    def load_memory_prompt(self) -> str:
+   
+    # 3、保存记忆，写入 .memory/{name}.md 文件，重建 MEMORY.md
+    def save_memory(self, name, desc, mem_type, content) -> str:
 ```
 
 ## 存储布局
@@ -1824,6 +1858,17 @@ class MemoryManager:
   MEMORY.md          ← 索引（≤200行）
   prefer_tabs.md     ← 单条记忆
   review_style.md
+```
+
+## 单条记忆文件格式
+
+```md
+---
+name: prefer_tabs
+description: User prefers tabs for indentation
+type: user
+---
+The user explicitly prefers tabs over spaces.
 ```
 
 </div>
@@ -1973,7 +2018,7 @@ class SystemPromptBuilder:
 layout: default
 ---
 
-# s11: 核心代码 — 主循环的变更
+# s11: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
@@ -2302,7 +2347,7 @@ class TaskManager:
 layout: default
 ---
 
-# s13: 核心代码 — 主循环的变更
+# s13: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
@@ -2413,7 +2458,7 @@ task = {
 layout: default
 ---
 
-# s14: 核心代码 — 主循环的变更
+# s14: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
