@@ -42,6 +42,7 @@
 .slide-image {
   display: flex;
   justify-content: left;
+  margin-bottom: 2rem;
 }
 
 .slide-image img {
