@@ -910,7 +910,7 @@ def agent_loop(messages: list) -> None:
 
 ## 新增数据结构
 
-```python
+```python {18-23}
 @dataclass
 class PlanItem:
     content: str
@@ -960,16 +960,16 @@ TOOL_HANDLERS = {
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
-**问题**：Agent 为回答一个小问题读了 5 个文件，这些中间过程全堆在父上下文里，后续推理越来越差
+**问题**：如果中间过程的结果都永久留在对话里，后面的问题会越来越难回答，因为上下文被大量局部任务的噪声填满了
 
-**方案**：上下文隔离
+**方案**：引入 subagent，把局部任务放进 subagent 的独立上下文里做，做完只把必要结果带回来，保持主 agent 上下文干净
 
 <v-clicks>
 
-- 派生子 agent，用 **fresh `messages=[]`**
-- 子 agent 独立工作，完成后**只返回摘要**
-- 子上下文丢弃，父上下文保持干净
-- 子 agent **没有 `task` 工具**，防止递归
+- Subagent 有自己的消息列表
+- Subagent 有自己的工具列表
+- Subagent 完成后只返回摘要
+- Subagent 没有 task 工具，防止递归创建 Subagent
 
 </v-clicks>
 
@@ -987,21 +987,23 @@ TOOL_HANDLERS = {
 layout: default
 ---
 
-# s04: 核心代码 — 主循环的变更
+# s04: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
 
 ## agent_loop 变更
 
-```python {5-8|10-11}{at:1}
+```python {7-8|16-22}
 def agent_loop(messages: list):
     while True:
         response = client.messages.create(
-            model=MODEL, system=SYSTEM,
-            # s04 变更：使用 PARENT_TOOLS 而非 TOOLS
-            tools=PARENT_TOOLS, max_tokens=8000,
+            model=MODEL, 
+            system=SYSTEM, 
             messages=messages,
+            # 变更：使用 PARENT_TOOLS
+            tools=PARENT_TOOLS, 
+            max_tokens=8000,
         )
         messages.append({"role": "assistant", "content": response.content})
         if response.stop_reason != "tool_use":
@@ -1009,48 +1011,64 @@ def agent_loop(messages: list):
         results = []
         for block in response.content:
             if block.type == "tool_use":
-                # s04 新增：task 工具走子智能体
+                # 新增：处理 task 工具调用，创建 Subagent
                 if block.name == "task":
-                    output = run_subagent(block.input["prompt"])
+                    desc = block.input.get("description", "subtask")
+                    prompt = block.input.get("prompt", "")
+                    print(f"> task ({desc}): {prompt[:80]}")
+                    output = run_subagent(prompt)
                 else:
                     handler = TOOL_HANDLERS.get(block.name)
-                    output = handler(**block.input) if handler else ...
-                results.append({"type": "tool_result",
-                    "tool_use_id": block.id, "content": str(output)})
+                    output = handler(**block.input) if handler 
+                    else f"Unknown tool: {block.name}"
+                print(f"  {str(output)[:200]}")
+                results.append({"type": "tool_result", 
+                "tool_use_id": block.id, "content": str(output)})
         messages.append({"role": "user", "content": results})
 ```
 
 </div>
 <div>
 
-## run_subagent — 独立循环
+## Subagent 实现
 
-```python {1-2|3-12|13-14}
+```python
 def run_subagent(prompt: str) -> str:
+    # Subagent 独立的消息列表
     sub_messages = [{"role": "user", "content": prompt}]
     for _ in range(30):  # 安全上限
         response = client.messages.create(
-            model=MODEL, system=SUBAGENT_SYSTEM,
+            model=MODEL, 
+            system=SUBAGENT_SYSTEM,
             messages=sub_messages,
-            tools=CHILD_TOOLS, max_tokens=8000,
+            # Subagent 独立的工具列表
+            tools=CHILD_TOOLS, 
+            max_tokens=8000,
         )
         sub_messages.append({"role": "assistant", "content": response.content})
         if response.stop_reason != "tool_use":
             break
         ...  # 执行工具，写回 sub_messages
-    # 只把最终文本带回父上下文
+    # 最终只把结果带回主 agent 上下文
     return "".join(b.text for b in response.content
                    if hasattr(b, "text")) or "(no summary)"
 ```
 
-## 工具过滤
+## 新增工具
 
 ```python
-# 子智能体：基础工具，没有 task
+# 子智能体：基础工具，没有 task 工具
 CHILD_TOOLS = [bash, read_file, write_file, edit_file]
 
-# 父智能体：基础工具 + task
-PARENT_TOOLS = CHILD_TOOLS + [task]
+# 父智能体：基础工具 + task 工具分派任务给 Subagent
+PARENT_TOOLS = CHILD_TOOLS + [
+    {
+      "name": "task", 
+      "description": "Spawn a subagent with fresh context.",
+      "input_schema": {"type": "object", "properties": {"prompt": {"type": "string"}...}, 
+      "required": ["prompt"]}
+    },
+]
 ```
 
 </div>
