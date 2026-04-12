@@ -1180,21 +1180,21 @@ TOOL_HANDLERS = {
 
 # s06: 上下文压缩 (Context Compact)
 
-> 读了 30 个文件、跑了 20 条命令后，10 万 tokens 烧完了——但活儿才干了一半
+> 读了 30 个文件，跑了 20 条命令后，10 万 tokens 烧完了，但活儿才干了一半
 
 <div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
-**问题**：上下文无限增长，模型推理变差、成本失控
+**问题**：读个大文件，塞进大量文本，跑个长命令，得到大段输出，上下文不断膨胀，如何在保证主线任务连续性的前提下，给上下文腾出空间
 
-**方案**：三级压缩策略
+**方案**：上下文压缩，三层压缩策略
 
 <v-clicks>
 
-- **Level 1**：大结果写磁盘，只留预览（`persist_large_output`）
-- **Level 2**：旧 tool_result 替换为占位符（`micro_compact`）
-- **Level 3**：整体摘要压缩（`compact_history`）
-- 新增工具 `compact`，可手动触发；超阈值自动触发
+- Level 1：大结果写磁盘，只留预览（`persist_large_output`）
+- Level 2：旧工具调用结果替换为占位符（`micro_compact`）
+- Level 3：消息历史太长，整体摘要压缩（`compact_history`）
+- 新增工具 `compact`，上下文超阈值自动触发，也可以手动触发
 
 </v-clicks>
 
@@ -1217,14 +1217,15 @@ layout: default
 
 ## agent_loop 变更
 
-```python {2-3|5-7|14-15|19-21}
-def agent_loop(messages: list, state: CompactState):
+```python {2-4|6-9|17-27,30-33}
+def agent_loop(messages: list, state: CompactState) -> None:
     while True:
-        # s06 新增：每轮开始前微压缩
+        # s06 新增：每轮开始前微压缩，将旧结果替换为占位符
         messages[:] = micro_compact(messages)
 
-        # s06 新增：超阈值自动压缩
+        # s06 新增：超阈值自动压缩，总结消息列表为摘要
         if estimate_context_size(messages) > CONTEXT_LIMIT:
+            print("[auto compact]")
             messages[:] = compact_history(messages, state)
 
         response = client.messages.create(...)
@@ -1233,15 +1234,23 @@ def agent_loop(messages: list, state: CompactState):
             return
 
         results = []
+        # s06 新增：标记本轮中模型是否触发了压缩
         manual_compact = False
         for block in response.content:
-            ...
-            # s06 新增：compact 工具触发手动压缩
+            if block.type != "tool_use":
+                continue
+
+            output = execute_tool(block, state)
+            results.append(...)
+            # s06 新增：模型主动触发压缩
             if block.name == "compact":
                 manual_compact = True
 
         messages.append({"role": "user", "content": results})
+
+        # s06 新增：本轮结束前，执行模型触发的压缩
         if manual_compact:
+            print("[manual compact]")
             messages[:] = compact_history(messages, state)
 ```
 
@@ -1258,21 +1267,24 @@ class CompactState:
     recent_files: list[str] = field(default_factory=list)
 
 # 常量
-CONTEXT_LIMIT = 50000
-KEEP_RECENT_TOOL_RESULTS = 3
-PERSIST_THRESHOLD = 30000
+CONTEXT_LIMIT = 50000         # 上下文空间占用阈值，50 万 tokens
+PERSIST_THRESHOLD = 30000     # 工具调用输出结果阈值，3 万 tokens
+KEEP_RECENT_TOOL_RESULTS = 3  # 保留最近 3 个工具调用结果
 ```
 
 ## 三级压缩函数
 
 ```python
-# Level 1: 大输出写磁盘
+# Level 1: 大输出结果写磁盘
+# 替换内容："<persisted-output>Full output saved to:... Preview:... </persisted-output>"
 def persist_large_output(tool_use_id, output): ...
 
 # Level 2: 旧结果替换占位符
+# 替换内容："[Earlier tool result compacted...]"
 def micro_compact(messages): ...
 
-# Level 3: LLM 摘要压缩
+# Level 3: 消息历史摘要压缩
+# 替换内容："This conversation was compacted so the agent can continue working, summary:..."
 def compact_history(messages, state): ...
 ```
 
@@ -1281,14 +1293,15 @@ def compact_history(messages, state): ...
 ```python
 TOOL_HANDLERS = {
     ...,
-    "compact": lambda **kw: "Compacting...",
+    # s06 新增工具 compact
+    "compact": lambda **kw: "Summarize earlier conversation ...",
 }
 ```
 
 </div>
 </div>
 
----
+<!-- ---
 
 # 阶段 1 完成：你有了一个能工作的单 Agent
 
@@ -1330,9 +1343,9 @@ TOOL_HANDLERS = {
 </div>
 
 </div>
-</div>
+</div> -->
 
----
+<!-- ---
 
 # 回顾：一条请求的完整流动
 
@@ -1352,7 +1365,7 @@ TOOL_HANDLERS = {
 
 **一句话记住**：先做出能工作的最小循环，再一层一层给它补上规划、隔离、安全、记忆、任务、协作和外部能力。
 
-</div>
+</div> -->
 
 ---
 layout: section
