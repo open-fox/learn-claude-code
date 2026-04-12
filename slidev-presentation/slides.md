@@ -1663,7 +1663,7 @@ class BashSecurityValidator:
 
 <div v-click>
 
-**问题**：安全审计、自动 lint、操作日志……每加一个横切需求都要改主循环，循环越来越重，改动就可能影响全局
+**问题**：安全审计、自动 lint、操作日志……每加横切需求都要改主循环，循环越来越重，小改动就可能影响全局
 
 </div>
 
@@ -1694,7 +1694,7 @@ SessionStart · PreToolUse · PostToolUse
 
 **核心原则**
 
-hook 不替代主循环，只在固定时机旁路扩展
+hook 不替代主循环，只在固定时机做旁路扩展
 
 </div>
 </div>
