@@ -1510,7 +1510,38 @@ layout: center
 
 </div>
 
-<div v-click>
+<div class="grid grid-cols-4 gap-4 mt-8 mb-16">
+<div v-click="4" class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**deny rules**
+
+sudo、rm -rf → 绝对禁止
+
+</div>
+<div v-click="5" class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**mode check**
+
+plan / auto / default
+
+</div>
+<div v-click="6" class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**allow rules**
+
+规则匹配 → 放行
+
+</div>
+<div v-click="7" class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
+
+**ask user**
+
+都没命中 → 问用户
+
+</div>
+</div>
+
+<div v-click="3">
 
 ```mermaid {scale: 0.8}
 graph LR
@@ -1530,37 +1561,6 @@ graph LR
   style A fill:#bbf7d0,color:#000
 ```
 
-</div>
-
-<div class="grid grid-cols-4 gap-4 mt-8">
-<div v-click class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
-
-**deny rules**
-
-sudo、rm -rf → 绝对禁止
-
-</div>
-<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
-
-**mode check**
-
-plan / auto / default
-
-</div>
-<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
-
-**allow rules**
-
-规则匹配 → 放行
-
-</div>
-<div v-click class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
-
-**ask user**
-
-都没命中 → 问用户
-
-</div>
 </div>
 
 ---
@@ -1677,21 +1677,21 @@ class BashSecurityValidator:
 
 
 <div class="grid grid-cols-3 gap-4 mt-8 mb-16">
-<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+<div v-click="4" class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
 
 **3 个生命周期事件**
 
 SessionStart · PreToolUse · PostToolUse
 
 </div>
-<div v-click class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
+<div v-click="5" class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
 
 **统一退出码协议**
 
 `0` 继续 · `1` 阻止 · `2` 追加信息
 
 </div>
-<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+<div v-click="6" class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
 
 **核心原则**
 
@@ -1700,7 +1700,7 @@ hook 不替代主循环，只在固定时机做旁路扩展
 </div>
 </div>
 
-<div v-click>
+<div v-click="3">
 
 ```mermaid {scale: 0.7}
 graph LR
