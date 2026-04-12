@@ -1496,11 +1496,42 @@ layout: center
 
 > 模型说"删掉这个目录"，但它 hallucinate 了路径，没有权限管控，意图直接变成执行
 
-问题：模型可能出现幻觉，导致写错文件、删错文件、执行危险命令
+<div v-click>
 
-方案：任何工具调用，都不应该直接执行，中间必须先过四级权限管控
+**问题**：模型可能出现幻觉，导致写错文件、删错文件、执行危险命令
 
-<div class="grid grid-cols-4 gap-4 mt-8 mb-16">
+</div>
+
+
+<div v-click>
+
+**方案**：任何工具调用，都不应该直接执行，中间必须先过四级权限管控
+
+</div>
+
+<div v-click>
+
+```mermaid {scale: 0.8}
+graph LR
+  TC["tool_call"] --> D["1. deny rules"]
+  D -->|"命中"| DENY["❌ 拒绝"]
+  D -->|"未命中"| M["2. mode check"]
+  M -->|"plan+写"| DENY
+  M -->|"auto+读"| ALLOW["✅ 放行"]
+  M -->|"default 或<br/>auto+写"| A["3. allow rules"]
+  A -->|"命中"| ALLOW
+  A -->|"未命中"| ASK["🙋‍♂️ ask user"]
+  style DENY fill:#ef4444,color:#fff
+  style ALLOW fill:#22c55e,color:#fff
+  style ASK fill:#f97316,color:#fff
+  style D fill:#fca5a5,color:#000
+  style M fill:#bfdbfe,color:#000
+  style A fill:#bbf7d0,color:#000
+```
+
+</div>
+
+<div class="grid grid-cols-4 gap-4 mt-8">
 <div v-click class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
 
 **deny rules**
@@ -1529,28 +1560,6 @@ plan / auto / default
 都没命中 → 问用户
 
 </div>
-</div>
-
-<div v-click>
-
-```mermaid {scale: 0.8}
-graph LR
-  TC["tool_call"] --> D["1. deny rules"]
-  D -->|"命中"| DENY["❌ 拒绝"]
-  D -->|"未命中"| M["2. mode check"]
-  M -->|"plan+写"| DENY
-  M -->|"auto+读"| ALLOW["✅ 放行"]
-  M -->|"default 或<br/>auto+写"| A["3. allow rules"]
-  A -->|"命中"| ALLOW
-  A -->|"未命中"| ASK["🙋‍♂️ ask user"]
-  style DENY fill:#ef4444,color:#fff
-  style ALLOW fill:#22c55e,color:#fff
-  style ASK fill:#f97316,color:#fff
-  style D fill:#fca5a5,color:#000
-  style M fill:#bfdbfe,color:#000
-  style A fill:#bbf7d0,color:#000
-```
-
 </div>
 
 ---
@@ -1629,7 +1638,7 @@ class PermissionManager:
 
 ## BashSecurityValidator（Step 0）
 
-bash 命令是自由文本，四级管道之前先过一遍正则检查：
+bash 命令是自由文本，四级管道之前先过一遍正则检查
 
 ```python
 class BashSecurityValidator:
@@ -1652,9 +1661,19 @@ class BashSecurityValidator:
 
 > 安全团队要审计 bash、QA 要自动跑 lint、运维要运行日志，难道每个需求都改主循环？
 
+<div v-click>
+
 **问题**：安全审计、自动 lint、操作日志……每加一个横切需求都要改主循环，循环越来越重，改动就可能影响全局
 
+</div>
+
+
+<div v-click>
+
 **方案**：主循环只在关键节点暴露"时机"，附加行为写成独立的 hook 脚本，通过配置文件注册，用退出码约定结果
+
+</div>
+
 
 <div class="grid grid-cols-3 gap-4 mt-8 mb-16">
 <div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
@@ -1808,9 +1827,19 @@ result = {
 <div class="grid grid-cols-[1fr_300px] gap-8">
 <div>
 
+<div v-click>
+
 **问题**：每次新会话都从零开始，用户偏好、纠正、项目约定全部丢失
 
+</div>
+
+
+<div v-click>
+
 **方案**：持久化记忆文件（`.memory/*.md`），会话启动时加载，`save_memory` 写入，每轮重建 system prompt 注入
+
+</div>
+
 
 <v-clicks>
 
@@ -1955,9 +1984,19 @@ The user explicitly prefers tabs over spaces.
 <div class="grid grid-cols-[1fr_500px] gap-4">
 <div>
 
+<div v-click>
+
 **问题**：系统提示词是一整块硬编码字符串，来源越来越多却无法分段维护、测试和缓存
 
+</div>
+
+
+<div v-click>
+
 **方案**：系统提示词的关键不是"写一段很长的话"，而是"把不同来源的信息按清晰边界组装起来"
+
+</div>
+
 
 分段组装流水线：6 段来源按顺序拼接，用 `DYNAMIC_BOUNDARY` 分隔 静态段 和 动态段
 
@@ -2104,9 +2143,19 @@ def _build_dynamic_context(self) -> str:
 
 > 大文件写到一半 max_tokens 截断、上下文爆了、API 超时，如果每次遇到问题就崩溃，用户就不敢用了
 
+<div v-click>
+
 **问题**：模型输出截断、上下文过长、网络抖动，这三种常见错误直接让主循环停住
 
+</div>
+
+
+<div v-click>
+
 **方案**：先对错误分类，再选恢复路径，每条路径有独立的重试预算，全部耗尽才真正失败
+
+</div>
+
 
 <div class="grid grid-cols-3 gap-4 mt-4">
 
@@ -2360,9 +2409,19 @@ s03 的 TodoWrite 是"会话内清单"——压缩一次就丢了。
 
 > s03 的 Todo 只知道"有事要做"；Task 能告诉你"先做什么、谁在等谁、完成后自动解锁下游"
 
+<div v-click>
+
 **问题**：Todo 是会话内临时清单，压缩一次就丢了；没有依赖关系，不能跨会话持久
 
+</div>
+
+
+<div v-click>
+
 **方案**：可持久化的任务图 — JSON 文件 on disk，`blockedBy`/`blocks` 双向依赖，完成时自动解锁
+
+</div>
+
 
 <div class="grid grid-cols-[1fr_450px] gap-4">
 <div>
@@ -2487,9 +2546,19 @@ class TaskManager:
 
 > 用户说"跑测试，同时帮我建配置文件"——但你的 agent 只会傻等 90 秒测试跑完
 
+<div v-click>
+
 **问题**：慢命令（pytest、npm build）同步执行会卡住主循环，模型和用户都在空等
 
+</div>
+
+
+<div v-click>
+
 **方案**：daemon 线程执行慢命令，主循环立即拿到 task_id 继续前进，结果通过通知队列在下一轮注入
+
+</div>
+
 
 <div v-click>
 
@@ -2615,9 +2684,19 @@ task = {
 
 > 后台任务解决"现在开始的慢任务"，但"每周一 9 点跑报告"怎么办？——agent 需要学会"记住未来"
 
+<div v-click>
+
 **问题**：agent 只能响应当前请求，不能"将来某个时间再开始做事"
 
+</div>
+
+
+<div v-click>
+
 **方案**：cron 表达式 + 后台检查线程 + 通知注入，触发后仍然回到同一条主循环
+
+</div>
+
 
 <div class="grid grid-cols-[1fr_450px] gap-4">
 <div>
@@ -2852,9 +2931,19 @@ layout: center
 
 > s04 的 Subagent 是"用完即弃"；团队成员**长期在线、有身份、有邮箱、能反复接活**
 
+<div v-click>
+
 **问题**：Subagent 是一次性的，干完就消失，无法长期分工协作
 
+</div>
+
+
+<div v-click>
+
 **方案**：持久化名册 + JSONL 邮箱 + 每个队友独立线程运行自己的 agent loop
+
+</div>
+
 
 <div class="grid grid-cols-[1fr_450px] gap-4">
 <div>
@@ -2976,9 +3065,19 @@ class TeammateManager:
 
 > Lead 说"请停下"，Alice 无视了；Bob 直接开始数据库迁移没人审批——自由聊天不够，需要结构化握手
 
+<div v-click>
+
 **问题**：自由文本消息无法保证"请求必须被回应"，多个请求并存时无法对号
 
+</div>
+
+
+<div v-click>
+
 **方案**：`request_id` 关联的结构化协议 — 请求-响应 + 状态追踪表（pending → approved | rejected）
+
+</div>
+
 
 <div v-click>
 
@@ -3111,9 +3210,19 @@ response = {
 
 > 任务板上 10 个待办，Lead 一个一个分配——Lead 成了瓶颈。让队友自己去任务板找活干
 
+<div v-click>
+
 **问题**：所有任务都由 Lead 手动分配，Lead 成了瓶颈
 
+</div>
+
+
+<div v-click>
+
 **方案**：WORK/IDLE 双阶段循环 — 空闲时先检查邮箱，再按角色扫描任务板自动认领
+
+</div>
+
 
 <div class="grid grid-cols-[1fr_400px] gap-4">
 <div>
@@ -3234,9 +3343,19 @@ def ensure_identity_context(messages, name, role, team):
 
 > Alice 在重构 auth，Bob 在做登录页——两人同时改 `config.py`，文件冲突了。每个任务需要自己的"车道"
 
+<div v-click>
+
 **问题**：多个队友在同一个目录工作，未提交改动互相污染
 
+</div>
+
+
+<div v-click>
+
 **方案**：git worktree = 每个任务一个隔离目录，Task 管"做什么"，Worktree 管"在哪做"
+
+</div>
+
 
 <div class="grid grid-cols-[1fr_450px] gap-4">
 <div>
@@ -3369,9 +3488,19 @@ class EventBus:
 
 > 想查数据库？写个 handler。想控浏览器？再写一个。每次加能力都改代码？——让外部进程自己报到
 
+<div v-click>
+
 **问题**：所有工具都硬编码在主程序中，无法让外部程序动态接入新能力
 
+</div>
+
+
+<div v-click>
+
 **方案**：MCP 协议 — 外部进程暴露工具，统一命名（`mcp__{server}__{tool}`），统一路由，仍走同一条权限管道
+
+</div>
+
 
 <div v-click>
 
