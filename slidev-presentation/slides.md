@@ -589,12 +589,12 @@ layout: default
 
 # s01: 智能体循环 (The Agent Loop)
 
-> 真正的 agent 起点，是把真实工具结果重新喂回模型，而不只是输出一段文本，没有循环，就没有 agent。
+> 真正的 agent 起点，是把真实工具结果重新喂回模型，而不只是输出一段文本，没有循环，就没有 agent
 
 <div class="grid grid-cols-[1fr_1.2fr] gap-4">
 <div>
 
-最小的心智循环
+最小的心智循环，不要让人来做 AI 的测试员
 
 ```mermaid {scale: 0.6}
 graph TD
@@ -604,6 +604,7 @@ graph TD
   D --> E["tool_result"]
   E --> F["写回 messages"]
   F --> B
+  style F fill:#f97316,color:#fff
 ```
 
 </div>
@@ -761,11 +762,11 @@ layout: default
 <div class="grid grid-cols-2 gap-4">
 <div>
 
-## 工具分发
+## 工具分发 + 路径沙箱
 
-新增工具 = 新增 handler + 新增 schema，核心的循环永远不变
+注册新的工具，并补充安全路径检查，防止逃逸出工作目录
 
-```python {1-8,12-15}
+```python {1-8,12-15|22-27,29-30}
 # 工具注册表
 TOOL_HANDLERS = {
     "bash":       lambda **kw: run_bash(kw["command"]),
@@ -786,16 +787,8 @@ for block in response.content:
             "tool_use_id": block.id,
             "content": output,
         })
-```
 
-</div>
-<div>
-
-## 路径沙箱
-
-防止逃逸出工作目录
-
-```python {1-5,7-8}
+# 路径沙箱，防止逃逸出工作目录
 def safe_path(p: str) -> Path:
     path = (WORKDIR / p).resolve()
     if not path.is_relative_to(WORKDIR):
@@ -810,6 +803,12 @@ def run_read(path: str, limit: int = None) -> str:
     return "\n".join(lines)[:50000]
 ```
 
+</div>
+<div>
+
+## 对比
+
+新增工具 = 新增 handler + 新增 schema，核心的循环永远不变
 
 <div class="mt-4 p-2 rounded text-sm">
 
@@ -817,7 +816,7 @@ def run_read(path: str, limit: int = None) -> str:
 |------|-----|-----|
 | Tools | 1 (仅 bash) | <span class="text-orange-500">4 (bash, read, write, edit)</span> |
 | Dispatch | 硬编码 | 工具注册表 |
-| 路径安全 | 无 | 路径安全校验 |
+| 路径安全 | 无 | 安全路径校验 |
 | Agent loop | 不变 | <span class="text-orange-500">不变</span> |
 
 </div>
