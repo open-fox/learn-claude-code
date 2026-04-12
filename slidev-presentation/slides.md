@@ -1435,7 +1435,7 @@ layout: center
 
 方案：任何工具调用，都不应该直接执行，中间必须先过四级权限管控
 
-<div class="grid grid-cols-4 gap-4 mt-16 mb-16">
+<div class="grid grid-cols-4 gap-4 mt-8 mb-16">
 <div v-click class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
 
 **deny rules**
@@ -1581,99 +1581,131 @@ class BashSecurityValidator:
 
 # s08: Hook 系统
 
-> 安全团队要审计 bash、QA 要自动跑 lint、运维要日志——难道每个需求都改主循环？
+> 安全团队要审计 bash、QA 要自动跑 lint、运维要运行日志，难道每个需求都改主循环？
 
-<div class="grid grid-cols-[1fr_600px] gap-4">
-<div>
+**问题**：安全审计、自动 lint、操作日志……每加一个横切需求都要改主循环，循环越来越重，改动就可能影响全局
 
-**问题**：每次加行为都要改主循环代码
+**方案**：主循环只在关键节点暴露"时机"，附加行为写成独立的 hook 脚本，通过配置文件注册，用退出码约定结果
 
-**方案**：3 个生命周期事件 + 退出码协议
+<div class="grid grid-cols-3 gap-4 mt-8 mb-16">
+<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
 
-<v-clicks>
+**3 个生命周期事件**
 
-- **SessionStart** — 会话开始时
-- **PreToolUse** — 工具执行前（可阻止）
-- **PostToolUse** — 工具执行后（可追加）
-- 退出码：`0` 继续 / `1` 阻止 / `2` 注入消息
-
-</v-clicks>
+SessionStart · PreToolUse · PostToolUse
 
 </div>
+<div v-click class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
 
-<div class="embed-viz">
-<iframe src="https://build-your-own-agent.vercel.app/en/embed/s08/" />
+**统一退出码协议**
+
+`0` 继续 · `1` 阻止 · `2` 追加信息
+
+</div>
+<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**核心原则**
+
+hook 不替代主循环，只在固定时机旁路扩展
+
+</div>
 </div>
 
-</div>
+```mermaid {scale: 0.7}
+graph LR
+  TU["model 发起<br/>tool_use"] --> PRE["PreToolUse<br/>hook"]
+  PRE -->|"exit 0"| EXEC["执行工具"]
+  PRE -->|"exit 1"| BLK["❌ 阻止"]
+  PRE -->|"exit 2"| INJ["💬 追加信息"]
+  INJ --> EXEC
+  EXEC --> POST["PostToolUse<br/>hook"]
+  POST -->|"exit 0"| OK["正常结束"]
+  POST -->|"exit 2"| ADD["📋 追加信息"]
+  style BLK fill:#ef4444,color:#fff
+  style INJ fill:#f97316,color:#fff
+  style ADD fill:#f97316,color:#fff
+  style PRE fill:#bfdbfe,color:#000
+  style POST fill:#bbf7d0,color:#000
+```
+
 
 ---
 layout: default
 ---
 
-# s08: 核心代码 — 主循环的变更
+# s08: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
 
 ## agent_loop 变更
 
-```python {8-9|11-16|19-20|22-25}
-def agent_loop(messages: list, hooks: HookManager):
+```python {4-7|9-20|25-27|29-31}
     while True:
         response = client.messages.create(...)
-        messages.append({"role": "assistant", "content": response.content})
-        if response.stop_reason != "tool_use":
-            return
-        results = []
+        ...
         for block in response.content:
-            if block.type != "tool_use":
-                continue
-            ctx = {"tool_name": block.name, "tool_input": block.input}
-
-            # s08 新增：PreToolUse hooks
+            ...
+            # s08 新增：执行 PreToolUse hooks
             pre_result = hooks.run_hooks("PreToolUse", ctx)
+
+            # s08 新增：注入 hook 的信息
+            for msg in pre_result.get("messages", []):
+                results.append({
+                    "type": "tool_result", "tool_use_id": block.id,
+                    "content": f"[Hook message]: {msg}",
+                })
+
             if pre_result.get("blocked"):
-                output = f"Blocked: {pre_result['block_reason']}"
-                results.append({...})
+                reason = pre_result.get("block_reason", "Blocked by hook")
+                output = f"Tool blocked by PreToolUse hook: {reason}"
+                results.append(...)
                 continue
 
             # 正常执行工具
-            output = handler(**block.input)
+            ...
 
-            # s08 新增：PostToolUse hooks
+            # s08 新增：执行 PostToolUse hooks
             ctx["tool_output"] = output
             post_result = hooks.run_hooks("PostToolUse", ctx)
+
+            # s08 新增：注入 hook 的信息
             for msg in post_result.get("messages", []):
                 output += f"\n[Hook note]: {msg}"
 
-            results.append({...})
+            results.append(...)
+
         messages.append({"role": "user", "content": results})
 ```
 
 </div>
 <div>
 
-## HookManager
+## 新增常量
 
 ```python
 HOOK_EVENTS = ("PreToolUse", "PostToolUse", "SessionStart")
+```
 
-class HookManager:
-    def __init__(self, config_path=None):
-        self.hooks = {
-            "PreToolUse": [],
-            "PostToolUse": [],
-            "SessionStart": [],
-        }
-        # 从 .hooks.json 加载配置
+## HookEvent
 
-    def run_hooks(self, event, context) -> dict:
-        # 返回 {"blocked": bool, "messages": [...]}
-        # exit 0 → 继续
-        # exit 1 → 阻止
-        # exit 2 → 注入消息
-        ...
+```python
+event = {
+    "name": "PreToolUse",
+    "payload": {
+        "tool_name": "bash",
+        "input": {"command": "pytest"},
+    },
+}
+```
+
+## HookResult
+
+```python
+result = {
+    "exit_code": 0, # 0 继续 · 1 阻止 · 2 追加信息
+    "message": "",
+}
 ```
 
 ## 配置文件 `.hooks.json`
