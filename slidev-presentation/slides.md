@@ -613,6 +613,7 @@ graph TD
   E --> F["写回 messages"]
   F --> B
   style F fill:#f97316,color:#fff
+  style D fill:#bfdbfe,color:#000
 ```
 
 </div>
@@ -1822,43 +1823,45 @@ result = {
 
 # s09: 记忆系统 (Memory)
 
-> 三次告诉模型"别改 test snapshots"，下次新开会话，它又改了
+> 三次告诉模型"别改 snapshots"，下次新开会话，它又改了
 
 <div class="grid grid-cols-[1fr_300px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：每次新会话都从零开始，用户偏好、纠正、项目约定全部丢失
+**问题**：每次新会话都从零开始，用户的长期偏好、纠正过的错误、项目的约定全部丢失
 
 </div>
-
 
 <div v-click>
 
-**方案**：持久化记忆文件（`.memory/*.md`），会话启动时加载，`save_memory` 写入，每轮重建 system prompt 注入
+**方案**：持久化记忆文件（`.memory/*.md`），调用 `save_memory` 写入，每轮会话重建系统提示词时注入记忆内容
 
 </div>
 
+<v-click at="+0">
 
-<v-clicks>
+- **user** — 用户偏好（tabs、pytest、简洁回答）
 
-- **user** — 偏好（tabs、pytest、简洁回答）
-- **feedback** — 纠正（"不要改 snapshots"）
+- **feedback** — 纠正的错误（"不要改 snapshots"）
+
 - **project** — 非显然约定（合规要求、不能动的旧模块）
-- **reference** — 外部指针（看板 URL、监控面板）
-- **不要存**：文件结构、临时任务进度、密钥
 
-</v-clicks>
+- **reference** — 外部参考（看板 URL、监控面板）
 
-<div v-click class="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-sm">
+</v-click>
 
-**原则**：memory 提供方向，不替代当前观察。冲突时优先相信真实状态。
+<div v-click="4" class="mt-4 p-2 text-orange-500 text-xl">
+
+**原则**：只有那些跨会话仍有价值，且不能轻易直接推出来的信息，才适合进入记忆
 
 </div>
 
 </div>
 <div>
+
+<div v-click="3">
 
 ```mermaid {scale: 0.6}
 graph TD
@@ -1876,6 +1879,8 @@ graph TD
   style SP fill:#bfdbfe,color:#000
   style LOAD fill:#bbf7d0,color:#000
 ```
+
+</div>
 
 </div>
 </div>
@@ -1952,7 +1957,7 @@ class MemoryManager:
     def save_memory(self, name, desc, mem_type, content) -> str:
 ```
 
-## 存储布局
+## 记忆文件存储结构
 
 ```text
 .memory/
