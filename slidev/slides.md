@@ -2923,24 +2923,18 @@ layout: default
 
 > s04 的 Subagent 是"用完即弃"；团队成员**长期在线、有身份、有邮箱、能反复接活**
 
+<div class="grid grid-cols-[1fr_600px] gap-8">
+<div>
+
 <div v-click>
 
 **问题**：Subagent 是一次性的，干完就消失，无法长期分工协作
 
 </div>
 
-
 <div v-click>
 
 **方案**：持久化名册 + JSONL 邮箱 + 每个队友独立线程运行自己的 agent loop
-
-</div>
-
-
-<div class="grid grid-cols-[1fr_450px] gap-4">
-<div>
-
-<v-clicks>
 
 - **名册** `.team/config.json`：成员列表、角色、状态
 - **邮箱** `.team/inbox/alice.jsonl`：append-only 收件箱
@@ -2948,32 +2942,42 @@ layout: default
 - 每轮先 drain inbox，再继续工作
 - 新增工具：`spawn_teammate` / `send_message` / `read_inbox` / `broadcast`
 
-</v-clicks>
+</div>
 
-<div v-click class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">
+<div v-click="4" class="mt-8 text-orange-500 text-lg">
 
-**subagent 是一次性外包，teammate 是长期在线队友**
+subagent 是一次性外包，teammate 是长期在线队友
 
 </div>
 
 </div>
-<div>
 
-```mermaid {scale: 0.45}
-graph TD
-  Lead["Lead"] -->|"spawn"| A["Alice (coder)<br/>独立 loop"]
-  Lead -->|"spawn"| B["Bob (tester)<br/>独立 loop"]
-  Lead -->|"send_message"| AI["alice.jsonl"]
-  Lead -->|"send_message"| BI["bob.jsonl"]
-  AI -->|"drain inbox"| A
-  BI -->|"drain inbox"| B
-  A -->|"send_message"| LI["lead.jsonl"]
-  B -->|"send_message"| LI
-  LI -->|"drain inbox"| Lead
-  style Lead fill:#f97316,color:#fff
-  style A fill:#bfdbfe,color:#000
-  style B fill:#bbf7d0,color:#000
-```
+<div v-click="3">
+
+<div class="flex flex-col items-center gap-1 mt-4">
+  <div class="px-5 py-3 rounded-xl bg-orange-500/20 border-2 border-orange-400 text-orange-300 font-bold text-sm text-center w-44">Lead</div>
+  <div class="flex items-center gap-12 mt-1">
+    <div class="text-gray-500 text-sm">↙ spawn</div>
+    <div class="text-gray-500 text-sm">↘ spawn</div>
+  </div>
+  <div class="flex items-start gap-8">
+    <div class="flex flex-col items-center gap-1">
+      <div class="px-4 py-2 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-blue-300 font-bold text-xs text-center">Alice (coder)<br/><span class="font-normal opacity-70">独立 loop</span></div>
+      <div class="text-xs text-gray-500">↕ inbox</div>
+      <div class="px-3 py-1 rounded bg-blue-500/10 border border-blue-400/50 text-blue-400 text-xs">alice.jsonl</div>
+    </div>
+    <div class="flex flex-col items-center gap-1">
+      <div class="px-4 py-2 rounded-xl bg-green-500/15 border-2 border-green-400 text-green-300 font-bold text-xs text-center">Bob (tester)<br/><span class="font-normal opacity-70">独立 loop</span></div>
+      <div class="text-xs text-gray-500">↕ inbox</div>
+      <div class="px-3 py-1 rounded bg-green-500/10 border border-green-400/50 text-green-400 text-xs">bob.jsonl</div>
+    </div>
+  </div>
+  <div class="flex items-center gap-6 mt-2">
+    <div class="text-gray-500 text-xs">↘ send_message</div>
+    <div class="text-gray-500 text-xs">↙ send_message</div>
+  </div>
+  <div class="px-3 py-1 rounded bg-orange-500/10 border border-orange-400/50 text-orange-400 text-xs">lead.jsonl</div>
+</div>
 
 </div>
 </div>
@@ -3057,55 +3061,63 @@ class TeammateManager:
 
 > Lead 说"请停下"，Alice 无视了；Bob 直接开始数据库迁移没人审批——自由聊天不够，需要结构化握手
 
+<div class="grid grid-cols-[1fr_600px] gap-8">
+<div>
+
 <div v-click>
 
 **问题**：自由文本消息无法保证"请求必须被回应"，多个请求并存时无法对号
 
 </div>
 
-
 <div v-click>
 
 **方案**：`request_id` 关联的结构化协议 — 请求-响应 + 状态追踪表（pending → approved | rejected）
 
-</div>
-
-
-<div v-click>
-
-```mermaid {scale: 0.7}
-graph LR
-  L["Lead"] -->|"shutdown_request<br/>req_001"| A["Alice inbox"]
-  A -->|"drain"| AH["Alice 处理"]
-  AH -->|"approve<br/>req_001"| LI["Lead inbox"]
-  LI -->|"drain"| LS["Lead 确认关闭"]
-  style L fill:#f97316,color:#fff
-  style AH fill:#bfdbfe,color:#000
-  style LS fill:#22c55e,color:#fff
-```
+- **shutdown 协议**：Lead 发请求 → 队友 approve/reject
+- **plan_approval 协议**：队友提交计划 → Lead 审批
+- 统一模板：request_id + 状态机 = 可复用的协议模式
+- 新增工具：`shutdown_request` / `shutdown_response` / `plan_approval`
 
 </div>
 
-<div class="grid grid-cols-3 gap-3 mt-2 text-sm">
-<div v-click class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+<div v-click="4" class="mt-8 text-orange-500 text-lg">
 
-**shutdown 协议**
-
-Lead 发请求 → 队友 approve/reject
+自由聊天靠默契，结构化协议靠协定
 
 </div>
-<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
-
-**plan_approval 协议**
-
-队友提交计划 → Lead 审批
 
 </div>
-<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
 
-**统一模板**
+<div v-click="3">
 
-request_id + 状态机 = 可复用的协议模式
+<div class="flex flex-col items-center gap-1 mt-6">
+  <div class="text-gray-400 text-xs mb-1">shutdown 协议流程</div>
+  <div class="flex items-center gap-3">
+    <div class="px-4 py-2 rounded-xl bg-orange-500/20 border-2 border-orange-400 text-orange-300 font-bold text-sm text-center">Lead</div>
+    <div class="text-gray-500 text-sm">→ <span class="text-xs text-orange-400">shutdown_request</span> →</div>
+    <div class="px-4 py-2 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-blue-300 font-bold text-sm text-center">Alice inbox</div>
+  </div>
+  <div class="text-gray-500 text-sm ml-32">↓ drain</div>
+  <div class="flex items-center gap-3">
+    <div class="px-4 py-2 rounded-xl bg-green-500/15 border-2 border-green-400 text-green-300 font-bold text-sm text-center">Lead 确认关闭</div>
+    <div class="text-gray-500 text-sm">← <span class="text-xs text-green-400">approve req_001</span> ←</div>
+    <div class="px-4 py-2 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-blue-300 font-bold text-sm text-center">Alice 处理</div>
+  </div>
+
+  <div class="text-gray-400 text-xs mt-6 mb-1">plan_approval 协议流程</div>
+  <div class="flex items-center gap-3">
+    <div class="px-4 py-2 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-blue-300 font-bold text-sm text-center">Bob</div>
+    <div class="text-gray-500 text-sm">→ <span class="text-xs text-blue-400">submit plan</span> →</div>
+    <div class="px-4 py-2 rounded-xl bg-orange-500/20 border-2 border-orange-400 text-orange-300 font-bold text-sm text-center">Lead inbox</div>
+  </div>
+  <div class="text-gray-500 text-sm ml-32">↓ review</div>
+  <div class="flex items-center gap-3">
+    <div class="px-4 py-2 rounded-xl bg-green-500/15 border-2 border-green-400 text-green-300 font-bold text-sm text-center">Bob 执行</div>
+    <div class="text-gray-500 text-sm">← <span class="text-xs text-green-400">approved</span> ←</div>
+    <div class="px-4 py-2 rounded-xl bg-orange-500/20 border-2 border-orange-400 text-orange-300 font-bold text-sm text-center">Lead 审批</div>
+  </div>
+</div>
 
 </div>
 </div>
@@ -3202,50 +3214,67 @@ response = {
 
 > 任务板上 10 个待办，Lead 一个一个分配——Lead 成了瓶颈。让队友自己去任务板找活干
 
+<div class="grid grid-cols-[1fr_600px] gap-8">
+<div>
+
 <div v-click>
 
 **问题**：所有任务都由 Lead 手动分配，Lead 成了瓶颈
 
 </div>
 
-
 <div v-click>
 
 **方案**：WORK/IDLE 双阶段循环 — 空闲时先检查邮箱，再按角色扫描任务板自动认领
 
-</div>
-
-
-<div class="grid grid-cols-[1fr_400px] gap-4">
-<div>
-
-<v-clicks>
-
-- **WORK 阶段**：标准 agent loop
+- **WORK 阶段**：标准 agent loop，执行具体任务
 - **IDLE 阶段**：每 5 秒轮询邮箱 + 任务板
-- 有消息 → 恢复 WORK
-- 有 unclaimed ready task → 认领 → 恢复 WORK
-- 60 秒无事 → shutdown
+- 有消息 → 恢复 WORK；有 unclaimed ready task → 认领 → WORK
+- 60 秒无事 → 自动 shutdown
 - 认领需原子锁 + 角色匹配
 - 压缩后自动重注入 `<identity>` block
 
-</v-clicks>
+</div>
+
+<div v-click="4" class="mt-8 text-orange-500 text-lg">
+
+Lead 负责拆任务，队友负责自己找活干
 
 </div>
-<div>
 
-```mermaid {scale: 0.45}
-graph TD
-  W["WORK 阶段"] -->|"工作做完"| I["IDLE 阶段"]
-  I -->|"邮箱有消息"| W
-  I -->|"任务板有 ready task"| CL["认领任务"]
-  CL -->|"补身份 + 任务提示"| W
-  I -->|"60s 无事"| SD["shutdown"]
-  style W fill:#22c55e,color:#fff
-  style I fill:#bfdbfe,color:#000
-  style CL fill:#f97316,color:#fff
-  style SD fill:#6b7280,color:#fff
-```
+</div>
+
+<div v-click="3">
+
+<div class="flex flex-col items-center gap-1 mt-6">
+
+  <div class="px-5 py-3 rounded-xl bg-green-500/15 border-2 border-green-400 text-green-300 font-bold text-sm text-center w-48">WORK 阶段<br/><span class="font-normal text-xs opacity-70">标准 agent loop</span></div>
+  <div class="text-gray-500">↓ <span class="text-xs text-gray-400">工作做完</span></div>
+
+  <div class="px-5 py-3 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-blue-300 font-bold text-sm text-center w-48">IDLE 阶段<br/><span class="font-normal text-xs opacity-70">每 5s 轮询</span></div>
+
+  <div class="flex items-start justify-center gap-6 mt-2">
+    <div class="flex flex-col items-center">
+      <div class="text-gray-500 text-sm">↓</div>
+      <div class="px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-400/50 text-blue-400 text-xs text-center">邮箱有消息</div>
+      <div class="text-green-400 text-xs mt-1">↑ 恢复 WORK</div>
+    </div>
+    <div class="flex flex-col items-center">
+      <div class="text-gray-500 text-sm">↓</div>
+      <div class="px-3 py-2 rounded-lg bg-orange-500/10 border border-orange-400/50 text-orange-400 text-xs text-center">有 ready task</div>
+      <div class="text-xs text-gray-500 mt-1">↓ 认领</div>
+      <div class="px-3 py-2 rounded-lg bg-orange-500/20 border border-orange-400 text-orange-300 text-xs text-center mt-1">补身份 + 任务提示</div>
+      <div class="text-green-400 text-xs mt-1">↑ 恢复 WORK</div>
+    </div>
+    <div class="flex flex-col items-center">
+      <div class="text-gray-500 text-sm">↓</div>
+      <div class="px-3 py-2 rounded-lg bg-gray-500/10 border border-gray-400/50 text-gray-400 text-xs text-center">60s 无事</div>
+      <div class="text-gray-500 text-xs mt-1">↓</div>
+      <div class="px-3 py-2 rounded-lg bg-gray-600/20 border border-gray-500 text-gray-400 text-xs text-center">shutdown</div>
+    </div>
+  </div>
+
+</div>
 
 </div>
 </div>
@@ -3335,55 +3364,61 @@ def ensure_identity_context(messages, name, role, team):
 
 > Alice 在重构 auth，Bob 在做登录页——两人同时改 `config.py`，文件冲突了。每个任务需要自己的"车道"
 
+<div class="grid grid-cols-[1fr_600px] gap-8">
+<div>
+
 <div v-click>
 
 **问题**：多个队友在同一个目录工作，未提交改动互相污染
 
 </div>
 
-
 <div v-click>
 
 **方案**：git worktree = 每个任务一个隔离目录，Task 管"做什么"，Worktree 管"在哪做"
 
-</div>
-
-
-<div class="grid grid-cols-[1fr_450px] gap-4">
-<div>
-
-<v-clicks>
-
 - `worktree_create` → `git worktree add -b wt/{name}`
 - `worktree_run` → `subprocess.run(cmd, cwd=wt_path)`
 - `worktree_closeout` → keep（保留）或 remove（删除）
-- 任务状态（`status`）和车道状态（`worktree_state`）**分开管理**
-- 两张注册表通过 `task_id` 关联
+- 任务状态和车道状态**分开管理**，通过 `task_id` 关联
+- 新增工具：`worktree_create` / `worktree_run` / `worktree_closeout` / `worktree_status`
 
-</v-clicks>
+</div>
 
-<div v-click class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">
+<div v-click="4" class="mt-8 text-orange-500 text-lg">
 
-**任务 completed 但 worktree kept 是完全合理的**（保留给 reviewer 看）
+任务 completed 但 worktree kept 是完全合理的（保留给 reviewer 看）
 
 </div>
 
 </div>
-<div>
 
-```mermaid {scale: 0.45}
-graph TD
-  TC["task_create()"] --> TB["task_bind_worktree()"]
-  TB --> WC["worktree_create()<br/>git worktree add"]
-  WC --> WE["worktree_enter()"]
-  WE --> WR["worktree_run()<br/>cwd=wt_path"]
-  WR --> CO{"closeout?"}
-  CO -->|"keep"| K["保留目录"]
-  CO -->|"remove"| R["删除目录"]
-  style TC fill:#f97316,color:#fff
-  style WC fill:#bfdbfe,color:#000
-  style WR fill:#bbf7d0,color:#000
-```
+<div v-click="3">
+
+<div class="flex flex-col items-center gap-1 mt-4">
+
+  <div class="px-5 py-3 rounded-xl bg-orange-500/20 border-2 border-orange-400 text-orange-300 font-bold text-sm text-center w-52">task_create()<br/><span class="font-normal text-xs opacity-70">"Refactor auth"</span></div>
+  <div class="text-gray-500">↓</div>
+
+  <div class="px-5 py-3 rounded-xl bg-purple-500/15 border-2 border-purple-400 text-purple-300 font-bold text-sm text-center w-52">task_bind_worktree()</div>
+  <div class="text-gray-500">↓</div>
+
+  <div class="px-5 py-3 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-blue-300 font-bold text-sm text-center w-52">worktree_create()<br/><span class="font-normal text-xs opacity-70">git worktree add</span></div>
+  <div class="text-gray-500">↓</div>
+
+  <div class="px-5 py-3 rounded-xl bg-cyan-500/15 border-2 border-cyan-400 text-cyan-300 font-bold text-sm text-center w-52">worktree_enter()</div>
+  <div class="text-gray-500">↓</div>
+
+  <div class="px-5 py-3 rounded-xl bg-green-500/15 border-2 border-green-400 text-green-300 font-bold text-sm text-center w-52">worktree_run()<br/><span class="font-normal text-xs opacity-70">cwd=wt_path</span></div>
+  <div class="text-gray-500">↓</div>
+
+  <div class="flex items-center gap-4">
+    <div class="px-4 py-2 rounded-xl bg-amber-500/15 border-2 border-amber-400 text-amber-300 font-bold text-xs text-center">keep<br/><span class="font-normal opacity-70">保留目录</span></div>
+    <div class="text-gray-400 text-sm">closeout?</div>
+    <div class="px-4 py-2 rounded-xl bg-gray-500/15 border-2 border-gray-400 text-gray-400 font-bold text-xs text-center">remove<br/><span class="font-normal opacity-70">删除目录</span></div>
+  </div>
+
+</div>
 
 </div>
 </div>
@@ -3480,59 +3515,62 @@ class EventBus:
 
 > 想查数据库？写个 handler。想控浏览器？再写一个。每次加能力都改代码？——让外部进程自己报到
 
+<div class="grid grid-cols-[1fr_600px] gap-8">
+<div>
+
 <div v-click>
 
 **问题**：所有工具都硬编码在主程序中，无法让外部程序动态接入新能力
 
 </div>
 
-
 <div v-click>
 
 **方案**：MCP 协议 — 外部进程暴露工具，统一命名（`mcp__{server}__{tool}`），统一路由，仍走同一条权限管道
 
-</div>
-
-
-<div v-click>
-
-```mermaid {scale: 0.7}
-graph LR
-  LLM["LLM tool_use"] --> R["Tool Router"]
-  R -->|"native tool"| NH["本地 Handler"]
-  R -->|"mcp__postgres__query"| MC["MCPClient"]
-  MC --> ES["外部 Server"]
-  ES --> MC
-  NH --> TR["统一 tool_result"]
-  MC --> TR
-  TR --> LLM
-  style R fill:#bfdbfe,color:#000
-  style MC fill:#f97316,color:#fff
-  style NH fill:#bbf7d0,color:#000
-```
+- **Plugin 发现**：`.claude-plugin/plugin.json` → server 启动命令
+- **MCP Server 连接**：`connect()` → `list_tools()` → 标准化名字
+- **统一权限**：MCP + native 走同一条 `PermissionGate`
+- **统一路由**：`mcp__` 前缀走 MCPClient，其余走本地 handler
+- 新增组件：`MCPClient` / `MCPToolRouter` / `CapabilityPermissionGate`
 
 </div>
 
-<div class="grid grid-cols-3 gap-3 mt-2 text-sm">
-<div v-click class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
+<div v-click="4" class="mt-8 text-orange-500 text-lg">
 
-**Plugin 发现配置**
-
-`.claude-plugin/plugin.json` → server 启动命令
+MCP 不是替代工具系统，是让工具系统可以被外部扩展
 
 </div>
-<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
-
-**MCP Server 连接**
-
-`connect()` → `list_tools()` → 标准化名字
 
 </div>
-<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
 
-**统一权限**
+<div v-click="3">
 
-MCP + native 走同一条 `PermissionGate`
+<div class="flex flex-col items-center gap-1 mt-6">
+
+  <div class="px-5 py-3 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-blue-300 font-bold text-sm text-center w-52">LLM tool_use</div>
+  <div class="text-gray-500">↓</div>
+
+  <div class="px-5 py-3 rounded-xl bg-gray-500/15 border-2 border-gray-400 text-gray-300 font-bold text-sm text-center w-52">Tool Router<br/><span class="font-normal text-xs opacity-70">前缀判断分发</span></div>
+
+  <div class="flex items-start justify-center gap-6 mt-2">
+    <div class="flex flex-col items-center">
+      <div class="text-gray-500 text-sm">↓ <span class="text-xs text-green-400">native</span></div>
+      <div class="px-4 py-2 rounded-xl bg-green-500/15 border-2 border-green-400 text-green-300 font-bold text-xs text-center">本地 Handler<br/><span class="font-normal opacity-70">bash / read / write</span></div>
+    </div>
+    <div class="flex flex-col items-center">
+      <div class="text-gray-500 text-sm">↓ <span class="text-xs text-orange-400">mcp__</span></div>
+      <div class="px-4 py-2 rounded-xl bg-orange-500/20 border-2 border-orange-400 text-orange-300 font-bold text-xs text-center">MCPClient<br/><span class="font-normal opacity-70">mcp__pg__query</span></div>
+      <div class="text-gray-500 text-xs mt-1">↕</div>
+      <div class="px-4 py-2 rounded-xl bg-purple-500/15 border-2 border-purple-400 text-purple-300 font-bold text-xs text-center">外部 Server<br/><span class="font-normal opacity-70">独立进程</span></div>
+    </div>
+  </div>
+
+  <div class="text-gray-500 mt-2">↓</div>
+
+  <div class="px-5 py-3 rounded-xl bg-cyan-500/15 border-2 border-cyan-400 text-cyan-300 font-bold text-sm text-center w-52">统一 tool_result</div>
+
+</div>
 
 </div>
 </div>
