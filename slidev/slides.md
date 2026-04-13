@@ -1901,7 +1901,7 @@ result = {
 
 > 三次告诉模型"别改 snapshots"，下次新开会话，它又改了
 
-<div class="grid grid-cols-[1fr_400px] gap-8">
+<div class="grid grid-cols-[1fr_500px] gap-8">
 <div>
 
 <div v-click>
@@ -1914,64 +1914,54 @@ result = {
 
 **方案**：引入记忆系统，持久化记忆文件，每轮会话开始时，注入记忆内容到系统提示词
 
-</div>
-
-<v-click at="+0">
-
 - **user** — 用户偏好（tabs、pytest、简洁回答）
-
 - **feedback** — 纠正的错误（"不要改 snapshots"）
-
 - **project** — 非显然约定（合规要求、不能动的旧模块）
-
 - **reference** — 外部参考（看板 URL、监控面板）
 
-</v-click>
+</div>
 
-<div v-click="4" class="mt-8 text-orange-500 text-xl">
+<div v-click="4" class="mt-8 text-orange-500 text-lg">
 
-**原则**：只有那些跨会话仍有价值，且不能轻易直接推出来的信息，才适合进入记忆
+只有跨会话仍有价值，且不能轻易直接推出来的信息，才适合进入记忆
 
 </div>
 
 </div>
-<div>
 
 <div v-click="3">
 
-<div class="text-xs space-y-2">
+<div class="text-xs space-y-2 mt-2">
 
-<div class="grid grid-cols-2 gap-3">
-
-<div class="space-y-2">
-<div class="text-gray-400 text-center mb-1">写入流程</div>
-<div class="bg-gray-800 rounded px-2 py-2 text-center">用户提到长期信息</div>
-<div class="text-center">▼</div>
-<div class="bg-orange-500 text-white rounded px-2 py-2 text-center">模型调用 save_memory</div>
-<div class="text-center">▼</div>
-<div class="bg-gray-800 rounded px-2 py-2 text-center">写入 .memory/{name}.md</div>
-<div class="text-center">▼</div>
-<div class="bg-gray-800 rounded px-2 py-2 text-center">重建 MEMORY.md 索引</div>
-</div>
+<div class="grid grid-cols-2 gap-4">
 
 <div class="space-y-2">
-<div class="text-gray-400 text-center mb-1">读取流程（每轮会话）</div>
-<div class="bg-gray-800 rounded px-2 py-2 text-center">build_system_prompt()</div>
-<div class="text-center">▼</div>
-<div class="bg-green-600 text-white rounded px-2 py-2 text-center">load_memory_prompt()</div>
-<div class="text-center">▼</div>
-<div class="bg-gray-800 rounded px-2 py-2 text-center">按 type 分组拼接</div>
-<div class="text-center">▼</div>
-<div class="bg-blue-500 text-white rounded px-2 py-2 text-center">注入 system prompt</div>
+<div class="text-gray-400 text-center mb-1 font-bold">写入流程</div>
+<div class="px-3 py-2 rounded-lg bg-gray-500/15 border border-gray-400/50 text-gray-300 text-center">用户提到长期信息</div>
+<div class="text-center text-gray-500">↓</div>
+<div class="px-3 py-2 rounded-lg bg-orange-500/20 border border-orange-400 text-orange-300 text-center font-bold">模型调用 save_memory</div>
+<div class="text-center text-gray-500">↓</div>
+<div class="px-3 py-2 rounded-lg bg-gray-500/15 border border-gray-400/50 text-gray-300 text-center">写入 .memory/{name}.md</div>
+<div class="text-center text-gray-500">↓</div>
+<div class="px-3 py-2 rounded-lg bg-gray-500/15 border border-gray-400/50 text-gray-300 text-center">重建 MEMORY.md 索引</div>
+</div>
+
+<div class="space-y-2">
+<div class="text-gray-400 text-center mb-1 font-bold">读取流程（每轮会话）</div>
+<div class="px-3 py-2 rounded-lg bg-gray-500/15 border border-gray-400/50 text-gray-300 text-center">build_system_prompt()</div>
+<div class="text-center text-gray-500">↓</div>
+<div class="px-3 py-2 rounded-lg bg-green-500/15 border border-green-400 text-green-300 text-center font-bold">load_memory_prompt()</div>
+<div class="text-center text-gray-500">↓</div>
+<div class="px-3 py-2 rounded-lg bg-gray-500/15 border border-gray-400/50 text-gray-300 text-center">按 type 分组拼接</div>
+<div class="text-center text-gray-500">↓</div>
+<div class="px-3 py-2 rounded-lg bg-blue-500/15 border border-blue-400 text-blue-300 text-center font-bold">注入 system prompt</div>
 </div>
 
 </div>
 
-<div class="text-center mt-1">▼</div>
-<div class="bg-gray-600 text-white rounded px-2 py-2 text-center">
+<div class="text-center text-gray-500 mt-2">↓</div>
+<div class="px-3 py-2 rounded-lg bg-purple-500/15 border border-purple-400 text-purple-300 text-center font-bold">
 .memory/ 磁盘（写入 ← → 读取）
-</div>
-
 </div>
 
 </div>
@@ -2080,7 +2070,7 @@ The user explicitly prefers tabs over spaces.
 
 > 角色说明、工具文档、技能列表、记忆、CLAUDE.md，全塞一个系统提示词里，半年后谁敢改？
 
-<div class="grid grid-cols-[1fr_400px] gap-4">
+<div class="grid grid-cols-[1fr_500px] gap-8">
 <div>
 
 <div v-click>
@@ -2095,72 +2085,56 @@ The user explicitly prefers tabs over spaces.
 
 - 启发：JSON序列化的结果要按照key进行排序，保证缓存复用
 
-<!-- - **core** — 身份 + 规则（几乎不变）
-
-- **tools** — 工具列表
-
-- **skills** — 技能列表
-
-- **memory** — 记忆内容
-
-- **CLAUDE.md** — 规则文件（ = AGENTS.md）
-
-- 用 `DYNAMIC_BOUNDARY` 分隔 静态段 和 动态段
-
-- **dynamic** — 日期、目录、模式、提醒（每轮会话重建） -->
-
 </div>
 
-<div v-click="4" class="mt-8 text-orange-500 text-xl">
+<div v-click="4" class="mt-8 text-orange-500 text-lg">
 
 静态前缀可缓存复用，效率高、成本低，动态后缀则每轮会话重建
 
 </div>
 
 </div>
-<div>
 
 <div v-click="3">
 
-<div class="text-sm space-y-2">
+<div class="text-sm space-y-2 mt-2">
 
-<div class="border border-gray-600 rounded p-2">
-<div class="text-gray-400 text-center mb-1">静态段（可缓存复用）</div>
+<div class="rounded-xl border-2 border-blue-400/50 p-3">
+<div class="text-blue-400 text-center mb-2 font-bold text-xs">静态段（可缓存复用）</div>
 <div class="space-y-2">
-<div class="bg-gray-800 rounded px-2 py-1">1. core — 身份 + 规则</div>
-<div class="bg-gray-800 rounded px-2 py-1">2. tools — 工具列表</div>
-<div class="bg-gray-800 rounded px-2 py-1">3. skills — 技能列表</div>
-<div class="bg-gray-800 rounded px-2 py-1">4. memory — 记忆内容</div>
-<div class="bg-gray-800 rounded px-2 py-1">5. CLAUDE.md — 规则文件</div>
+<div class="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-400/30 text-blue-300 text-xs">1. core — 身份 + 规则</div>
+<div class="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-400/30 text-blue-300 text-xs">2. tools — 工具列表</div>
+<div class="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-400/30 text-blue-300 text-xs">3. skills — 技能列表</div>
+<div class="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-400/30 text-blue-300 text-xs">4. memory — 记忆内容</div>
+<div class="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-400/30 text-blue-300 text-xs">5. CLAUDE.md — 规则文件</div>
 </div>
 </div>
 
-<div class="text-center">▼</div>
+<div class="text-center text-gray-500">↓</div>
 
-<div class="bg-orange-500 text-white text-center rounded px-2 py-1 font-bold">DYNAMIC_BOUNDARY</div>
+<div class="px-3 py-2 rounded-lg bg-orange-500/20 border-2 border-orange-400 text-orange-300 text-center font-bold text-xs">DYNAMIC_BOUNDARY</div>
 
-<div class="text-center">▼</div>
+<div class="text-center text-gray-500">↓</div>
 
-<div class="border border-gray-600 rounded p-2">
-<div class="text-gray-400 text-center mb-1">动态段（每轮会话重建）</div>
+<div class="rounded-xl border-2 border-green-400/50 p-3">
+<div class="text-green-400 text-center mb-2 font-bold text-xs">动态段（每轮会话重建）</div>
 <div class="space-y-2">
-<div class="bg-gray-800 rounded px-2 py-1">1. 当前日期</div>
-<div class="bg-gray-800 rounded px-2 py-1">2. 工作目录</div>
-<div class="bg-gray-800 rounded px-2 py-1">3. 当前模式</div>
-<div class="bg-gray-800 rounded px-2 py-1">4. 操作系统</div>
-<div class="bg-gray-800 rounded px-2 py-1">5. 本轮提醒</div>
+<div class="px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-400/30 text-green-300 text-xs">1. 当前日期</div>
+<div class="px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-400/30 text-green-300 text-xs">2. 工作目录</div>
+<div class="px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-400/30 text-green-300 text-xs">3. 当前模式</div>
+<div class="px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-400/30 text-green-300 text-xs">4. 操作系统</div>
+<div class="px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-400/30 text-green-300 text-xs">5. 本轮提醒</div>
 </div>
 </div>
 
-<div class="text-center">▼</div>
+<div class="text-center text-gray-500">↓</div>
 
-<div class="bg-green-500 text-white text-center rounded px-2 py-1 font-bold">最终系统提示词</div>
-
-</div>
+<div class="px-3 py-2 rounded-xl bg-cyan-500/15 border-2 border-cyan-400 text-cyan-300 text-center font-bold text-xs">最终系统提示词</div>
 
 </div>
 
 </div>
+
 </div>
 
 ---
