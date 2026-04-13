@@ -1095,19 +1095,13 @@ TOOL_HANDLERS = {
 
 **方案**：把局部任务交给 subagent 在独立上下文里做，做完只带必要结果回来，保持主 agent 上下文干净
 
-</div>
+- Subagent 有独立的消息列表和工具列表
 
-<v-click at="+0">
-
-- Subagent 有自己的消息列表
-
-- Subagent 有自己的工具列表
-
-- Subagent 完成后只返回摘要
+- 完成后只返回摘要，不污染父 agent 上下文
 
 - Subagent 没有 task 工具，防止递归创建 Subagent
 
-</v-click>
+</div>
 
 </div>
 
@@ -1225,19 +1219,15 @@ PARENT_TOOLS = CHILD_TOOLS + [
 
 <div v-click>
 
-**方案**：把技能拆成两层，系统提示词只存放技能摘要，模型按需加载完整技能说明，始终不在系统提示词中
+**方案**：技能拆成两层，系统提示词只放摘要目录，模型按需加载完整技能说明
+
+- **第 1 层**：技能摘要始终在 system prompt，约 120 tokens
+
+- **第 2 层**：模型调用 `load_skill` 工具按需加载完整正文
+
+- 新增工具 load_skill，核心循环保持不变
 
 </div>
-
-<v-click at="+0">
-
-- **第 1 层**：始终在 system prompt，~120 tokens
-
-- **第 2 层**：模型调用 `load_skill` 工具按需加载
-
-- 新增工具 load_skill，Agent 核心循环保持不变
-
-</v-click>
 
 </div>
 
@@ -1348,21 +1338,17 @@ TOOL_HANDLERS = {
 
 <div v-click>
 
-**方案**：三层上下文压缩策略，在保住任务连续性的条件下，给上下文腾出空间
-
-</div>
-
-<v-click at="+0">
+**方案**：三层压缩策略，保住任务连续性的同时给上下文腾出空间
 
 - 第 1 层：大结果写磁盘，只留预览（`persist_large_output`）
 
-- 第 2 层：旧工具调用结果替换为占位符（`micro_compact`）
+- 第 2 层：旧工具结果替换为占位符（`micro_compact`）
 
-- 第 3 层：消息历史太长，整体摘要压缩（`compact_history`）
+- 第 3 层：消息历史太长时整体摘要压缩（`compact_history`）
 
-- 新增工具 compact，上下文超阈值自动触发，也可以手动触发
+- 新增工具 compact，上下文超阈值自动触发，也可手动触发
 
-</v-click>
+</div>
 
 </div>
 
