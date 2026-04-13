@@ -132,6 +132,8 @@ layout: two-cols
 
 ## 近半年进展
 
+<div v-click>
+
 ### 1、主流模型竞赛
 
 [models.dev](https://models.dev) 记录主流模型的发布时间、知识库时间、性能、价格和能力
@@ -140,12 +142,18 @@ layout: two-cols
 
 - GLM 5.1 / Kimi K2.5 / MiniMax M2.7
 
+</div>
+
+<div v-click>
+
 ### 2、主流模型调用量
 
 [openrouter.ai](https://openrouter.ai/rankings) 调用量前十中除了国外三家模型，国产开源模型也表现亮眼
 
 <div class="concept-slide-image">
   <img src="./images/open-router-leaderboard.png" alt="OpenRouter Leaderboard" />
+</div>
+
 </div>
 
 </template>
@@ -177,6 +185,8 @@ layout: two-cols
 
 ## 近半年进展
 
+<div v-click>
+
 ### 1、提示词缓存（Prompt Caching）
 
 如果当前请求的输入前缀和之前的请求完全一致，模型商就可以直接从缓存中读取结果，效率更高，成本更低
@@ -189,6 +199,10 @@ layout: two-cols
   <img src="./images/token-price.png" alt="Input token price" style="width: 60%"/>
 </div>
 
+</div>
+
+<div v-click>
+
 ### 2、设计提示词的核心原则
 
 <span class="text-orange-500">常驻内容要短且稳定：把不变的放前面，把变化的放后面</span>
@@ -196,6 +210,8 @@ layout: two-cols
 - 前面：系统提示、工具定义等在多轮请求中基本不会变的内容
 
 - 后面：当前时间、用户输入、工具调用结果等动态变化的内容
+
+</div>
 
 </template>
 
@@ -226,11 +242,17 @@ layout: two-cols
 
 ## 近半年进展
 
+<div v-click>
+
 ### 1、中文名：<span class="text-orange-500">词元</span>
 
 Token是大模型处理信息的最小信息单元，也是结算单位
 
 信息时代的基础单位是 Bit，而 AI 时代的基础单位是 Token
+
+</div>
+
+<div v-click>
 
 ### 2、Token Plan
 
@@ -241,6 +263,8 @@ Token是大模型处理信息的最小信息单元，也是结算单位
 
 <div class="slide-image" style="margin-top: 8px">
   <img src="./images/token-plan.png" alt="Token Plan" />
+</div>
+
 </div>
 
 </template>
@@ -271,6 +295,8 @@ layout: two-cols
 <template v-slot:right>
 
 ## 近半年进展
+
+<div v-click>
 
 ### 1、工程化的演进
 
@@ -307,13 +333,7 @@ layout: two-cols
   <img src="./images/ai-engineering.png" alt="AI Engineering" />
 </div>
 
-<!-- ### 2、<span class="text-orange-500 font-bold">Harness Engineering</span>
-
-Model 决定做什么，Harness 决定如何做，两者结合就是 Agent 系统
-
-<div class="slide-image">
-  <img src="./images/open-harness.png" alt="Harness" />
-</div> -->
+</div>
 
 </template>
 
@@ -344,11 +364,17 @@ layout: two-cols
 
 ## 近半年进展
 
+<div v-click>
+
 ### 1、<a href="https://youtu.be/TqC1qOfiVcQ" target="_blank"><span class="text-orange-500">Bash is all you need</span></a>
 
 - HCI (Human Computer Interface) 向 ACI (Agent Computer Interface) 转化
 
 - GUI 是给人看的 (Chrome)，Agent 只需要 bash 工具就行 (Headless Chrome)
+
+</div>
+
+<div v-click>
 
 ### 2、为什么选择 bash？
 
@@ -357,6 +383,10 @@ layout: two-cols
 - bash 可以利用其他三方工具，比如 ffmpeg/git/grep
 
 - 增加工具不会解锁新能力，只会增加模型需要理解的接口
+
+</div>
+
+<div v-click>
 
 ### 3、CLI 工具的兴起
 
@@ -377,6 +407,8 @@ obsidian create name="Trip to Paris"
 # Search your vault
 obsidian search query="meeting notes"
 ```
+
+</div>
 
 </template>
 
@@ -407,11 +439,17 @@ layout: two-cols
 
 ## 近半年进展
 
+<div v-click>
+
 ### 1、<a href="https://youtu.be/CEvIs9y1uog" target="_blank"><span class="text-orange-500">Don't build agents, build skills instead</span></a>
 
 - Claude Code 证明：不同领域的 Agent 底层可以完全一样（bash + 文件系统）
 
 - 构建 Skills 生态，让通用 Agent 通过可积累、可复用的 Skills 变成各领域的专业工具
+
+</div>
+
+<div v-click>
 
 ### 2、理解 Skill
 
@@ -420,6 +458,10 @@ layout: two-cols
 - Claude Code/Cowork = iOS 系统，OpenClaw = Android 系统
 
 - ClawHub = 国外应用商店，SkillsHub = 国内应用商店，有毒的 Skill = 恶意应用
+
+</div>
+
+<div v-click>
 
 ### 3、MCP 和 Skill
 
@@ -461,6 +503,8 @@ layout: two-cols
   </table>
 </div>
 
+</div>
+
 </template>
 
 <!-- MCP -->
@@ -488,12 +532,18 @@ layout: two-cols
 
 ## 近半年进展
 
+<div v-click>
+
 ### 1、CodeBuddy 逐渐完善
 
 - AI IDE：CodeBuddy IDE
 - VS Code 插件：CodeBuddy 插件
 - AI Coding Agent：CodeBuddy Code
 - 底层共享通用的 CodeBuddy Agent SDK
+
+</div>
+
+<div v-click>
 
 ### 2、Claude Code 源码泄漏
 
@@ -505,13 +555,19 @@ layout: two-cols
 
 <!-- [驾驭工程 — 从 Claude Code 源码到 AI 编码最佳实践](https://zhanghandong.github.io/harness-engineering-from-cc-to-ai-coding/preface.html) -->
 
-### 3、<a href="https://learn.shareai.run/" target="_blank"><span class="text-orange-500">Learn Claude Code</span></a>
+</div>
 
-通过学习这个教程，了解 AI Coding Agent 的架构设计和开发流程
+<div v-click>
+
+### 3、Learn Claude Code
+
+通过学习这个<a href="https://learn.shareai.run/" target="_blank">教程</a>，了解 AI Coding Agent 的架构设计和开发流程
 
 - 教程在 Claude Code 源码泄漏之前就存在，并不是 Claude Code 源码分析教程
 
 - 教程在 Claude Code 源码泄漏之后，新增了 7 个章节，可能是受泄漏的源码启发
+
+</div>
 
 </template>
 
@@ -945,17 +1001,13 @@ layout: default
 
 **方案**：在会话内做规划，先把要做的任务列表写出来，并不断更新任务状态，在合适时机注入提醒
 
-</div>
-
-<v-clicks>
-
 - 不是任务系统，只是当前会话的计划外显
 
 - **约束**：同一时间最多一个任务正在执行
 
 - **提醒**：连续 3 轮不更新状态 → 注入提醒
 
-</v-clicks>
+</div>
 
 </div>
 
@@ -1236,7 +1288,7 @@ layout: default
 
 ## agent_loop 不变
 
-```python {1-10,16,18}
+```python {1-10|16,18}
 # s05 新增：技能注册表，从 skills 目录发现所有技能
 SKILL_REGISTRY = SkillRegistry(WORKDIR / "skills")
 
