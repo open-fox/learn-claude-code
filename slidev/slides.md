@@ -191,13 +191,11 @@ layout: two-cols
 
 ### 2、设计提示词的核心原则
 
-<span class="text-orange-500">常驻内容要短且稳定</span>：把不变的放前面，把变化的放后面
+<span class="text-orange-500">常驻内容要短且稳定：把不变的放前面，把变化的放后面</span>
 
 - 前面：系统提示、工具定义等在多轮请求中基本不会变的内容
 
 - 后面：当前时间、用户输入、工具调用结果等动态变化的内容
-
-- 启发：JSON序列化的结果要按照key进行排序，保证缓存复用
 
 </template>
 
@@ -240,6 +238,10 @@ Token是大模型处理信息的最小信息单元，也是结算单位
 
 - Tencent Token Plan
 - MiniMax Token Plan
+
+<div class="slide-image" style="margin-top: 8px">
+  <img src="./images/token-plan.png" alt="Token Plan" />
+</div>
 
 </template>
 
@@ -285,20 +287,24 @@ layout: two-cols
       <tr>
         <td class="pr-2 pb-2 align-center">提示词工程</td>
         <td class="pr-2 pb-2 align-center">2023-2024</td>
-        <td class="pb-2 align-top">怎么跟模型说，能让它输出高质量的结果，<span class="text-orange-500">侧重于措辞和结构化</span></td>
+        <td class="pb-2 align-top">怎么跟模型说，<span class="text-orange-500">侧重于措辞和结构化、单轮 AI 交互</span></td>
       </tr>
       <tr>
         <td class="pr-2 pb-2 align-center">上下文工程</td>
         <td class="pr-2 pb-2 align-center">2025</td>
-        <td class="pb-2 align-top">给模型看什么，能让它输出高质量的结果，<span class="text-orange-500">侧重于上下文信息编排</span></td>
+        <td class="pb-2 align-top">给模型什么信息，<span class="text-orange-500">侧重于上下文信息编排、多轮 AI 交互</span></td>
       </tr>
       <tr>
         <td class="pr-2 align-center">驾驭工程</td>
         <td class="pr-2 align-center">2026+</td>
-        <td class="align-top">如何约束模型，能让它输出高质量的结果，<span class="text-orange-500">侧重于 Agent 运行环境的设计</span></td>
+        <td class="align-top">如何搭建运行环境、设计约束规则、建立反馈循环，<span class="text-orange-500">侧重于运行环境的设计</span></td>
       </tr>
     </tbody>
   </table>
+</div>
+
+<div class="slide-image">
+  <img src="./images/ai-engineering.png" alt="AI Engineering" />
 </div>
 
 <!-- ### 2、<span class="text-orange-500 font-bold">Harness Engineering</span>
@@ -401,13 +407,21 @@ layout: two-cols
 
 ## 近半年进展
 
-<!-- ### 1、MCP 的问题
+### 1、<a href="https://youtu.be/CEvIs9y1uog" target="_blank"><span class="text-orange-500">Don't build agents, build skills instead</span></a>
 
-- MCP Tools 的定义和返回结果内容太多，占用大量上下文
+- Claude Code 证明：不同领域的 Agent 底层可以完全一样（bash + 文件系统）
 
-- 很多 MCP Server 只是把旧接口重新包装，使用体验不佳 -->
+- 构建 Skills 生态，让通用 Agent 通过可积累、可复用的 Skills 变成各领域的专业工具
 
-### 1、MCP 和 Skill
+### 2、理解 Skill
+
+- <span class="text-orange-500">Agent = 系统，Tools = 系统接口，Skills = 安装在系统上的应用</span>
+
+- Claude Code/Cowork = iOS 系统，OpenClaw = Android 系统
+
+- ClawHub = 国外应用商店，SkillsHub = 国内应用商店，有毒的 Skill = 恶意应用
+
+### 3、MCP 和 Skill
 
 - 对于 Agent 而言，MCP 和 Skill 都在工具层，都是为了扩展 Agent 的能力
 
@@ -446,20 +460,6 @@ layout: two-cols
     </tbody>
   </table>
 </div>
-
-### 2、理解 Skill
-
-- <span class="text-orange-500">Agent = 系统，Tools = 系统接口，Skills = 安装在系统上的应用</span>
-
-- Claude Code/Cowork = iOS 系统，OpenClaw = Android 系统
-
-- ClawHub = 国外应用商店，SkillsHub = 国内应用商店，有毒的 Skill = 恶意应用
-
-### 3、<a href="https://youtu.be/CEvIs9y1uog" target="_blank"><span class="text-orange-500">Don't build agents, build skills instead</span></a>
-
-- Claude Code 证明：不同领域的 Agent 底层可以完全一样（bash + 文件系统）
-
-- 构建 Skills 生态，让通用 Agent 通过可积累、可复用的 Skills 变成各领域的专业工具
 
 </template>
 
@@ -509,7 +509,7 @@ layout: two-cols
 
 通过学习这个教程，了解 AI Coding Agent 的架构设计和开发流程
 
-- 教程在 Claude Code 源码泄漏之前就存在，所以不是源码分析教程
+- 教程在 Claude Code 源码泄漏之前就存在，并不是 Claude Code 源码分析教程
 
 - 教程在 Claude Code 源码泄漏之后，新增了 7 个章节，可能是受泄漏的源码启发
 
@@ -2075,6 +2075,8 @@ The user explicitly prefers tabs over spaces.
 <div v-click>
 
 **方案**：系统提示词的关键不是"写一段很长的话"，而是"把不同来源的信息按清晰边界组装起来"
+
+- 启发：JSON序列化的结果要按照key进行排序，保证缓存复用
 
 <!-- - **core** — 身份 + 规则（几乎不变）
 
