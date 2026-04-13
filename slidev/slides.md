@@ -2404,41 +2404,7 @@ layout: section
 </div>
 
 ---
-layout: center
----
-
-# 阶段 3 要解决什么？
-
-<v-clicks>
-
-s03 的 TodoWrite 是"会话内清单"——压缩一次就丢了。
-
-真实工作有**结构**：任务 B 等任务 A，C 和 D 能并行，E 等 C+D 都完成。
-
-有些命令要跑 90 秒（`pytest`），难道 agent 傻等？
-
-有些事要"每周一早 9 点跑"——难道用户每次手动提？
-
-</v-clicks>
-
-<div v-click class="mt-6 grid grid-cols-3 gap-3 text-sm">
-<div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
-
-**s12** 持久任务图
-
-</div>
-<div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
-
-**s13** 后台执行
-
-</div>
-<div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
-
-**s14** 定时调度
-
-</div>
-</div>
-
+layout: default
 ---
 
 # s12: 任务系统 (Task System)
@@ -2888,51 +2854,7 @@ layout: section
 </div>
 
 ---
-layout: center
----
-
-# 阶段 4 要解决什么？
-
-<v-clicks>
-
-一个 agent 忙不过来了。
-
-前端、后端、测试——需要**多个 agent 并行工作**。
-
-但它们不能共享一个对话、不能都改同一个文件、也不能自说自话。
-
-**这个阶段解决：谁在做、怎么协调、在哪做、外部能力怎么接入。**
-
-</v-clicks>
-
-<div v-click class="mt-6 grid grid-cols-5 gap-2 text-sm">
-<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
-
-**s15** 团队
-
-</div>
-<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
-
-**s16** 协议
-
-</div>
-<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
-
-**s17** 自治
-
-</div>
-<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
-
-**s18** 隔离
-
-</div>
-<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
-
-**s19** MCP
-
-</div>
-</div>
-
+layout: default
 ---
 
 # s15: 智能体团队 (Agent Teams)
