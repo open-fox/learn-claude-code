@@ -43,6 +43,71 @@ layout: section
 不追热点，聚焦本质，将原来的编程思想应用到 Agent 开发中-->
 
 ---
+layout: default
+class: flex items-center justify-center
+---
+
+<style>
+@keyframes float1 { 0%,100% { transform: translate(0,0) rotate(var(--r)); } 50% { transform: translate(6px,-8px) rotate(calc(var(--r) + 3deg)); } }
+@keyframes float2 { 0%,100% { transform: translate(0,0) rotate(var(--r)); } 50% { transform: translate(-7px,6px) rotate(calc(var(--r) - 4deg)); } }
+@keyframes float3 { 0%,100% { transform: translate(0,0) rotate(var(--r)); } 50% { transform: translate(8px,5px) rotate(calc(var(--r) + 5deg)); } }
+@keyframes float4 { 0%,100% { transform: translate(0,0) rotate(var(--r)); } 50% { transform: translate(-5px,-7px) rotate(calc(var(--r) - 3deg)); } }
+@keyframes float5 { 0%,100% { transform: translate(0,0) rotate(var(--r)); } 50% { transform: translate(4px,9px) rotate(calc(var(--r) + 4deg)); } }
+@keyframes pulse-person { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+.concept-word { position: absolute; font-weight: 700; white-space: nowrap; }
+.f1 { animation: float1 3s ease-in-out infinite; }
+.f2 { animation: float2 3.5s ease-in-out infinite; }
+.f3 { animation: float3 4s ease-in-out infinite; }
+.f4 { animation: float4 2.8s ease-in-out infinite; }
+.f5 { animation: float5 3.2s ease-in-out infinite; }
+</style>
+
+<div class="relative w-full h-full flex items-center justify-center overflow-hidden">
+
+  <!-- 中心困惑的人 -->
+  <div class="relative z-10 flex flex-col items-center" style="animation: pulse-person 3s ease-in-out infinite;">
+    <div class="text-8xl mb-2">🤯</div>
+    <div class="text-2xl font-bold text-gray-400 tracking-widest">???</div>
+  </div>
+
+  <!-- 第一圈：紧贴中心 -->
+  <span class="concept-word f1 text-2xl text-blue-400" style="--r:-8deg; top:22%; left:33%;">Model</span>
+  <span class="concept-word f2 text-xl text-green-400" style="--r:5deg; top:20%; left:52%;">Prompt</span>
+  <span class="concept-word f3 text-2xl text-orange-400" style="--r:10deg; top:30%; right:24%;">Context</span>
+  <span class="concept-word f4 text-lg text-pink-400" style="--r:-3deg; top:30%; left:26%;">Token</span>
+  <span class="concept-word f5 text-xl text-cyan-400" style="--r:12deg; top:62%; left:34%;">MCP</span>
+  <span class="concept-word f1 text-xl text-yellow-400" style="--r:-6deg; top:62%; right:30%;">Skill</span>
+
+  <!-- 第二圈：中距离 -->
+  <span class="concept-word f3 text-lg text-red-400" style="--r:4deg; top:16%; left:22%;">Harness</span>
+  <span class="concept-word f2 text-2xl text-purple-400" style="--r:-12deg; top:18%; right:18%;">Agent</span>
+  <span class="concept-word f4 text-lg text-emerald-400" style="--r:-5deg; top:38%; left:14%;">Coding Agent</span>
+  <span class="concept-word f5 text-base text-indigo-400" style="--r:8deg; top:40%; right:12%;">Vibe Coding</span>
+  <span class="concept-word f1 text-base text-teal-400" style="--r:6deg; top:55%; left:14%;">Prompt Caching</span>
+  <span class="concept-word f3 text-lg text-rose-400" style="--r:-10deg; top:52%; right:10%;">Prompt Engineering</span>
+
+  <!-- 第三圈：稍远但仍在视觉范围 -->
+  <span class="concept-word f2 text-lg text-violet-400" style="--r:-7deg; top:70%; left:16%;">Context Engineering</span>
+  <span class="concept-word f4 text-base text-amber-400" style="--r:6deg; top:68%; right:12%;">Harness Engineering</span>
+  <span class="concept-word f5 text-base text-sky-400" style="--r:3deg; top:74%; left:38%;">Hooks</span>
+  <span class="concept-word f1 text-lg text-lime-400" style="--r:-9deg; top:72%; right:28%;">Memory</span>
+  <span class="concept-word f3 text-sm text-fuchsia-400" style="--r:11deg; top:10%; left:44%;">Commands</span>
+
+  <!-- 第四圈：外围点缀 -->
+  <span class="concept-word f4 text-lg text-orange-300" style="--r:-4deg; top:82%; left:22%;">Plugins</span>
+  <span class="concept-word f2 text-xl text-blue-300" style="--r:7deg; top:12%; right:32%;">OpenClaw</span>
+  <span class="concept-word f5 text-lg text-green-300" style="--r:-8deg; top:82%; right:22%;">OpenHarness</span>
+  <span class="concept-word f1 text-xl text-red-300" style="--r:5deg; top:8%; left:12%;">Hermes Agent</span>
+
+</div>
+
+<!--
+这半年来 AI 领域概念爆炸，各种新名词层出不穷，让人目不暇接。
+今天我们就来梳理这些概念，理清脉络，帮大家建立清晰的认知框架。
+-->
+
+
+---
 layout: two-cols
 ---
 
@@ -67,17 +132,17 @@ layout: two-cols
 
 ## 近半年进展
 
-### 1、[models.dev](https://models.dev)
+### 1、主流模型竞赛
 
-记录主流模型的发布时间、知识库时间、性能、价格和能力
+[models.dev](https://models.dev) 记录主流模型的发布时间、知识库时间、性能、价格和能力
 
 - OpenAI GPT 5.4 / Google Gemini 3.1 / Anthropic Claude Opus 4.6
 
 - GLM 5.1 / Kimi K2.5 / MiniMax M2.7
 
-### 2、[openrouter.ai](https://openrouter.ai/rankings)
+### 2、主流模型调用量
 
-调用量前十中除了国外三家模型，国产开源模型也表现亮眼
+[openrouter.ai](https://openrouter.ai/rankings) 调用量前十中除了国外三家模型，国产开源模型也表现亮眼
 
 <div class="concept-slide-image">
   <img src="./images/open-router-leaderboard.png" alt="OpenRouter Leaderboard" />
@@ -165,15 +230,9 @@ layout: two-cols
 
 ### 1、中文名：<span class="text-orange-500">词元</span>
 
-Token是大模型处理信息的最小信息单元，也是 AI 时代的结算单位
+Token是大模型处理信息的最小信息单元，也是结算单位
 
-<!-- ### 2、Token 不同价
-
-Prompt Caching 普及后，重复前缀可复用缓存，cached input tokens 比普通 input token 便宜很多
-
-<div class="slide-image">
-  <img src="./images/token-price.png" alt="Input token price" style="width: 60%"/>
-</div> -->
+信息时代的基础单位是 Bit，而 AI 时代的基础单位是 Token
 
 ### 2、Token Plan
 
