@@ -1929,7 +1929,7 @@ result = {
 
 </div>
 
-<div v-click="3">
+<div v-click="3" style="width: 300px; margin: auto;">
 
 <div class="text-xs space-y-2 mt-2">
 
@@ -2095,7 +2095,7 @@ The user explicitly prefers tabs over spaces.
 
 </div>
 
-<div v-click="3">
+<div v-click="3" style="width: 300px; margin: auto;">
 
 <div class="text-sm space-y-2 mt-2">
 
