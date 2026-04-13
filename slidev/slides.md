@@ -3349,11 +3349,11 @@ class EventBus:
 
 <div v-click>
 
-**方案**：支持 MCP 协议，外部进程自己暴露提供的工具，统一命名、统一路由、统一权限
+**方案**：实现插件系统，支持 MCP 协议，外部服务暴露自己提供的工具，统一命名、统一路由、统一权限
 
 - **Plugin 发现**：`plugin.json` → server 启动命令
 - **MCP Server 连接**：`connect()` → `list_tools()`
-- **MCP 工具名字格式**：`mcp__{server}__{tool}`
+- **统一命名**：`mcp__{server}__{tool}`
 - **统一权限**：MCP + native 工具走同一条鉴权通道
 - **统一路由**：`mcp__` 前缀走 MCPClient，其余走本地 handler
 
@@ -3374,6 +3374,9 @@ MCP 不是替代工具系统，是让工具系统可以被外部扩展
   <div class="px-5 py-3 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-blue-300 font-bold text-sm text-center w-52">LLM tool_use</div>
   <div class="text-gray-500">↓</div>
 
+  <div class="px-5 py-3 rounded-xl bg-red-500/15 border-2 border-red-400 text-red-300 font-bold text-sm text-center w-52">PermissionGate<br/><span class="font-normal text-xs opacity-70">deny / mode / allow / ask</span></div>
+  <div class="text-gray-500">↓ <span class="text-xs text-green-400">通过</span></div>
+
   <div class="px-5 py-3 rounded-xl bg-gray-500/15 border-2 border-gray-400 text-gray-300 font-bold text-sm text-center w-52">Tool Router<br/><span class="font-normal text-xs opacity-70">前缀判断分发</span></div>
 
   <div class="flex items-start justify-center gap-6 mt-2">
@@ -3383,9 +3386,11 @@ MCP 不是替代工具系统，是让工具系统可以被外部扩展
     </div>
     <div class="flex flex-col items-center">
       <div class="text-gray-500 text-sm">↓ <span class="text-xs text-orange-400">mcp__</span></div>
-      <div class="px-4 py-2 rounded-xl bg-orange-500/20 border-2 border-orange-400 text-orange-300 font-bold text-xs text-center">MCPClient<br/><span class="font-normal opacity-70">mcp__pg__query</span></div>
-      <div class="text-gray-500 text-xs mt-1">↕</div>
-      <div class="px-4 py-2 rounded-xl bg-purple-500/15 border-2 border-purple-400 text-purple-300 font-bold text-xs text-center">外部 Server<br/><span class="font-normal opacity-70">独立进程</span></div>
+      <div class="flex items-center gap-2">
+        <div class="px-4 py-2 rounded-xl bg-orange-500/20 border-2 border-orange-400 text-orange-300 font-bold text-xs text-center">MCPClient<br/><span class="font-normal opacity-70">mcp__pg__query</span></div>
+        <div class="text-gray-500 text-xs">↔</div>
+        <div class="px-4 py-2 rounded-xl bg-purple-500/15 border-2 border-purple-400 text-purple-300 font-bold text-xs text-center">外部 Server<br/><span class="font-normal opacity-70">独立进程</span></div>
+      </div>
     </div>
   </div>
 
