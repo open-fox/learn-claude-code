@@ -603,7 +603,7 @@ layout: default
 </div>
 
 </div>
-<div v-click>
+<div v-after>
 
 <img src="./images/open-harness-diagram.png" alt="Open Harness" class="rounded-lg" />
 
@@ -692,13 +692,13 @@ layout: default
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：模型能思考但不能动手，不能打开文件、不能跑命令，每一步都需要人复制粘贴结果
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：给模型接上工具，让思考、调用、拿结果形成自动循环，这就是最小的 Agent Loop
 
@@ -839,13 +839,13 @@ layout: default
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：循环跑起来了，但只有一个 bash 工具，所有操作都走 shell，路径逃逸和危险命令都拦不住
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：为高频操作定义专用工具，在工具层面做路径沙箱，新增工具只需新增一行路由，核心循环不变
 
@@ -989,13 +989,13 @@ layout: default
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：工具多了能干的事也多了，但大任务做着做着方向就漂了，没有计划全凭即兴发挥
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：让 Agent 先写任务清单再动手，每完成一步更新状态，清单会话内可见防止漂移
 
@@ -1113,13 +1113,13 @@ TOOL_HANDLERS = {
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：探索性工作的中间结果全留在上下文里，噪声越积越多，主任务反而做不好
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：把局部任务交给 subagent 在独立上下文里做，做完只带必要结果回来，保持主 agent 上下文干净
 
@@ -1239,13 +1239,13 @@ PARENT_TOOLS = CHILD_TOOLS + [
 <div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：代码审查、提交约定等领域知识全塞进系统提示词，上下文很快就满了，还不一定用得上
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：技能拆成两层，系统提示词只放摘要目录，模型按需加载完整技能说明
 
@@ -1358,13 +1358,13 @@ TOOL_HANDLERS = {
 <div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：读了大量文件、跑了很多命令，上下文不断膨胀，Token 都烧完了，活儿才干一半
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：三层压缩策略，保住任务连续性的同时给上下文腾出空间
 
@@ -1499,14 +1499,14 @@ layout: section
 
 > 模型产生的执行意图，必须先通过清晰的权限门，再变成真正动作
 
-<div v-click>
+<div>
 
 **问题**：Agent 能工作了，但模型可能幻觉出错误路径，写错文件、删错目录，意图直接执行很危险
 
 </div>
 
 
-<div v-click>
+<div>
 
 **方案**：工具调用前必须先经过权限管控，四级管道：deny rules、mode check、allow rules、ask user
 
@@ -1664,14 +1664,14 @@ class BashSecurityValidator:
 
 > Hook 让系统围绕主循环生长，而不是不断重写主循环本身
 
-<div v-click>
+<div>
 
 **问题**：安全审计、自动 lint、操作日志，每加一个横切需求都要改主循环，越改越重，小改动就可能影响全局
 
 </div>
 
 
-<div v-click>
+<div>
 
 **方案**：主循环在关键节点暴露生命周期事件，附加行为写成独立的 hook 脚本，通过配置文件注册，在事件触发时执行
 
@@ -1830,13 +1830,13 @@ result = {
 <div class="grid grid-cols-[1fr_500px] gap-8">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：每次开新会话从零开始，用户偏好、纠正过的错误、项目约定全部丢失
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：持久化记忆文件到磁盘，每轮会话开始时自动注入记忆内容到系统提示词
 
@@ -2002,13 +2002,13 @@ The user explicitly prefers tabs over spaces.
 <div class="grid grid-cols-[1fr_500px] gap-8">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：系统提示词是一整块硬编码的字符串，来源越来越多，无法分段维护和缓存
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：把系统提示词拆成静态段和动态段，按来源分段组装，静态前缀可缓存复用
 
@@ -2158,13 +2158,13 @@ def _build_dynamic_context(self) -> str:
 
 > 系统必须清楚自己此刻是在继续、重试，还是处于恢复流程
 
-<div v-click>
+<div>
 
 **问题**：输出截断、上下文爆了、API 超时，遇到错误主循环直接停住，用户不敢再用
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：先对错误分类，再选恢复路径，每条路径有独立重试预算，全部耗尽才真正失败
 
@@ -2342,13 +2342,13 @@ layout: default
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：s03 的 Todo 是会话内临时清单，压缩一次就丢，任务之间也没有依赖关系
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：持久化任务图，写入磁盘文件，支持双向依赖关系，完成一个任务自动解锁下游任务
 
@@ -2468,13 +2468,13 @@ def _clear_dependency(self, completed_id: int):
 <div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：build 要跑 10 分钟，同步执行会卡住主循环，模型和用户都在空等
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：慢命令放到后台线程执行，主循环立即拿到 task_id 继续干别的事
 
@@ -2599,13 +2599,13 @@ task = {
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：后台任务解决了"现在启动的慢命令"，但"每周一 9 点跑报告"怎么办？
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：cron 表达式 + 后台检查线程 + 通知注入，时间到了自动触发回到主循环
 
@@ -2833,13 +2833,13 @@ layout: default
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
-<div v-click>
+<div>
 
 **问题**：想查数据库写个工具，想操作浏览器再写个工具，每次加能力都要改主程序代码
 
 </div>
 
-<div v-click>
+<div>
 
 **方案**：实现插件系统，支持 MCP 协议，外部服务暴露自己提供的工具，统一命名、统一路由、统一权限
 
