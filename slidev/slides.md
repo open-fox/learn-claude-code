@@ -567,6 +567,8 @@ layout: two-cols
 
 - 教程在 Claude Code 源码泄漏之后，新增了 7 个章节，可能是受泄漏的源码启发
 
+- 它是 Coding Agent 简化版实现，跟实际生产环境的 Agent 有差异，但很值得学习
+
 </div>
 
 </template>
@@ -2653,54 +2655,39 @@ def _clear_dependency(self, completed_id: int):
 
 > 用户说"跑测试，同时帮我建配置文件"——但你的 agent 只会傻等 90 秒测试跑完
 
+<div class="grid grid-cols-[1fr_600px] gap-8">
+<div>
+
 <div v-click>
 
 **问题**：慢命令（pytest、npm build）同步执行会卡住主循环，模型和用户都在空等
 
 </div>
 
-
 <div v-click>
 
 **方案**：daemon 线程执行慢命令，主循环立即拿到 task_id 继续前进，结果通过通知队列在下一轮注入
 
-</div>
-
-
-<div v-click>
-
-```mermaid {scale: 0.7}
-graph LR
-  ML["主循环"] -->|"background_run('pytest')"| BG["后台线程"]
-  ML -->|"继续其他工作"| ML2["下一轮模型调用"]
-  BG -->|"完成"| NQ["通知队列"]
-  NQ -->|"drain_notifications()"| ML2
-  style BG fill:#f97316,color:#fff
-  style NQ fill:#bfdbfe,color:#000
-```
+- `background_run("pytest")` → 启动 daemon 线程，立即返回 task_id
+- 完整输出写磁盘，通知只带 preview 摘要
+- 主循环仍然只有一条，并行的是执行与等待
+- 新增工具：`background_run` / `check_background`
 
 </div>
 
-<div class="grid grid-cols-3 gap-3 mt-2 text-sm">
-<div v-click class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
+<div v-click="4" class="mt-8 text-orange-500 text-lg">
 
-**启动即返回**
-
-`background_run` → 立即返回 task_id
+调度器做的是"记住未来"，触发后仍然回到同一条主循环
 
 </div>
-<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
-
-**通知只放摘要**
-
-完整输出写磁盘，通知只带 preview
 
 </div>
-<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
 
-**并行的是等待**
+<div v-click="3">
 
-主循环仍然只有一条，并行的是执行与等待
+<div v-click class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s08/" />
+</div>
 
 </div>
 </div>
