@@ -3518,7 +3518,7 @@ MCP 不是替代工具系统，是让工具系统可以被外部扩展
 
 </div>
 
-<div v-click="3">
+<div v-click="3" style="width: 300px; margin: auto;">
 
 <div class="flex flex-col items-center gap-1 mt-6">
 
