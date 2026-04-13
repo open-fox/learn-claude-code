@@ -2533,23 +2533,23 @@ def _clear_dependency(self, completed_id: int):
 
 # s13: 后台任务 (Background Tasks)
 
-> 用户说"跑测试，同时帮我建配置文件"——但你的 agent 只会傻等 90 秒测试跑完
+> 用户说"跑测试，同时帮我建配置文件"，但 agent 只会傻等 90 秒等测试跑完
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：慢命令（pytest、npm build）同步执行会卡住主循环，模型和用户都在空等
+**问题**：慢命令（pytest、npm build、docker build）同步执行会卡住主循环，导致模型和用户都在空等
 
 </div>
 
 <div v-click>
 
-**方案**：daemon 线程执行慢命令，主循环立即拿到 task_id 继续前进，结果通过通知队列在下一轮注入
+**方案**：把慢命令放到后台 daemon 线程执行，让主循环继续推进别的事情，结果通过通知队列在下一轮注入
 
-- `background_run("pytest")` → 启动 daemon 线程，立即返回 task_id
-- 完整输出写磁盘，通知只带 preview 摘要
+- 后台任务启动 daemon 线程，立即返回 task_id
+- 完整输出写入磁盘，通知只带 preview 摘要
 - 主循环仍然只有一条，并行的是执行与等待
 - 新增工具：`background_run` / `check_background`
 
@@ -2583,10 +2583,13 @@ layout: default
 
 ## agent_loop 变更
 
-```python {3-10}
+```python {3-14}
+BG = BackgroundManager()
+
 def agent_loop(messages: list):
     while True:
-        # s13 新增：每轮开始前 drain 后台通知
+        # s13 新增：每轮开始前，检查后台通知，如果有通知，就注入到上下文
+        # 教程为了简单，没有做 user 和 assistant 消息配对，可能有问题
         notifs = BG.drain_notifications()
         if notifs and messages:
             notif_text = "\n".join(
@@ -2597,7 +2600,8 @@ def agent_loop(messages: list):
                 "content": f"<background-results>\n{notif_text}\n</background-results>"})
 
         response = client.messages.create(...)
-        ...  # 标准循环
+        # 正常执行循环
+        ...  
 ```
 
 ## 注册新工具
@@ -2605,8 +2609,9 @@ def agent_loop(messages: list):
 ```python
 TOOL_HANDLERS = {
     ...,
-    # s13 新增
+    # s13 新增工具：启动后台任务
     "background_run":   lambda **kw: BG.run(kw["command"]),
+    # s13 新增工具：检测后台任务状态
     "check_background": lambda **kw: BG.check(kw.get("task_id")),
 }
 ```
@@ -2618,11 +2623,6 @@ TOOL_HANDLERS = {
 
 ```python
 class BackgroundManager:
-    def __init__(self):
-        self.tasks = {}       # task_id -> status/result
-        self._notification_queue = []
-        self._lock = threading.Lock()
-
     def run(self, command) -> str:
         # 启动 daemon 线程，立即返回 task_id
         task_id = str(uuid.uuid4())[:8]
@@ -2632,9 +2632,20 @@ class BackgroundManager:
         thread.start()
         return f"Background task {task_id} started"
 
+    def _execute(self, task_id, command):
+        # daemon 线程：执行命令，写输出，推通知
+        r = subprocess.run(command, shell=True, ...)
+        with self._lock:
+            self._notification_queue.append({
+                "task_id": task_id, "status": status,
+                "preview": preview, "output_file": ...})
+
     def drain_notifications(self) -> list:
-        # 返回并清空通知队列
-        ...
+        # 返回通知队列，并清空队列
+        with self._lock:
+            notifs = list(self._notification_queue)
+            self._notification_queue.clear()
+        return notifs
 ```
 
 ## RuntimeTaskRecord
@@ -2656,57 +2667,73 @@ task = {
 
 # s14: 定时调度 (Cron Scheduler)
 
-> 后台任务解决"现在开始的慢任务"，但"每周一 9 点跑报告"怎么办？——agent 需要学会"记住未来"
+> 后台任务解决"现在开始的慢任务"，定时调度解决"将来某个时间再开始做事"
+
+<div class="grid grid-cols-[1fr_600px] gap-8">
+<div>
 
 <div v-click>
 
-**问题**：agent 只能响应当前请求，不能"将来某个时间再开始做事"
+**问题**：agent 只能响应当前请求，不能"将来某个时间再开始做事"——用户想"每周一 9 点跑报告"只能每次手动再说一遍
 
 </div>
-
 
 <div v-click>
 
 **方案**：cron 表达式 + 后台检查线程 + 通知注入，触发后仍然回到同一条主循环
 
-</div>
-
-
-<div class="grid grid-cols-[1fr_450px] gap-4">
-<div>
-
-<v-clicks>
-
-- `cron_create("0 9 * * 1", "Run report")` 注册
-- 后台线程每分钟检查一次是否匹配
-- 到期 → 推入通知队列 → 主循环注入
-- 支持 recurring / one-shot
-- 支持 durable（重启后仍在）
+- `cron_create("0 9 * * 1", "Run report")` 注册调度记录
+- 后台线程每分钟检查一次是否匹配当前时间
+- 到期 → 推入通知队列 → 主循环注入为 user message
+- 支持 recurring（反复触发）/ one-shot（触发一次自动删除）
+- 支持 durable（落盘持久化，重启后仍在）
 - 新增工具：`cron_create` / `cron_delete` / `cron_list`
 
-</v-clicks>
+</div>
 
-<div v-click class="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-sm">
+<div v-click="4" class="mt-8 text-orange-500 text-lg">
 
-**调度器做的是"记住未来"，触发后仍然回到同一条主循环**
+后台任务是在"等结果"，定时调度是在"等开始"
 
 </div>
 
 </div>
-<div>
 
-```mermaid {scale: 0.45}
-graph TD
-  CR["cron_create()"] --> REC["ScheduleRecord<br/>cron: 0 9 * * 1"]
-  REC --> CHK["后台检查线程<br/>每分钟检查"]
-  CHK -->|"时间匹配"| NQ["通知队列"]
-  NQ -->|"drain()"| ML["主循环注入"]
-  ML --> LLM["模型处理"]
-  CHK -->|"不匹配"| CHK
-  style CR fill:#f97316,color:#fff
-  style NQ fill:#bfdbfe,color:#000
-  style CHK fill:#bbf7d0,color:#000
-```
+<div v-click="3">
+
+<div class="flex flex-col items-center gap-0 mt-2">
+
+  <div class="px-4 py-2 rounded-lg bg-orange-500/20 border border-orange-400 text-orange-300 font-bold text-sm text-center w-56">
+    cron_create()<br/><span class="font-normal text-xs opacity-70">"0 9 * * 1", "Run report"</span>
+  </div>
+  <div class="text-gray-500 text-lg">↓</div>
+
+  <div class="px-4 py-2 rounded-lg bg-purple-500/15 border border-purple-400 text-purple-300 font-bold text-sm text-center w-56">
+    ScheduleRecord<br/><span class="font-normal text-xs opacity-70">cron + prompt + recurring + durable</span>
+  </div>
+  <div class="text-gray-500 text-lg">↓</div>
+
+  <div class="px-4 py-2 rounded-lg bg-green-500/15 border border-green-400 text-green-300 font-bold text-sm text-center w-56 relative">
+    后台检查线程<br/><span class="font-normal text-xs opacity-70">每分钟检查 cron_matches</span>
+    <div class="absolute -right-20 top-1/2 -translate-y-1/2 text-gray-600 text-xs">↻ 不匹配<br/>继续等</div>
+  </div>
+  <div class="text-gray-500 text-lg">↓ <span class="text-xs text-green-400">时间匹配</span></div>
+
+  <div class="px-4 py-2 rounded-lg bg-blue-500/15 border border-blue-400 text-blue-300 font-bold text-sm text-center w-56">
+    通知队列<br/><span class="font-normal text-xs opacity-70">queue.put(notification)</span>
+  </div>
+  <div class="text-gray-500 text-lg">↓ <span class="text-xs text-blue-400">drain()</span></div>
+
+  <div class="px-4 py-2 rounded-lg bg-cyan-500/15 border border-cyan-400 text-cyan-300 font-bold text-sm text-center w-56">
+    主循环注入<br/><span class="font-normal text-xs opacity-70">append as user message</span>
+  </div>
+  <div class="text-gray-500 text-lg">↓</div>
+
+  <div class="px-4 py-2 rounded-lg bg-amber-500/15 border border-amber-400 text-amber-300 font-bold text-sm text-center w-56">
+    模型处理<br/><span class="font-normal text-xs opacity-70">LLM 接手执行任务</span>
+  </div>
+
+</div>
 
 </div>
 </div>
@@ -2731,7 +2758,8 @@ def agent_loop(messages: list):
             messages.append({"role": "user", "content": note})
 
         response = client.messages.create(...)
-        ...  # 标准循环
+        # 正常执行循环
+        ...
 ```
 
 ## 注册新工具
@@ -2739,7 +2767,7 @@ def agent_loop(messages: list):
 ```python
 TOOL_HANDLERS = {
     ...,
-    # s14 新增
+    # s14 新增工具
     "cron_create": lambda **kw: scheduler.create(
         kw["cron"], kw["prompt"],
         kw.get("recurring", True), kw.get("durable", False)),
@@ -2748,8 +2776,39 @@ TOOL_HANDLERS = {
 }
 ```
 
+## 调度存储结构
+
+```text
+.claude/
+  scheduled_tasks.json   # durable 任务持久化
+  cron.lock              # PID 锁，防多进程重复触发
+```
+
 </div>
 <div>
+
+## CronScheduler
+
+```python
+class CronScheduler:
+    def start(self):
+        self._load_durable()          # 加载持久化记录
+        Thread(target=self._check_loop, daemon=True).start()
+
+    def _check_loop(self):
+        while not self._stop_event.is_set():
+            now = datetime.now()
+            if current_minute != self._last_check_minute:
+                self._check_tasks(now)  # 每分钟检查一次
+            self._stop_event.wait(timeout=1)
+
+    def _check_tasks(self, now):
+        for task in self.tasks:
+            if cron_matches(task["cron"], now):
+                self.queue.put(f"[Scheduled:{task['id']}] {task['prompt']}")
+                if not task["recurring"]:
+                    fired_oneshots.append(task["id"])  # 一次性任务触发后删除
+```
 
 ## ScheduleRecord
 
@@ -2758,38 +2817,11 @@ schedule = {
     "id": "job_001",
     "cron": "0 9 * * 1",       # 每周一 9 点
     "prompt": "Run weekly status report.",
-    "recurring": True,
-    "durable": True,
+    "recurring": True,          # recurring / one-shot
+    "durable": True,            # 是否落盘持久化
     "last_fired": None,
 }
 ```
-
-## CronScheduler
-
-```python
-class CronScheduler:
-    def __init__(self):
-        self.tasks = []
-        self.queue = Queue()
-    def start(self): ...          # 启动后台检查线程
-    def create(self, cron, prompt, ...) -> str: ...
-    def drain_notifications(self) -> list: ...
-```
-
-## cron_matches
-
-```python
-def cron_matches(expr: str, dt: datetime) -> bool:
-    # 5 字段匹配: min hour dom month dow
-    # 支持 * / */N / N-M / N,M
-    ...
-```
-
-<div class="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-sm">
-
-**调度器做的是"记住未来"，触发后仍然回到同一条主循环。**
-
-</div>
 
 </div>
 </div>
