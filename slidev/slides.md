@@ -20,9 +20,7 @@ layout: section
 </div>
 
 <!--
-基于开源项目 Learn Claude Code 的教程，分享一个简化版本的 AI Coding Agent 的构建流程
-大模型的核心概念和 AI 编程工具的演进，这次是介绍半年后它们的进展，以及现在火热的 Agent
-科普基础知识，对齐大家认知，方便工作中遇到 Agent 开发时沟通交流，或者寻找问题解决方案
+基于开源项目 Learn Claude Code 的教程，分享一个简化版本的 AI Coding Agent 的实现
 -->
 
 ---
@@ -85,8 +83,8 @@ class: flex items-center justify-center
 </div>
 
 <!--
-这半年来 AI 领域概念爆炸，各种新名词层出不穷，让人目不暇接。
-今天我们就来梳理这些概念，理清脉络，帮大家建立清晰的认知框架。
+这半年来 AI 领域概念爆炸，各种新名词层出不穷，让人目不暇接
+今天我们就来梳理这些概念，理清脉络，帮大家建立清晰的认知框架
 -->
 
 
@@ -1459,72 +1457,6 @@ TOOL_HANDLERS = {
 
 </div>
 </div>
-
-<!-- ---
-
-# 阶段 1 完成：你有了一个能工作的单 Agent
-
-<div class="grid grid-cols-2 gap-6">
-<div>
-
-## 六章带来了什么
-
-| 章节 | 新增能力 |
-|------|----------|
-| **s01** | 最小可运行循环 |
-| **s02** | 工具分发 + 路径沙箱 |
-| **s03** | 结构化计划 + 漂移提醒 |
-| **s04** | 上下文隔离委派 |
-| **s05** | 按需知识加载 |
-| **s06** | 四级上下文压缩 |
-
-</div>
-<div>
-
-## 现在你的 agent 能
-
-<v-clicks>
-
-- 读写文件、执行命令
-- 按计划完成多步任务
-- 遇到子问题时隔离探索
-- 需要领域知识时按需加载
-- 长时间工作而不撑爆上下文
-
-</v-clicks>
-
-<div v-click class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
-
-**但它还没有安全管控、没有记忆、出错就崩。**
-
-这就是阶段 2 要解决的。
-
-</div>
-
-</div>
-</div> -->
-
-<!-- ---
-
-# 回顾：一条请求的完整流动
-
-<v-clicks>
-
-1. 用户发来任务
-2. 组装 system prompt + messages + tools
-3. 模型返回文本或 `tool_use`
-4. **tool_use** → 执行工具 → tool_result 写回 messages
-5. 主循环继续
-6. 如果太大 → todo / subagent / compact
-7. 直到模型结束
-
-</v-clicks>
-
-<div v-click class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-sm">
-
-**一句话记住**：先做出能工作的最小循环，再一层一层给它补上规划、隔离、安全、记忆、任务、协作和外部能力。
-
-</div> -->
 
 ---
 layout: section
