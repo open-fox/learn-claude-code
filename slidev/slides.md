@@ -3180,36 +3180,6 @@ pi-coding-agent 可以作为 Agent SDK，通过代码配置工具、扩展和上
 
 <div v-click>
 
-## 工具配置
-
-```ts
-import {
-  createAgentSession,
-  readOnlyTools,
-  readTool, 
-  bashTool, 
-  grepTool,
-  SessionManager,
-} from "@mariozechner/pi-coding-agent";
-
-// 只读模式
-await createAgentSession({
-  tools: readOnlyTools,
-  sessionManager: SessionManager.inMemory(),
-});
-
-// 自选工具组合
-await createAgentSession({
-  tools: [readTool, bashTool, grepTool],
-  sessionManager: SessionManager.inMemory(),
-});
-
-```
-
-</div>
-
-<div v-click>
-
 ## 扩展 (Hook + 自定义工具)
 
 ```ts
@@ -3240,6 +3210,37 @@ const resourceLoader = new DefaultResourceLoader({
 
 <div v-click>
 
+## 工具配置
+
+```ts
+import {
+  createAgentSession,
+  readOnlyTools,
+  readTool, 
+  bashTool, 
+  grepTool,
+  SessionManager,
+} from "@mariozechner/pi-coding-agent";
+
+// 只读模式：仅使用内置只读工具
+await createAgentSession({
+  tools: readOnlyTools,
+  sessionManager: SessionManager.inMemory(),
+});
+
+
+// 自选组合：内置工具 + 自定义工具
+await createAgentSession({
+  tools: [readTool, bashTool, grepTool, my_tool],
+  sessionManager: SessionManager.inMemory(),
+});
+
+```
+
+</div>
+
+<div v-click>
+
 ## 上下文文件 (AGENTS.md)
 
 ```ts
@@ -3248,7 +3249,7 @@ const loader = new DefaultResourceLoader({
     agentsFiles: [
       ...current.agentsFiles,
       {
-        path: "/virtual/AGENTS.md",
+        path: "/virtual/AGENTS.md", // 虚拟文件
         content: `# Project Guidelines
 ## Code Style
 - Use TypeScript strict mode
