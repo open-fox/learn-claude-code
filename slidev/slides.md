@@ -23,6 +23,34 @@ layout: section
 基于开源项目 Learn Claude Code 的教程，分享一个简化版本的 AI Coding Agent 的实现
 -->
 
+
+---
+layout: default
+---
+
+# OpenClaw vs Hermes
+
+| 维度 | 🐙 OpenClaw | 🪶 Hermes Agent |
+|:---|:---|:---|
+| **定位** | 万能协同网关 (The AI that actually does things) | 自进化智能体 (An agent that grows with you) |
+| **语言** | TypeScript | Python |
+| **架构** | Gateway + Node + Channel | 模块化单代理持久循环 (~9200 行) |
+| **平台** | 20+ 消息渠道 (微信/企微 原生支持) | 15+ 消息渠道 (微信/企微 原生支持) |
+| **GitHub** | 35 万+ ⭐ | 4.7 万+ ⭐ (2 个月) |
+| **记忆** | 🧠 四层系统，依赖模型自主判断写入 | 🧠 四层架构 + 主动周期提示写入 |
+| **技能** | ❌ 人工编写维护 | ✅ 自动生成技能 |
+| **安全** | 🔴 36.8% 插件存在漏洞 | 🟢 无严重 CVE + 五层防护 |
+
+<div class="flex gap-8 mt-3">
+  <img src="/images/hermes-reasoning.jpg" class="max-h-80 rounded shadow" />
+  <img src="/images/hermes-tools.jpg" class="max-h-80 rounded shadow" />
+  <img src="/images/hermes-skill.jpg" class="max-h-80 rounded shadow" />
+  <img src="/images/hermes-permission.jpg" class="max-h-80 rounded shadow" />
+  <img src="/images/hermes-image.jpg" class="max-h-80 rounded shadow" />
+  <img src="/images/hermes-job.jpg" class="max-h-80 rounded shadow" />
+</div>
+
+
 ---
 layout: default
 class: flex items-center justify-center
@@ -2324,11 +2352,13 @@ layout: default
 
 **方案**：持久化任务图，写入磁盘文件，支持双向依赖关系，完成一个任务自动解锁下游任务
 
-- 每个 task 有 `blockedBy` / `blocks` 依赖关系
-- `is_ready(task)` = pending + 没有前置阻塞
-- 完成一个 task → 自动从下游的 `blockedBy` 移除
 - 每个任务的状态持久化到 `.tasks/task_N.json`
-- 核心循环不变，新增工具：`task_create` / `task_update` / `task_list` / `task_get`
+
+- 每个 task 有 `blockedBy` / `blocks` 依赖关系
+
+- 完成一个 task，自动从下游的 `blockedBy` 移除
+
+- `task_create` / `task_update` / `task_list` / `task_get`
 
 </div>
 
@@ -2435,12 +2465,12 @@ def _clear_dependency(self, completed_id: int):
 
 > 持久任务描述要完成什么，运行槽位描述谁在跑、跑到哪里；两者相关但不是一回事
 
-<div class="grid grid-cols-[1fr_600px] gap-8">
+<div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
 <div v-click>
 
-**问题** build 要跑 10 分钟，同步执行会卡住主循环，模型和用户都在空等
+**问题**：build 要跑 10 分钟，同步执行会卡住主循环，模型和用户都在空等
 
 </div>
 
@@ -2449,15 +2479,12 @@ def _clear_dependency(self, completed_id: int):
 **方案**：慢命令放到后台线程执行，主循环立即拿到 task_id 继续干别的事
 
 - 后台任务启动 daemon 线程，立即返回 task_id
+
 - 完整输出写入磁盘，通知只带 preview 摘要
+
 - 主循环仍然只有一条，并行的是执行与等待
+
 - 新增工具：`background_run` / `check_background`
-
-</div>
-
-<div v-click="4" class="mt-8 text-orange-500 text-lg">
-
-调度器做的是"记住未来"，触发后仍然回到同一条主循环
 
 </div>
 
@@ -2583,10 +2610,15 @@ task = {
 **方案**：cron 表达式 + 后台检查线程 + 通知注入，时间到了自动触发回到主循环
 
 - `cron_create("0 9 * * 1", "Run report")` 注册调度记录
+
 - 后台线程每分钟检查一次是否匹配当前时间
+
 - 到期 → 推入通知队列 → 主循环注入为 user message
+
 - 支持 recurring（反复触发）/ one-shot（触发一次自动删除）
+
 - 支持 durable（落盘持久化，重启后仍在）
+
 - 新增工具：`cron_create` / `cron_delete` / `cron_list`
 
 </div>
@@ -3178,7 +3210,7 @@ pi-coding-agent 可以作为 Agent SDK，通过代码配置工具、扩展和上
 
 <div class="grid grid-cols-3 gap-4 mt-6">
 
-<div v-click>
+<div>
 
 ## 扩展 (Hook + 自定义工具)
 
@@ -3208,7 +3240,7 @@ const resourceLoader = new DefaultResourceLoader({
 
 </div>
 
-<div v-click>
+<div>
 
 ## 工具配置
 
@@ -3239,7 +3271,7 @@ await createAgentSession({
 
 </div>
 
-<div v-click>
+<div>
 
 ## 上下文文件 (AGENTS.md)
 
@@ -3270,33 +3302,6 @@ await createAgentSession({
 </div>
 
 </div>
-
-
----
-layout: default
----
-
-# OpenClaw vs Hermes
-
-| 维度 | 🐙 OpenClaw | 🪶 Hermes Agent |
-|:---|:---|:---|
-| **定位** | 万能协同网关 (The AI that actually does things) | 自进化智能体 (An agent that grows with you) |
-| **语言** | TypeScript | Python |
-| **架构** | Gateway + Node + Channel | 模块化单代理持久循环 (~9200 行) |
-| **平台** | 20+ 消息渠道 (微信/企微 原生支持) | 15+ 消息渠道 (微信/企微 原生支持) |
-| **GitHub** | 35 万+ ⭐ | 4.7 万+ ⭐ (2 个月) |
-| **记忆** | 🧠 四层系统，依赖模型自主判断写入 | 🧠 四层架构 + 主动周期提示写入 |
-| **技能** | ❌ 人工编写维护 | ✅ 自动生成技能 |
-| **安全** | 🔴 36.8% 插件存在漏洞 | 🟢 无严重 CVE + 五层防护 |
-
-<div class="flex gap-8 mt-3">
-  <img src="/images/hermes-reasoning.jpg" class="max-h-80 rounded shadow" />
-  <img src="/images/hermes-tools.jpg" class="max-h-80 rounded shadow" />
-  <img src="/images/hermes-skill.jpg" class="max-h-80 rounded shadow" />
-  <img src="/images/hermes-permission.jpg" class="max-h-80 rounded shadow" />
-  <img src="/images/hermes-image.jpg" class="max-h-80 rounded shadow" />
-</div>
-
 
 ---
 layout: end
