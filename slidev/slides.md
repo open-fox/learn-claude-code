@@ -560,29 +560,48 @@ layout: section
 layout: default
 ---
 
-# <a href="https://learn.shareai.run/" target="_blank"><span class="text-orange-500">Learn Claude Code</span></a>
+# Learn Claude Code
 
-<div class="mt-18">
+<div class="mt-32 flex items-start justify-center gap-2">
 
-```mermaid {scale: 0.8}
-graph LR
-  A["🔵 阶段1: 核心单Agent<br/>s01-s06"] --> B["🟢 阶段2: 生产加固<br/>s07-s11"]
-  B --> C["🟠 阶段3: 任务管理<br/>s12-s14"]
-  C --> D["🔴 阶段4: 多Agent平台<br/>s15-s19"]
-```
+  <div v-click class="flex items-center gap-2">
+    <div class="px-5 py-4 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-center" style="min-width:180px;">
+      <div class="text-blue-300 font-bold text-base">🔵 阶段1: 核心单Agent</div>
+      <div class="text-blue-400/60 text-xs mt-1">s01 - s06</div>
+      <div class="text-blue-200/80 text-sm mt-2">先做出一个真能工作的 agent</div>
+    </div>
+  </div>
+
+  <div v-click class="flex items-center gap-2">
+    <div class="text-gray-500 text-2xl mt-2">→</div>
+    <div class="px-5 py-4 rounded-xl bg-green-500/15 border-2 border-green-400 text-center" style="min-width:180px;">
+      <div class="text-green-300 font-bold text-base">🟢 阶段2: 生产加固</div>
+      <div class="text-green-400/60 text-xs mt-1">s07 - s11</div>
+      <div class="text-green-200/80 text-sm mt-2">再补安全、扩展、记忆和恢复</div>
+    </div>
+  </div>
+
+  <div v-click class="flex items-center gap-2">
+    <div class="text-gray-500 text-2xl mt-2">→</div>
+    <div class="px-5 py-4 rounded-xl bg-orange-500/15 border-2 border-orange-400 text-center" style="min-width:180px;">
+      <div class="text-orange-300 font-bold text-base">🟠 阶段3: 任务管理</div>
+      <div class="text-orange-400/60 text-xs mt-1">s12 - s14</div>
+      <div class="text-orange-200/80 text-sm mt-2">临时清单升级成持久化任务系统</div>
+    </div>
+  </div>
+
+  <div v-click class="flex items-center gap-2">
+    <div class="text-gray-500 text-2xl mt-2">→</div>
+    <div class="px-5 py-4 rounded-xl bg-red-500/15 border-2 border-red-400 text-center" style="min-width:180px;">
+      <div class="text-red-300 font-bold text-base">🔴 阶段4: 多Agent平台</div>
+      <div class="text-red-400/60 text-xs mt-1">s15 - s19</div>
+      <div class="text-red-200/80 text-sm mt-2">从单 agent 升级成多 agent 平台</div>
+    </div>
+  </div>
 
 </div>
 
-<v-clicks class="mt-16 text-xl flex flex-col justify-left">
-
-- **阶段 1** — 先做出一个真能工作的 agent
-- **阶段 2** — 再补安全、扩展、记忆和恢复
-- **阶段 3** — 临时清单升级成持久化任务系统
-- **阶段 4** — 从单 agent 升级成多 agent 平台
-
-</v-clicks>
-
-<div v-click class="mt-16 text-xl text-orange-500">
+<div v-click class="mt-32 text-xl text-orange-500 w-full text-center">
 
 核心原则：每一章节都是上一章节自然迭代出来的，从最小的单 Agent 开始，到复杂的多 Agent 平台
 
