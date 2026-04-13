@@ -3414,14 +3414,17 @@ layout: default
 
 ## agent_loop 变更
 
-```python {2|8-9|11-15}
+```python {2-3|12-21}
 def agent_loop(messages: list):
-    # s19 新增：合并 native + MCP 工具
+    # s19 新增：统一工具注册，合并 native + MCP 工具
     tools = build_tool_pool()
     while True:
         response = client.messages.create(
-            model=MODEL, system=system,
-            messages=messages, tools=tools, max_tokens=8000)
+            model=MODEL, 
+            system=system,
+            messages=messages, 
+            tools=tools, 
+            max_tokens=8000)
         ...
         for block in response.content:
             # s19 新增：统一权限检查
@@ -3431,16 +3434,19 @@ def agent_loop(messages: list):
             elif decision["behavior"] == "ask" and not ...:
                 output = f"Permission denied by user"
             else:
-                # s19 新增：统一路由
+                # s19 新增：统一工具路由
                 output = handle_tool_call(block.name, block.input)
             results.append({...})
+            # 正常执行循环
+            ...
 ```
 
-## 统一路由
+## 统一工具路由
 
 ```python
 def handle_tool_call(tool_name, tool_input) -> str:
-    if mcp_router.is_mcp_tool(tool_name):   # mcp__ 前缀
+    # 判断是否是 mcp 工具：
+    if mcp_router.is_mcp_tool(tool_name):
         return mcp_router.call(tool_name, tool_input)
     handler = NATIVE_HANDLERS.get(tool_name)
     return handler(**tool_input) if handler else "Unknown"
@@ -3455,11 +3461,15 @@ def handle_tool_call(tool_name, tool_input) -> str:
 class MCPClient:
     def __init__(self, server_name, command, args):
         ...
-    def connect(self): ...         # 启动进程 + initialize
-    def list_tools(self) -> list:  # tools/list
-    def call_tool(self, name, args) -> str:  # tools/call
+    # 启动进程 + initialize
+    def connect(self): ...         
+    # tools/list
+    def list_tools(self) -> list:  
+    # tools/call
+    def call_tool(self, name, args) -> str:  
+    # 给每个 tool 加 mcp__{server}__{tool} 前缀
     def get_agent_tools(self) -> list:
-        # 给每个 tool 加 mcp__{server}__{tool} 前缀
+        ...
 ```
 
 ## MCPToolRouter
