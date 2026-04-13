@@ -1,1778 +1,3872 @@
 ---
 theme: default
-title: Learn Claude Code
-titleTemplate: '%s'
-info: |
-  Detailed teaching deck for Learn Claude Code chapters s01-s19.
-author: CodeBuddy
+title: Build Your Own Agent — 从0到1，手搓 AI Coding Agent
+info: Build Your Own Agent — 从0到1，手搓 AI Coding Agent
 lineNumbers: true
-aspectRatio: 16/9
-colorSchema: light
-mdc: true
+drawings:
+  persist: false
 transition: slide-left
+mdc: true
+layout: section
 ---
 
-<div class="cover-shell">
-  <div class="eyebrow">Slidev deck · based on <code>docs/en</code> + <code>web</code> visual system</div>
-  
-  # Learn Claude Code
-  
-  <div class="hero-sub">
-    从 <strong>The Agent Loop</strong> 到 <strong>MCP &amp; Plugin</strong>：
-    用一套按章节展开的课程 slides，把单代理内核、生产级加固、任务运行时、再到多代理平台讲完整。
-  </div>
+# Build Your Own Agent
 
-  <div class="metric-grid">
-    <div class="metric-card">
-      <div class="metric-label">Deck Scope</div>
-      <div class="metric-value">19</div>
-      <p>覆盖 <code>s01</code> 到 <code>s19</code>，严格按教程顺序推进。</p>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Teaching Lens</div>
-      <div class="metric-value">4x</div>
-      <p>每章都看 <strong>问题</strong>、<strong>机制</strong>、<strong>代码变化</strong>、<strong>下一步</strong>。</p>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Visual Reference</div>
-      <div class="metric-value">Web</div>
-      <p>沿用现有站点的蓝 / 绿 / 橙分层配色、卡片感和深色代码面板。</p>
-    </div>
-  </div>
+## 从 0 到 1 手搓 AI Coding Agent
 
-  <div class="badge-row">
-    <span class="layer-chip core">Core Single-Agent</span>
-    <span class="layer-chip hardening">Production Hardening</span>
-    <span class="layer-chip runtime">Task Runtime</span>
-    <span class="layer-chip platform">Multi-Agent Platform</span>
-  </div>
+<div class="text-lg text-gray-500 mt-8">
+<p>javayhu</p>
+<p>2026/4/13</p>
 </div>
 
+<!--
+基于开源项目 Learn Claude Code 的教程，分享一个简化版本的 AI Coding Agent 的构建流程
+这个教程是在 Claude Code 代码泄漏之前就有，在这之后，可能基于泄漏的源码，又补充了几个章节
+-->
+
 ---
-layout: two-cols-header
+layout: section
 ---
 
-## 怎么读这套课件
+# 内容大纲
 
-::left::
+## 1、回顾近半年进展
 
-<div class="surface tight-list">
-  <div class="kicker">Reading Pattern</div>
-  <v-clicks>
+## 2、Agent 框架对比
 
-  - 先看 **这一章解决了什么痛点**，避免只记 API 和名词。
-  - 再看 **新增了哪一层结构**，例如 `dispatch map`、`TodoManager`、`TaskManager`。
-  - 然后看 **代码里真正新增的核心几行**，不是把整份实现照搬。
-  - 最后看 **这一章如何自然长到下一章**，理解课程递进关系。
+## 3、Agent 框架实现
 
-  </v-clicks>
+## 4、Agent 框架使用
 
-  <div class="takeaway">
-    <strong>主线不是不断重写 Agent。</strong> 而是在同一个 loop 外面，一层一层外挂能力。
-  </div>
+<!-- 大模型的核心概念，这次是介绍半年后它们的进展，以及现在火热的 Agent 开发入门。
+基础知识的科普，对齐大家的认知，方便工作中遇到 Agent 开发时沟通交流，或者寻找方向。
+不追热点，聚焦本质，将原来的编程思想应用到 Agent 开发中-->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- <span class="text-orange-500 font-bold">LLM</span>
+- Prompt
+- Token
+- Context
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-llm.png" alt="LLM" />
 </div>
 
-::right::
+</template>
 
-<div class="surface">
-  <div class="kicker">What the deck emphasizes</div>
-  <ul class="no-bullets">
-    <li><strong>概念层</strong>：为什么这个机制存在</li>
-    <li><strong>控制层</strong>：它插在 query / tool / prompt 的哪一段</li>
-    <li><strong>实现层</strong>：真正改变了哪段代码路径</li>
-    <li><strong>教学层</strong>：这一章最容易混淆的边界是什么</li>
-  </ul>
-  <div class="hr-soft"></div>
-  <div class="small">
-    源内容来自 `learn-claude-code/docs/en`，
-    视觉语言参考 `web/src/app/globals.css` 与 `web/src/lib/constants.ts`。
-  </div>
-  <div class="badge-row">
-    <span class="ghost-chip">流程图</span>
-    <span class="ghost-chip">代码高亮</span>
-    <span class="ghost-chip">点击渐进展示</span>
-    <span class="ghost-chip">章节分段总结</span>
-  </div>
+<template v-slot:right>
+
+## 近半年进展
+
+### 1、[models.dev](https://models.dev)
+
+记录主流模型的发布时间、知识库时间、性能、价格和能力
+
+- OpenAI GPT 5.4 / Google Gemini 3.1 / Anthropic Claude Opus 4.6
+
+- GLM 5.1 / Kimi K2.5 / MiniMax M2.7
+
+### 2、[openrouter.ai](https://openrouter.ai/rankings)
+
+调用量前十中除了国外三家模型，国产开源模型也表现亮眼
+
+<div class="concept-slide-image">
+  <img src="./images/open-router-leaderboard.png" alt="OpenRouter Leaderboard" />
+</div>
+
+</template>
+
+<!-- LLM -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- <span class="text-orange-500 font-bold">Prompt</span>
+- Token
+- Context
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-prompt.png" alt="Prompt" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+### 1、提示词缓存（Prompt Caching）
+
+如果当前请求的输入前缀和之前的请求完全一致，模型商就可以直接从缓存中读取结果，效率更高，成本更低
+
+<!-- <div class="slide-image">
+  <img src="./images/prompt-caching.png" alt="Prompt Caching" style="width: 60%" />
+</div> -->
+
+<div class="slide-image">
+  <img src="./images/token-price.png" alt="Input token price" style="width: 60%"/>
+</div>
+
+### 2、设计提示词的核心原则
+
+<span class="text-orange-500">常驻内容要短且稳定</span>：把不变的放前面，把变化的放后面
+
+- 前面：系统提示、工具定义等在多轮请求中基本不会变的内容
+
+- 后面：当前时间、用户输入、工具调用结果等动态变化的内容
+
+- 启发：JSON序列化的结果要按照key进行排序，保证缓存复用
+
+</template>
+
+<!-- Prompt -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- <span class="text-orange-500 font-bold">Token</span>
+- Context
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-token.png" alt="Token" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+### 1、中文名：<span class="text-orange-500">词元</span>
+
+Token是大模型处理信息的最小信息单元，也是 AI 时代的结算单位
+
+<!-- ### 2、Token 不同价
+
+Prompt Caching 普及后，重复前缀可复用缓存，cached input tokens 比普通 input token 便宜很多
+
+<div class="slide-image">
+  <img src="./images/token-price.png" alt="Input token price" style="width: 60%"/>
+</div> -->
+
+### 2、Token Plan
+
+模型服务商从提供 Coding Plan 到提供 Token Plan，满足用户使用 AI 应用时多模态输入输出的需求
+
+- Tencent Token Plan
+- MiniMax Token Plan
+
+</template>
+
+<!-- Token -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- Token
+- <span class="text-orange-500 font-bold">Context</span>
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-context-engineering.png" alt="Context" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+### 1、工程化的演进
+
+<div class="mt-4 mb-8">
+  <table class="w-full">
+    <thead>
+      <tr class="">
+        <th class="w-28 text-left pb-2"></th>
+        <th class="w-28 text-left pb-2">时间</th>
+        <th class="text-left pb-2">解决的问题</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="pr-2 pb-2 align-center">提示词工程</td>
+        <td class="pr-2 pb-2 align-center">2023-2024</td>
+        <td class="pb-2 align-top">怎么跟模型说，能让它输出高质量的结果，<span class="text-orange-500">侧重于措辞和结构化</span></td>
+      </tr>
+      <tr>
+        <td class="pr-2 pb-2 align-center">上下文工程</td>
+        <td class="pr-2 pb-2 align-center">2025</td>
+        <td class="pb-2 align-top">给模型看什么，能让它输出高质量的结果，<span class="text-orange-500">侧重于上下文信息编排</span></td>
+      </tr>
+      <tr>
+        <td class="pr-2 align-center">驾驭工程</td>
+        <td class="pr-2 align-center">2026+</td>
+        <td class="align-top">如何约束模型，能让它输出高质量的结果，<span class="text-orange-500">侧重于 Agent 运行环境的设计</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ### 2、<span class="text-orange-500 font-bold">Harness Engineering</span>
+
+Model 决定做什么，Harness 决定如何做，两者结合就是 Agent 系统
+
+<div class="slide-image">
+  <img src="./images/open-harness.png" alt="Harness" />
+</div> -->
+
+</template>
+
+<!-- Context -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- Token
+- Context
+- <span class="text-orange-500 font-bold">Tools</span>
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-tools.png" alt="Tools" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+### 1、<a href="https://youtu.be/TqC1qOfiVcQ" target="_blank"><span class="text-orange-500">Bash is all you need</span></a>
+
+- HCI (Human Computer Interface) 向 ACI (Agent Computer Interface) 转化
+
+- GUI 是给人看的 (Chrome)，Agent 只需要 bash 工具就行 (Headless Chrome)
+
+### 2、为什么选择 bash？
+
+- bash 能读写文件、管理文件系统、编写脚本并执行
+
+- bash 可以利用其他三方工具，比如 ffmpeg/git/grep
+
+- 增加工具不会解锁新能力，只会增加模型需要理解的接口
+
+### 3、CLI 工具的兴起
+
+- 飞书推出 CLI，钉钉推出 CLI，企微推出 CLI
+
+- Google Workspace 推出 CLI，Obsidian 推出 CLI
+
+```bash
+# Send an email
+gws gmail +send --to alice@example.com --subject "Hello" --body "Hi there"
+
+# Create a spreadsheet
+gws sheets spreadsheets create --json '{"properties": {"title": "Q1 Budget"}}'
+
+# Create a new note
+obsidian create name="Trip to Paris"
+
+# Search your vault
+obsidian search query="meeting notes"
+```
+
+</template>
+
+<!-- Tools -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- Token
+- Context
+- Tools
+- <span class="text-orange-500 font-bold">MCP + Skill</span>
+
+<div class="concept-slide-image">
+  <img src="./images/ai-mcp.png" alt="MCP" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+<!-- ### 1、MCP 的问题
+
+- MCP Tools 的定义和返回结果内容太多，占用大量上下文
+
+- 很多 MCP Server 只是把旧接口重新包装，使用体验不佳 -->
+
+### 1、MCP 和 Skill
+
+- 对于 Agent 而言，MCP 和 Skill 都在工具层，都是为了扩展 Agent 的能力
+
+- MCP 和 Skill 不是竞争关系，而是互补关系，Skills + MCP = 专业知识 + 外部连接
+
+<div class="mt-3">
+  <table class="w-full">
+    <thead>
+      <tr class="text-orange-500">
+        <th class="w-32 text-left"></th>
+        <th class="text-left">MCP</th>
+        <th class="text-left">Skill</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="pr-2 pb-2 align-top">解决的问题</td>
+        <td class="pr-2 pb-2 align-top">把外部能力接进来给 Agent 用</td>
+        <td class="pb-2 align-top">把做事的方法和步骤教给 Agent</td>
+      </tr>
+      <tr>
+        <td class="pr-2 pb-2 align-top">内容形态</td>
+        <td class="pr-2 pb-2 align-top">tools / resources / prompts</td>
+        <td class="pb-2 align-top">Skill.md / scripts / references</td>
+      </tr>
+      <tr>
+        <td class="pr-2 pb-2 align-top">加载方式</td>
+        <td class="pr-2 pb-2 align-top">连接 server 后暴露能力</td>
+        <td class="pb-2 align-top">按需加载正文和脚本</td>
+      </tr>
+      <tr>
+        <td class="pr-2 align-top">上下文成本</td>
+        <td class="pr-2 align-top">工具定义和结果可能太大</td>
+        <td class="align-top">分层设计，按需加载</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+### 2、理解 Skill
+
+- <span class="text-orange-500">Agent = 系统，Tools = 系统接口，Skills = 安装在系统上的应用</span>
+
+- Claude Code/Cowork = iOS 系统，OpenClaw = Android 系统
+
+- ClawHub = 国外应用商店，SkillsHub = 国内应用商店，有毒的 Skill = 恶意应用
+
+### 3、<a href="https://youtu.be/CEvIs9y1uog" target="_blank"><span class="text-orange-500">Don't build agents, build skills instead</span></a>
+
+- Claude Code 证明：不同领域的 Agent 底层可以完全一样（bash + 文件系统）
+
+- 构建 Skills 生态，让通用 Agent 通过可积累、可复用的 Skills 变成各领域的专业工具
+
+</template>
+
+<!-- MCP -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (2/2) AI 编程工具的演进和经验
+
+- Chat：ChatGPT
+- VS Code 插件：Copilot
+- AI IDE：Cursor、Windsurf
+- AI Coding Agent：Claude Code、Codex
+
+<div class="concept-slide-image">
+  <img src="./images/ai-coding.png" alt="Coding" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+### 1、CodeBuddy 逐渐完善
+
+- AI IDE：CodeBuddy IDE
+- VS Code 插件：CodeBuddy 插件
+- AI Coding Agent：CodeBuddy Code
+- 底层共享通用的 CodeBuddy Agent SDK
+
+### 2、Claude Code 源码泄漏
+
+国内外各种源码分析，带动全网开发和设计更加高效的 Agent 框架
+
+[Claude Code Upacked](https://ccunpacked.dev/)
+
+[Claude Code From Source](https://claude-code-from-source.com/)
+
+<!-- [驾驭工程 — 从 Claude Code 源码到 AI 编码最佳实践](https://zhanghandong.github.io/harness-engineering-from-cc-to-ai-coding/preface.html) -->
+
+### 3、<a href="https://learn.shareai.run/" target="_blank"><span class="text-orange-500">Learn Claude Code</span></a>
+
+通过学习这个教程，了解 AI Coding Agent 的架构设计和开发流程
+
+- 教程在 Claude Code 源码泄漏之前就存在，所以不是源码分析教程
+
+- 教程在 Claude Code 源码泄漏之后，新增了 7 个章节，可能是受泄漏的源码启发
+
+</template>
+
+<!-- AI Coding-->
+
+---
+layout: section
+---
+
+# Agent 框架对比
+
+<div class="text-gray-500 mt-4">
+常见的 Coding Agent 框架的架构和对比
 </div>
 
 ---
 layout: default
 ---
 
-## 课程地图：这 19 章到底在长什么
+# <span class="text-orange-500">Agent = Model + Harness</span>
 
-<div class="stage-grid" style="grid-template-columns: repeat(4, minmax(0, 1fr));">
-  <div class="stage-card core">
-    <div class="layer-chip core">Stage 1 · Core</div>
-    <h3>单代理内核</h3>
-    <p><code>s01-s06</code></p>
-    <ul class="dense-list">
-      <li><code>s01</code> loop 闭环</li>
-      <li><code>s02</code> 工具调度与沙箱</li>
-      <li><code>s03</code> session 计划</li>
-      <li><code>s04</code> 子代理隔离上下文</li>
-      <li><code>s05</code> skill 按需加载</li>
-      <li><code>s06</code> 长会话压缩</li>
-    </ul>
-  </div>
-  <div class="stage-card hardening">
-    <div class="layer-chip hardening">Stage 2 · Hardening</div>
-    <h3>治理与工程化</h3>
-    <p><code>s07-s11</code></p>
-    <ul class="dense-list">
-      <li><code>s07</code> permission pipeline</li>
-      <li><code>s08</code> hooks 扩展点</li>
-      <li><code>s09</code> durable memory</li>
-      <li><code>s10</code> prompt assembly</li>
-      <li><code>s11</code> recovery branches</li>
-    </ul>
-  </div>
-  <div class="stage-card runtime">
-    <div class="layer-chip runtime">Stage 3 · Runtime</div>
-    <h3>任务运行时</h3>
-    <p><code>s12-s14</code></p>
-    <ul class="dense-list">
-      <li><code>s12</code> task graph (DAG)</li>
-      <li><code>s13</code> background threads</li>
-      <li><code>s14</code> cron scheduler</li>
-    </ul>
-  </div>
-  <div class="stage-card future">
-    <div class="layer-chip platform">Stage 4 · Platform</div>
-    <h3>多代理平台</h3>
-    <p><code>s15-s19</code></p>
-    <ul class="dense-list">
-      <li><code>s15</code> agent teams</li>
-      <li><code>s16</code> team protocols</li>
-      <li><code>s17</code> autonomous agents</li>
-      <li><code>s18</code> worktree isolation</li>
-      <li><code>s19</code> MCP &amp; plugin</li>
-    </ul>
-  </div>
+- Agent 是大脑和身体的结合
+
+- Model 是大脑，负责思考+推理
+
+- Harness 是身体，负责感知+执行
+
+- 如何设计和实现一个 Agent 框架？需要解决哪些问题？需要包含哪些功能？为什么要这样设计和实现？
+
+<div class="section-image">
+  <img src="./images/harness.png" alt="Harness" />
 </div>
 
-<div class="slide-caption">
-  站点的四层颜色体系：蓝色 core、绿色 hardening、橙色 runtime、红色 platform。本 deck 完整覆盖 <code>s01-s19</code>。
+
+---
+layout: section
+---
+
+# Agent 框架实现
+
+<div class="text-gray-500 mt-4">
+跟着 Learn Claude Code 教程实现简易的 AI Coding Agent
+</div>
+
+---
+layout: default
+---
+
+# <a href="https://learn.shareai.run/" target="_blank"><span class="text-orange-500">Learn Claude Code</span></a>
+
+<div class="mt-18">
+
+```mermaid {scale: 0.8}
+graph LR
+  A["🔵 阶段1: 核心单Agent<br/>s01-s06"] --> B["🟢 阶段2: 生产加固<br/>s07-s11"]
+  B --> C["🟠 阶段3: 任务管理<br/>s12-s14"]
+  C --> D["🔴 阶段4: 多Agent平台<br/>s15-s19"]
+```
+
+</div>
+
+<v-clicks class="mt-16 text-xl flex flex-col justify-left">
+
+- **阶段 1** — 先做出一个真能工作的 agent
+- **阶段 2** — 再补安全、扩展、记忆和恢复
+- **阶段 3** — 临时清单升级成持久化任务系统
+- **阶段 4** — 从单 agent 升级成多 agent 平台
+
+</v-clicks>
+
+<div v-click class="mt-16 text-xl text-orange-500">
+
+核心原则：每一章节都是上一章节自然迭代出来的，从最小的单 Agent 开始，到复杂的多 Agent 平台
+
 </div>
 
 ---
 layout: section
-class: section-core
 ---
 
-<div class="section-hero">
-  <div class="layer-chip core">Core Single-Agent · s01-s06</div>
-  
-  # Stage 1 · 先把 Agent 内核搭起来
-  
-  <div class="section-subtitle">
-    这一段的目标不是"功能很多"，而是让 Agent 具备一个能长期工作的最小 kernel：
-    <strong>会循环、会调工具、会规划、会上下文隔离、会按需加载知识、会压缩上下文</strong>。
-  </div>
+# 阶段 1：核心单 Agent
 
-  <div class="badge-row">
-    <span class="ghost-chip">messages[] 累积</span>
-    <span class="ghost-chip">tool_result write-back</span>
-    <span class="ghost-chip">context boundary</span>
-    <span class="ghost-chip">prompt token economy</span>
-  </div>
+## s01 — s06
+
+<div class="text-gray-500 mt-4">
+先让 agent 能跑起来
 </div>
 
 ---
-layout: two-cols-header
+layout: center
 ---
 
-## s01 · The Agent Loop
+# 阶段 1 要解决什么？
 
-::left::
+<v-clicks>
 
-<div class="surface tight-list">
-  <div class="chapter-pill core">Minimal Closed Loop</div>
-  <h3>这一章回答的核心问题</h3>
-  <v-clicks>
+想象你有一个天才助手——能推理、能写代码、能设计方案
 
-  - 没有 loop 时，**人类就是 loop**：模型说一句，你执行一次，再把结果贴回去。
-  - 一旦任务需要 10 次、20 次工具调用，人工中转马上崩掉。
-  - 最小解法非常朴素：**模型请求工具 → harness 执行 → 结果回写 → 再问模型**。
-  - 关键不是 while 语法，而是 **write-back**：工具结果必须重新进入 `messages[]`。
+**但它什么都不能"做"。**
 
-  </v-clicks>
+每次它建议你跑一个命令，你得手动复制、执行、再把结果粘回去。
 
-  <div class="takeaway">
-    <strong>Key insight</strong>：An agent is just a loop.
-  </div>
+你就是那个循环。**这个阶段的目标就是把你从循环里解放出来。**
+
+</v-clicks>
+
+<div v-click class="mt-6 grid grid-cols-3 gap-3 text-sm">
+<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**s01** 最小循环
+
+</div>
+<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**s02** 工具 · **s03** 规划
+
+</div>
+<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**s04** 隔离 · **s05** 知识 · **s06** 压缩
+
+</div>
 </div>
 
-::right::
+<!-- s01 agent loop -->
 
-```mermaid
-flowchart LR
-  U[User prompt] --> M[LLM]
-  M -->|tool_use| T[Tool execute]
-  T -->|tool_result| W[Write back to messages]
-  W --> M
-  M -->|end_turn| D[Done]
+---
+layout: default
+---
+
+# s01: 智能体循环 (The Agent Loop)
+
+> 没有循环，就没有 agent，真正的 agent 起点是把真实工具结果重新喂回模型
+
+<div class="grid grid-cols-[1fr_600px] gap-8">
+<div>
+
+<div v-click>
+
+**问题**：模型能思考，但不会打开文件、运行命令，是个"只会说话，不会干活"的程序，需要人参与完成任务
+
+</div>
+
+<div v-click>
+
+**方案**：把"模型 + 工具"连接成一个能持续推进任务的主循环，不要让人来做 AI 的测试员，最小的心智循环
+
+</div>
+
+<div v-after>
+
+```mermaid {scale: 0.6}
+graph TD
+  A["user message"] --> B["LLM"]
+  B -->|"普通回答"| C["结束"]
+  B -->|"tool_use"| D["执行工具"]
+  D --> E["tool_result"]
+  E --> F["写回 messages"]
+  F --> B
+  style F fill:#f97316,color:#fff
+  style D fill:#bfdbfe,color:#000
 ```
 
-<div class="code-note small">
-  <strong>本章新增对象：</strong> `messages`、`stop_reason`、`tool_use` / `tool_result`。
+</div>
+
+</div>
+
+<div v-click class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s01/" />
+</div>
+
 </div>
 
 ---
-layout: two-cols-header
+layout: default
 ---
 
-## s01 · 核心变化代码：把结果写回去
+# s01: 最小 Agent Loop 实现
 
-::left::
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
 
-<div class="surface tight-list">
-  <h3>看代码时只盯三件事</h3>
-  <ul class="dense-list">
-    <li><strong>入口</strong>：用户 query 先进入 `messages`</li>
-    <li><strong>分叉</strong>：`stop_reason != "tool_use"` 就结束</li>
-    <li><strong>闭环</strong>：工具执行结果再 append 回 `messages`</li>
-  </ul>
-  <div class="code-note">
-    这 20 多行就是整门课的地基，后面章节几乎都在它外面加层，而不是推翻它。
-  </div>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s01_agent_loop.py</span></div>
-</div>
+```python {1|3-4|5-18|20-23|25-34|36-39|all}
+messages = [{"role": "user", "content": query}]
 
-::right::
-
-```python {1-3|4-8|10-11|13-22|all}
-def agent_loop(query):
-    messages = [{"role": "user", "content": query}]
+def agent_loop(state):
     while True:
+        # 1. 调用模型
         response = client.messages.create(
-            model=MODEL,
+            model=MODEL, 
             system=SYSTEM,
-            messages=messages,
-            tools=TOOLS,
+            tools=TOOLS, 
+            messages=state["messages"],
+            max_tokens=8000,
         )
-        messages.append({"role": "assistant", "content": response.content})
 
+        # 2. 追加 assistant 回复
+        state["messages"].append({
+            "role": "assistant", 
+            "content": response.content,
+        })
+
+        # 3. 如果不是 tool_use，结束
         if response.stop_reason != "tool_use":
-            return
+          state["transition_reason"] = None
+          return
 
+        # 4. 执行工具，回写结果
         results = []
         for block in response.content:
             if block.type == "tool_use":
-                output = run_bash(block.input["command"])
+                output = run_tool(block)
                 results.append({
                     "type": "tool_result",
                     "tool_use_id": block.id,
                     "content": output,
                 })
-        messages.append({"role": "user", "content": results})
+
+        # 5. 工具结果作为新消息写回
+        state["messages"].append({"role": "user", "content": results})
+        state["turn_count"] += 1
+        state["transition_reason"] = "tool_result"
 ```
 
----
-layout: two-cols-header
----
-
-## s02 · Tool Use
-
-::left::
-
-<div class="surface tight-list">
-  <div class="chapter-pill core">Route Intent into Action</div>
-  <h3>为什么不能只靠 bash</h3>
-  <v-clicks>
-
-  - `cat`、`sed`、shell quoting 都很脆，长输出也容易炸上下文。
-  - 更严重的是：没有边界，模型可以乱读文件、乱写路径、乱执行命令。
-  - 需要把"工具"从 bash 字符串，升级成 **有 schema、有 handler、有路径沙箱** 的控制面。
-  - 关键新增物是 **dispatch map**：loop 不需要知道每个工具怎么实现。
-
-  </v-clicks>
-
-  <div class="takeaway">
-    <strong>Key insight</strong>：Adding a tool means adding one handler. The loop never changes.
-  </div>
 </div>
+<div>
 
-::right::
+**系统提示词**和**工具**定义
 
-```mermaid
-flowchart LR
-  U[User] --> M[LLM]
-  M --> D{{Tool Dispatch}}
-  D --> B[bash]
-  D --> R[read_file]
-  D --> W[write_file]
-  D --> E[edit_file]
-  B --> RT[tool_result]
-  R --> RT
-  W --> RT
-  E --> RT
-  RT --> M
+```python
+SYSTEM = (
+    f"You are a coding agent at {os.getcwd()}. "
+    "Use bash to inspect and change the workspace. Act first, then report clearly."
+)
+
+TOOLS = [{
+    "name": "bash",
+    "description": "Run a shell command in the current workspace.",
+    "input_schema": {...},
+}]
 ```
 
-<div class="code-note small">
-  这一章真正引入的是：<strong>工具路由层</strong> 和 <strong>路径安全边界</strong>。
+**Message**：消息历史不是聊天记录展示层，而是模型下一轮要读的上下文
+
+```python
+{"role": "user", "content": "..."}
+{"role": "assistant", "content": [...]}
+{"role": "tool_result", "content": [...]}
+```
+
+**Tool Result**：模型返回的工具结果
+
+```python
+{
+    "type": "tool_result",
+    "tool_use_id": "...",
+    "content": "...",
+}
+```
+
+**LoopState**：显式收拢循环状态
+
+```python
+state = {
+    "messages": [...],
+    "turn_count": 1,
+    "transition_reason": None,
+}
+```
+
+</div>
 </div>
 
 ---
-layout: two-cols-header
+layout: default
 ---
 
-## s02 · 核心变化代码：`safe_path()` + `TOOL_HANDLERS`
+# s02: 工具使用 (Tool Use)
 
-::left::
+> 只有 bash 工具，`rm -rf /` 谁来拦？路径逃逸谁来管？高危高频的文件操作需要专用工具
 
-<div class="surface tight-list">
-  <h3>代码里新增了哪两层</h3>
-  <ul class="dense-list">
-    <li><strong>路径沙箱</strong>：所有文件 I/O 先过 `safe_path()`</li>
-    <li><strong>统一调度</strong>：`tool name -> handler`，替代 if/elif 链</li>
-  </ul>
-  <div class="code-note">
-    这就是教程一直强调的"保持 loop 形状不变"：新增能力时，尽量把变化限制在 loop 外侧。
-  </div>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s02_tool_use.py</span></div>
+<div class="grid grid-cols-[1fr_600px] gap-8">
+<div>
+
+<div v-click>
+
+**问题**：只有 bash 工具，所有操作都走 shell，每次 bash 调用都是不受约束的，存在严重的安全隐患
+
 </div>
 
-::right::
+<div v-click>
 
-```python {1-5|7-12|14-19|all}
+**方案**：专用工具 (read_file, write_file) 可以在工具层面做路径沙箱，新增工具只是新增处理方法，核心循环保持不变
+
+</div>
+
+<div v-after>
+
+```mermaid {scale: 0.4}
+graph TD
+  LLM["🤖 LLM"] -->|"tool_use"| D["Dispatch Map"]
+  D --> B["bash"]
+  D --> R["read_file"]
+  D --> W["write_file"]
+  D --> E["edit_file"]
+  B & R & W & E --> TR["tool_result"]
+  TR -->|"写回 messages"| LLM
+  style R fill:#f97316,color:#fff
+  style W fill:#f97316,color:#fff
+  style E fill:#f97316,color:#fff
+```
+
+</div>
+
+</div>
+
+<div v-click class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s02/" style="--viz-h: 1000px; --viz-scale: 0.45" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s02: 核心代码
+
+<div class="grid grid-cols-2 gap-4">
+<div>
+
+## 工具分发 + 路径沙箱
+
+注册新的工具，并补充安全路径检查，防止逃逸出工作目录
+
+```python {1-8|10-15|22-27,29-30}
+# s02 新增：工具注册表
+TOOL_HANDLERS = {
+    "bash":       lambda **kw: run_bash(kw["command"]),
+    "read_file":  lambda **kw: run_read(kw["path"], kw.get("limit")),
+    "write_file": lambda **kw: run_write(kw["path"], kw["content"]),
+    "edit_file":  lambda **kw: run_edit(kw["path"], kw["old_text"],
+                                        kw["new_text"]),
+}
+
+# s02 循环中按名称查找对应的工具
+for block in response.content:
+    if block.type == "tool_use":
+        handler = TOOL_HANDLERS.get(block.name)
+        output = handler(**block.input) if handler \
+            else f"Unknown tool: {block.name}"
+        results.append({
+            "type": "tool_result",
+            "tool_use_id": block.id,
+            "content": output,
+        })
+
+# s02 路径沙箱，防止逃逸出工作目录
 def safe_path(p: str) -> Path:
     path = (WORKDIR / p).resolve()
     if not path.is_relative_to(WORKDIR):
         raise ValueError(f"Path escapes workspace: {p}")
     return path
 
-TOOL_HANDLERS = {
-    "bash": lambda **kw: run_bash(kw["command"]),
-    "read_file": lambda **kw: run_read(kw["path"], kw.get("limit")),
-    "write_file": lambda **kw: run_write(kw["path"], kw["content"]),
-    "edit_file": lambda **kw: run_edit(kw["path"], kw["old_text"], kw["new_text"]),
-}
-
-handler = TOOL_HANDLERS.get(block.name)
-output = handler(**block.input) if handler else f"Unknown tool: {block.name}"
-results.append({"type": "tool_result", "tool_use_id": block.id, "content": output})
+def run_read(path: str, limit: int = None) -> str:
+    text = safe_path(path).read_text()
+    lines = text.splitlines()
+    if limit and limit < len(lines):
+        lines = lines[:limit]
+    return "\n".join(lines)[:50000]
 ```
 
----
-layout: two-cols-header
----
+</div>
+<div>
 
-## s03 · TodoWrite
+## 对比
 
-::left::
+新增工具 = 新增 handler + 新增 schema，核心的循环永远不变
 
-<div class="surface tight-list">
-  <div class="chapter-pill core">Session Planning</div>
-  <h3>为什么复杂任务会漂移</h3>
-  <v-clicks>
+<div class="mt-4 p-2 rounded text-sm">
 
-  - 多步任务不是"模型笨"，而是 **working memory 会被工具输出淹没**。
-  - 任务做到一半，模型看不见前面的计划，就会跳步、重复、即兴发挥。
-  - 解法不是让 prompt 更长，而是给它一个 **结构化 checklist 状态**。
-  - 再加一个轻量 nag：几轮不更新 plan，就注入 `<reminder>`。
+| 组件 | s01 | s02 |
+|------|-----|-----|
+| Tools | 1 (仅 bash) | <span class="text-orange-500">4 (bash, read, write, edit)</span> |
+| Dispatch | 硬编码 | 工具注册表 |
+| 路径安全 | 无 | 安全路径校验 |
+| Agent loop | 不变 | <span class="text-orange-500">不变</span> |
 
-  </v-clicks>
-
-  <div class="takeaway">
-    <strong>Key insight</strong>：结构化状态比自由文本计划更抗漂移。
-  </div>
 </div>
 
-::right::
-
-```mermaid
-flowchart TD
-  P[User request] --> M[LLM]
-  M --> T[Base tools]
-  M --> TD[todo]
-  TD --> S[(TodoManager state)]
-  T --> R[tool_result]
-  S --> R
-  R --> M
-  N{3 rounds without todo?} -->|yes| I[Inject reminder]
-  I --> M
-```
-
----
-layout: two-cols-header
----
-
-## s03 · 核心变化代码：状态化 checklist + nag injection
-
-::left::
-
-<div class="surface tight-list">
-  <h3>本章新增的约束</h3>
-  <ul class="dense-list">
-    <li>同一时刻只允许 <code>1</code> 个 <code>in_progress</code></li>
-    <li><code>todo</code> 只是当前会话计划，不是长期任务数据库</li>
-    <li>提醒通过 <strong>write-back</strong> 技巧注入，而不是另起机制</li>
-  </ul>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s03_todo_write.py</span></div>
 </div>
-
-::right::
-
-```python {1-7|9-12|14-19|all}
-class TodoManager:
-    def update(self, items: list) -> str:
-        validated, in_progress_count = [], 0
-        for item in items:
-            status = item.get("status", "pending")
-            if status == "in_progress":
-                in_progress_count += 1
-        if in_progress_count > 1:
-            raise ValueError("Only one task can be in_progress")
-        self.items = items
-        return self.render()
-
-TOOL_HANDLERS = {
-    "todo": lambda **kw: TODO.update(kw["items"]),
-}
-
-if rounds_since_todo >= 3:
-    results.insert(0, {
-        "type": "text",
-        "text": "<reminder>Update your todos.</reminder>",
-    })
-messages.append({"role": "user", "content": results})
-```
-
----
-layout: two-cols-header
----
-
-## s04 · Subagent
-
-::left::
-
-<div class="surface tight-list">
-  <div class="chapter-pill core">Fresh Context per Subtask</div>
-  <h3>为什么需要子代理</h3>
-  <v-clicks>
-
-  - 侧向探索很脏：为了回答"测试框架是什么"，父代理可能读 5 个文件。
-  - 但父代理真正只需要一句答案：`pytest`。
-  - 子代理的本质不是并发，而是 **context boundary**。
-  - 子代理拿全新 `messages=[]`，做完只把摘要带回来，其余历史直接丢弃。
-
-  </v-clicks>
-
-  <div class="takeaway">
-    <strong>Key insight</strong>：A subagent is a disposable scratch pad.
-  </div>
-</div>
-
-::right::
-
-```mermaid
-flowchart LR
-  subgraph Parent agent
-    P1[messages = [...]] --> P2[task tool]
-    P2 --> P3[summary result only]
-  end
-  subgraph Child subagent
-    C1[messages = []] --> C2[read/search/explore]
-    C2 --> C3[final text summary]
-  end
-  P2 --> C1
-  C3 --> P3
-```
-
----
-layout: two-cols-header
----
-
-## s04 · 核心变化代码：`task` 只在父级出现
-
-::left::
-
-<div class="surface tight-list">
-  <h3>实现时要守住的边界</h3>
-  <ul class="dense-list">
-    <li>父级有 <code>task</code>，子级没有，避免递归繁殖</li>
-    <li>子代理完整跑自己的 loop</li>
-    <li>父级只拿到最终文本摘要，拿不到子级历史</li>
-  </ul>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s04_subagent.py</span></div>
-</div>
-
-::right::
-
-```python {1-8|10-18|20-24|all}
-PARENT_TOOLS = CHILD_TOOLS + [{
-    "name": "task",
-    "description": "Spawn a subagent with fresh context.",
-    "input_schema": {
-        "type": "object",
-        "properties": {"prompt": {"type": "string"}},
-        "required": ["prompt"],
-    }
-}]
-
-def run_subagent(prompt: str) -> str:
-    sub_messages = [{"role": "user", "content": prompt}]
-    for _ in range(30):
-        response = client.messages.create(
-            model=MODEL,
-            system=SUBAGENT_SYSTEM,
-            messages=sub_messages,
-            tools=CHILD_TOOLS,
-        )
-        # ... execute child tool calls ...
-
-    return "".join(
-        b.text for b in response.content if hasattr(b, "text")
-    ) or "(no summary)"
-```
-
----
-layout: two-cols-header
----
-
-## s05 · Skills
-
-::left::
-
-<div class="surface tight-list">
-  <div class="chapter-pill core">Discover Cheap, Load Deep</div>
-  <h3>为什么不能把所有领域知识塞进 system prompt</h3>
-  <v-clicks>
-
-  - 10 个 skill × 2000 tokens = 每一轮都在重读大段无关说明。
-  - 真正需要的是两层：**便宜的目录** + **昂贵的正文**。
-  - 第一层常驻系统提示，只放 skill 名称和一句描述。
-  - 第二层通过工具按需加载：模型自己决定何时取正文。
-
-  </v-clicks>
-
-  <div class="takeaway">
-    <strong>Key insight</strong>：Advertise cheaply, load on demand.
-  </div>
-</div>
-
-::right::
-
-```mermaid
-flowchart TD
-  A[System prompt] --> B[Skill names + descriptions]
-  B --> M[Model decides]
-  M -->|load_skill("git")| T[Tool call]
-  T --> F[Full SKILL.md body]
-  F --> M
-```
-
-<div class="code-note small">
-  Skill 文件的最小单元是：<code>skills/&lt;name&gt;/SKILL.md</code> + YAML frontmatter。
-</div>
-
----
-layout: two-cols-header
----
-
-## s05 · 核心变化代码：`SkillLoader` 的两层读取
-
-::left::
-
-<div class="surface tight-list">
-  <h3>这里最值得记住的接口</h3>
-  <ul class="dense-list">
-    <li><code>get_descriptions()</code>：给 system prompt 的便宜目录</li>
-    <li><code>get_content(name)</code>：通过工具回传的昂贵正文</li>
-    <li><code>SKILL.md</code>：frontmatter 负责可发现性，body 负责真正 SOP</li>
-  </ul>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s05_skill_loading.py</span></div>
-</div>
-
-::right::
-
-```python {1-9|11-17|19-24|all}
-class SkillLoader:
-    def __init__(self, skills_dir: Path):
-        self.skills = {}
-        for f in sorted(skills_dir.rglob("SKILL.md")):
-            text = f.read_text()
-            meta, body = self._parse_frontmatter(text)
-            name = meta.get("name", f.parent.name)
-            self.skills[name] = {"meta": meta, "body": body}
-
-    def get_descriptions(self) -> str:
-        lines = []
-        for name, skill in self.skills.items():
-            desc = skill["meta"].get("description", "")
-            lines.append(f"  - {name}: {desc}")
-        return "\n".join(lines)
-
-    def get_content(self, name: str) -> str:
-        skill = self.skills.get(name)
-        return f"<skill name=\"{name}\">\n{skill['body']}\n</skill>"
-
-SYSTEM = f"Skills available:\n{SKILL_LOADER.get_descriptions()}"
-```
-
----
-layout: two-cols-header
----
-
-## s06 · Context Compact
-
-::left::
-
-<div class="surface tight-list">
-  <div class="chapter-pill core">Keep the Active Context Small</div>
-  <h3>长会话为什么必然撞上下文墙</h3>
-  <v-clicks>
-
-  - conversation 里的每条消息都会在后续 API 调用里被重新携带。
-  - 真正的大头通常不是用户文本，而是 <code>read_file</code> 和命令输出。
-  - 粗暴截断会丢信息，所以要分层压缩，而不是一刀切删除。
-  - 本章给了四个 lever：越往后越重，但也越能保命。
-
-  </v-clicks>
-
-  <div class="takeaway">
-    <strong>Key insight</strong>：Compaction is relocating detail, not deleting history.
-  </div>
-</div>
-
-::right::
-
-```mermaid
-flowchart TD
-  A[Tool result] --> L0[Lever 0 persisted output]
-  L0 --> L1[Lever 1 micro compact]
-  L1 --> C{tokens > threshold?}
-  C -->|no| K[keep working]
-  C -->|yes| L2[Lever 2 auto compact]
-  L2 --> L3[Lever 3 manual compact]
-```
-
-<div class="code-note small">
-  教学上最重要的是把四层分开：<strong>结果落盘</strong>、<strong>静默缩旧结果</strong>、<strong>阈值自动总结</strong>、<strong>显式 compact</strong>。
-</div>
-
----
-layout: two-cols-header
----
-
-## s06 · 核心变化代码：把压缩接进主循环
-
-::left::
-
-<div class="surface tight-list small">
-  <h3>四个 lever 对应什么职责</h3>
-  <ul class="dense-list">
-    <li><strong>Lever 0</strong>：超大输出直接写磁盘，消息里只留预览</li>
-    <li><strong>Lever 1</strong>：老旧 <code>tool_result</code> 变成短 placeholder</li>
-    <li><strong>Lever 2</strong>：token 超阈值时让 LLM 总结整段会话</li>
-    <li><strong>Lever 3</strong>：模型或用户显式调用 <code>compact</code></li>
-  </ul>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s06_context_compact.py</span></div>
-</div>
-
-::right::
-
-```python {1-3|4-5|6-7|all}
-def agent_loop(messages: list):
-    while True:
-        micro_compact(messages)                 # Lever 1
-        if estimate_tokens(messages) > THRESHOLD:
-            messages[:] = auto_compact(messages)  # Lever 2
-        response = client.messages.create(...)
-        # ... tool execution with persisted output ... # Lever 0
-        if manual_compact:
-            messages[:] = auto_compact(messages)  # Lever 3
-```
-
-<div class="code-note small">
-  <strong>重点不是函数名。</strong> 重点是：压缩被接成一条"持续运行的控制路径"，而不是出事后临时补救。
 </div>
 
 ---
 layout: default
 ---
 
-## Stage 1 小结：一个可工作的单代理 kernel 已经成形
+# s03: 会话内规划 (TodoWrite)
 
-<div class="summary-grid">
-  <div class="summary-card core">
-    <h3><code>s01-s02</code> 先把闭环和工具路由搭出来</h3>
-    <p>你已经有了最小 loop、可扩展工具调度、文件沙箱和 write-back。</p>
-  </div>
-  <div class="summary-card core">
-    <h3><code>s03-s04</code> 再解决"任务漂移"和"上下文脏"</h3>
-    <p>TodoWrite 负责当前会话计划，Subagent 负责把探索垃圾挡在父上下文之外。</p>
-  </div>
-  <div class="summary-card core">
-    <h3><code>s05-s06</code> 最后控制 prompt 体积</h3>
-    <p>Skill 把知识按需装载，Compact 把长会话从必死改成可持续运行。</p>
-  </div>
-  <div class="summary-card core">
-    <h3>一句话</h3>
-    <p><strong>会循环</strong> → <strong>会调工具</strong> → <strong>会计划</strong> → <strong>会隔离</strong> → <strong>会控制 prompt 体积</strong>。</p>
-  </div>
+> 对模型说"重构这个模块：加类型、文档、测试、保证编译通过"，结果 Agent 做完前两步之后，就开始即兴发挥
+
+<div class="grid grid-cols-[1fr_600px] gap-8">
+<div>
+
+<div v-click>
+
+**问题**：模型没有显式的任务计划状态，注意力始终受上下文影响太大，大任务做着做着方向就漂了
+
 </div>
 
-<div class="center-note">
-  下一段开始，不再只是"能跑"，而是让这个 kernel 变得 <strong>受控、可扩展、可记忆、可恢复</strong>。
+<div v-click>
+
+**方案**：在会话内做规划，先把要做的任务列表写出来，并不断更新任务状态，在合适时机注入提醒
+
 </div>
+
+<v-clicks>
+
+- 不是任务系统，只是当前会话的计划外显
+
+- **约束**：同一时间最多一个任务正在执行
+
+- **提醒**：连续 3 轮不更新状态 → 注入提醒
+
+</v-clicks>
+
+</div>
+
+<div v-click class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s03/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s03: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {9-19|21-28}{at:1}
+def agent_loop(messages: list) -> None:
+    while True:
+        response = client.messages.create(...)
+        messages.append({"role": "assistant", "content": response.content})
+        if response.stop_reason != "tool_use":
+            return
+
+        results = []
+        # s03 新增：跟踪本轮是否调用了 todo
+        used_todo = False
+        for block in response.content:
+            if block.type != "tool_use":
+                continue
+            handler = TOOL_HANDLERS.get(block.name)
+            output = handler(**block.input) if handler else ...
+            results.append({"type": "tool_result",
+                "tool_use_id": block.id, "content": str(output)})
+            if block.name == "todo":
+                used_todo = True
+
+        # s03 新增：注入更新执行计划的提醒
+        if used_todo:
+            TODO.state.rounds_since_update = 0
+        else:
+            TODO.note_round_without_update()
+            reminder = TODO.reminder()
+            if reminder:
+                results.insert(0, {"type": "text", "text": reminder})
+
+        messages.append({"role": "user", "content": results})
+```
+
+</div>
+<div>
+
+## 新增数据结构
+
+```python {all|18-24}{at:3}
+@dataclass
+class PlanItem:
+    content: str
+    status: str = "pending"       # pending | in_progress | completed
+    active_form: str = ""
+
+@dataclass
+class PlanningState:
+    items: list[PlanItem] = field(default_factory=list)
+    rounds_since_update: int = 0  # 连续多少轮过去了，模型还没有更新这份计划
+
+class TodoManager:
+    def __init__(self):
+        self.state = PlanningState()
+    def update(self, items) -> str: ...   # 校验 + 重写整份计划
+    def render(self) -> str: ...          # [ ] [>] [x] 渲染
+
+    # s03 新增：注入更新执行计划的提醒
+    def reminder(self) -> str | None:
+        if not self.state.items:
+            return None
+        if self.state.rounds_since_update < PLAN_REMINDER_INTERVAL:
+            return None
+        return "<reminder>Refresh your current plan.</reminder>"
+```
+
+## 注册新工具
+
+```python
+TOOL_HANDLERS = {
+    ...,
+    # s03 新增工具 todo
+    "todo": lambda **kw: TODO.update(kw["items"]),
+}
+```
+
+</div>
+</div>
+
+---
+
+# s04: 子智能体 (Subagent)
+
+> 问"项目用什么测试框架？"，Agent 读了 5 个文件，但答案只有一个词："pytest"，那 5 个文件为什么还留在上下文里？
+
+<div class="grid grid-cols-[1fr_600px] gap-8">
+<div>
+
+<div v-click>
+
+**问题**：如果中间过程的结果都永久留在对话里，后面的问题会越来越难回答，因为上下文被大量局部任务的噪声填满了
+
+</div>
+
+<div v-click>
+
+**方案**：引入 subagent，把局部任务放进 subagent 的独立上下文里做，做完只把必要结果带回来，保持主 agent 上下文干净
+
+</div>
+
+<v-click at="+0">
+
+- Subagent 有自己的消息列表
+
+- Subagent 有自己的工具列表
+
+- Subagent 完成后只返回摘要
+
+- Subagent 没有 task 工具，防止递归创建 Subagent
+
+</v-click>
+
+</div>
+
+<div v-click class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s04/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s04: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {7-8|16-22}
+def agent_loop(messages: list):
+    while True:
+        response = client.messages.create(
+            model=MODEL, 
+            system=SYSTEM, 
+            messages=messages,
+            # s04 变更：使用 PARENT_TOOLS
+            tools=PARENT_TOOLS, 
+            max_tokens=8000,
+        )
+        messages.append({"role": "assistant", "content": response.content})
+        if response.stop_reason != "tool_use":
+            return
+        results = []
+        for block in response.content:
+            if block.type == "tool_use":
+                # s04 新增：处理 task 工具调用，创建 Subagent
+                if block.name == "task":
+                    desc = block.input.get("description", "subtask")
+                    prompt = block.input.get("prompt", "")
+                    print(f"> task ({desc}): {prompt[:80]}")
+                    output = run_subagent(prompt)
+                else:
+                    handler = TOOL_HANDLERS.get(block.name)
+                    output = handler(**block.input) if handler 
+                    else f"Unknown tool: {block.name}"
+                print(f"  {str(output)[:200]}")
+                results.append({"type": "tool_result", 
+                "tool_use_id": block.id, "content": str(output)})
+        messages.append({"role": "user", "content": results})
+```
+
+</div>
+<div>
+
+## Subagent 实现
+
+```python {all|2-3|9-10|17-19}{at:3}
+def run_subagent(prompt: str) -> str:
+    # Subagent 独立的消息列表
+    sub_messages = [{"role": "user", "content": prompt}]
+    for _ in range(30):  # 安全上限
+        response = client.messages.create(
+            model=MODEL, 
+            system=SUBAGENT_SYSTEM,
+            messages=sub_messages,
+            # Subagent 独立的工具列表
+            tools=CHILD_TOOLS, 
+            max_tokens=8000,
+        )
+        sub_messages.append({"role": "assistant", "content": response.content})
+        if response.stop_reason != "tool_use":
+            break
+        ...  # 执行工具，写回 sub_messages
+    # 最终只把结果带回主 agent 上下文
+    return "".join(b.text for b in response.content
+                   if hasattr(b, "text")) or "(no summary)"
+```
+
+## 注册新工具
+
+```python
+# 子智能体：基础工具，没有 task 工具
+CHILD_TOOLS = [bash, read_file, write_file, edit_file]
+
+# 父智能体：基础工具 + task 工具分派任务给 Subagent
+PARENT_TOOLS = CHILD_TOOLS + [
+    {
+      "name": "task", 
+      "description": "Spawn a subagent with fresh context.",
+      "input_schema": {"type": "object", "properties": {...}}, 
+      "required": ["prompt"]}
+    },
+]
+```
+
+</div>
+</div>
+
+---
+
+# s05: 技能系统  (Skills)
+
+> 你不会每次做饭前把所有菜谱从头到尾看一遍，agent 的领域知识也一样
+
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
+
+<div v-click>
+
+**问题**：代码审查需要一套审查清单，代码提交需要一套提交约定，如果把这些知识包全部塞进系统提示词，会占用大量 tokens
+
+</div>
+
+<div v-click>
+
+**方案**：把技能说明从系统提示词中拆出来，改成 2 层架构，系统提示词只告诉模型有哪些技能，模型按需加载完整技能说明
+
+</div>
+
+<v-click at="+0">
+
+- **Layer 1 目录**：始终在 system prompt，~120 tokens
+
+- **Layer 2 正文**：模型调用 `load_skill` 工具按需加载
+
+- 新增工具 `load_skill`，Agent 核心循环保持不变
+
+</v-click>
+
+</div>
+
+<div v-click class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s05/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s05: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 不变
+
+```python {1-10,16,18}
+# s05 新增：技能注册表，从 skills 目录发现所有技能
+SKILL_REGISTRY = SkillRegistry(WORKDIR / "skills")
+
+# s05 新增：system prompt 注入 skill 列表
+SYSTEM = f"""You are a coding agent at {WORKDIR}.
+Use load_skill when a task needs specialized instructions.
+
+Skills available:
+{SKILL_REGISTRY.describe_available()}
+"""
+
+def agent_loop(messages: list) -> None:
+    while True:
+        response = client.messages.create(
+            model=MODEL, 
+            system=SYSTEM,
+            messages=messages, 
+            tools=TOOLS, 
+            max_tokens=8000,
+        )
+        
+        # 标准循环：append → stop_reason → dispatch → results
+        ...  
+```
+
+</div>
+<div>
+
+## 新增数据结构
+
+```python
+@dataclass
+class SkillManifest:
+    name: str
+    description: str
+    path: Path
+
+@dataclass
+class SkillDocument:
+    manifest: SkillManifest
+    body: str
+```
+
+## SkillRegistry
+
+```python
+class SkillRegistry:
+    def __init__(self, skills_dir: Path):
+        self.skills_dir = skills_dir
+        self.documents: dict[str, SkillDocument] = {}
+        self._load_all()
+
+    # Layer 1 目录：返回技能列表
+    def describe_available(self) -> str: ...   
+
+    # Layer 2 正文：返回技能正文
+    def load_full_text(self, name) -> str: ... 
+```
+
+## 注册新工具
+
+```python
+TOOL_HANDLERS = {
+    ...,
+    # s05 新增工具 load_skill
+    "load_skill": lambda **kw: SKILL_REGISTRY.load_full_text(kw["name"]),
+}
+```
+
+</div>
+</div>
+
+---
+
+# s06: 上下文压缩 (Context Compact)
+
+> 读了 30 个文件，跑了 20 条命令后，10 万 tokens 烧完了，但活儿才干了一半
+
+<div class="grid grid-cols-[1fr_600px] gap-4">
+<div>
+
+<div v-click>
+
+**问题**：读个大文件，塞进大量文本，跑个长命令，得到大段输出，上下文不断膨胀，如何在保证主线任务连续性的前提下，给上下文腾出空间
+
+</div>
+
+<div v-click>
+
+**方案**：上下文压缩，三层压缩策略
+
+</div>
+
+<v-click at="+0">
+
+- Level 1：大结果写磁盘，只留预览（`persist_large_output`）
+
+- Level 2：旧工具调用结果替换为占位符（`micro_compact`）
+
+- Level 3：消息历史太长，整体摘要压缩（`compact_history`）
+
+- 新增工具 `compact`，上下文超阈值自动触发，也可以手动触发
+
+</v-click>
+
+</div>
+
+<div v-click class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s06/" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
+# s06: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {2-4|6-9|17-27,30-34}
+def agent_loop(messages: list, state: CompactState) -> None:
+    while True:
+        # s06 新增：每轮开始前微压缩，将旧结果替换为占位符
+        messages[:] = micro_compact(messages)
+
+        # s06 新增：超阈值自动压缩，总结消息列表为摘要
+        if estimate_context_size(messages) > CONTEXT_LIMIT:
+            print("[auto compact]")
+            messages[:] = compact_history(messages, state)
+
+        response = client.messages.create(...)
+        messages.append({"role": "assistant", "content": response.content})
+        if response.stop_reason != "tool_use":
+            return
+
+        results = []
+        # s06 新增：标记本轮中模型是否触发了压缩
+        manual_compact = False
+        for block in response.content:
+            if block.type != "tool_use":
+                continue
+
+            output = execute_tool(block, state)
+            results.append(...)
+            # s06 新增：模型主动触发压缩
+            if block.name == "compact":
+                manual_compact = True
+
+        messages.append({"role": "user", "content": results})
+
+        # s06 新增：本轮结束前，执行模型触发的压缩
+        if manual_compact:
+            print("[manual compact]")
+            messages[:] = compact_history(messages, state)
+```
+
+</div>
+<div>
+
+## 新增数据结构
+
+```python
+@dataclass
+class CompactState:
+    has_compacted: bool = False
+    last_summary: str = ""
+    recent_files: list[str] = field(default_factory=list)
+
+# 常量
+CONTEXT_LIMIT = 50000         # 上下文空间占用阈值，50 万 tokens
+PERSIST_THRESHOLD = 30000     # 工具调用输出结果阈值，3 万 tokens
+KEEP_RECENT_TOOL_RESULTS = 3  # 保留最近 3 个工具调用结果
+```
+
+## 三级压缩函数
+
+```python
+# Level 1: 大输出结果写磁盘
+# 替换内容："<persisted-output>Full output saved to:... Preview:... </persisted-output>"
+def persist_large_output(tool_use_id, output): ...
+
+# Level 2: 旧结果替换占位符
+# 替换内容："[Earlier tool result compacted...]"
+def micro_compact(messages): ...
+
+# Level 3: 消息历史摘要压缩
+# 替换内容："This conversation was compacted so the agent can continue working, summary:..."
+def compact_history(messages, state): ...
+```
+
+## 注册新工具
+
+```python
+TOOL_HANDLERS = {
+    ...,
+    # s06 新增工具 compact
+    "compact": lambda **kw: "Summarize earlier conversation ...",
+}
+```
+
+</div>
+</div>
+
+<!-- ---
+
+# 阶段 1 完成：你有了一个能工作的单 Agent
+
+<div class="grid grid-cols-2 gap-6">
+<div>
+
+## 六章带来了什么
+
+| 章节 | 新增能力 |
+|------|----------|
+| **s01** | 最小可运行循环 |
+| **s02** | 工具分发 + 路径沙箱 |
+| **s03** | 结构化计划 + 漂移提醒 |
+| **s04** | 上下文隔离委派 |
+| **s05** | 按需知识加载 |
+| **s06** | 四级上下文压缩 |
+
+</div>
+<div>
+
+## 现在你的 agent 能
+
+<v-clicks>
+
+- 读写文件、执行命令
+- 按计划完成多步任务
+- 遇到子问题时隔离探索
+- 需要领域知识时按需加载
+- 长时间工作而不撑爆上下文
+
+</v-clicks>
+
+<div v-click class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
+
+**但它还没有安全管控、没有记忆、出错就崩。**
+
+这就是阶段 2 要解决的。
+
+</div>
+
+</div>
+</div> -->
+
+<!-- ---
+
+# 回顾：一条请求的完整流动
+
+<v-clicks>
+
+1. 用户发来任务
+2. 组装 system prompt + messages + tools
+3. 模型返回文本或 `tool_use`
+4. **tool_use** → 执行工具 → tool_result 写回 messages
+5. 主循环继续
+6. 如果太大 → todo / subagent / compact
+7. 直到模型结束
+
+</v-clicks>
+
+<div v-click class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-sm">
+
+**一句话记住**：先做出能工作的最小循环，再一层一层给它补上规划、隔离、安全、记忆、任务、协作和外部能力。
+
+</div> -->
 
 ---
 layout: section
-class: section-hardening
 ---
 
-<div class="section-hero">
-  <div class="layer-chip hardening">Production Hardening · s07-s11</div>
-  
-  # Stage 2 · 把内核加固到更像真实 harness
-  
-  <div class="section-subtitle">
-    这一段处理的是"真实世界的麻烦事"：权限、安全、可扩展性、跨会话记忆、复杂 prompt 组装、以及运行时失败恢复。
-  </div>
+# 阶段 2：生产加固
 
-  <div class="badge-row">
-    <span class="ghost-chip">safety pipeline</span>
-    <span class="ghost-chip">external hooks</span>
-    <span class="ghost-chip">durable memory</span>
-    <span class="ghost-chip">prompt assembly</span>
-    <span class="ghost-chip">recovery branches</span>
-  </div>
+## s07 — s11
+
+<div class="text-gray-500 mt-4">
+能跑 ≠ 能上线，让 agent 更安全、更稳定、更可扩展
 </div>
 
 ---
-layout: two-cols-header
+layout: center
 ---
 
-## s07 · Permission System
+# 阶段 2 要解决什么？
 
-::left::
+<v-clicks>
 
-<div class="surface tight-list">
-  <div class="chapter-pill hardening">Intent Must Pass Safety</div>
-  <h3>为什么这章很关键</h3>
-  <v-clicks>
+你的 agent 很能干——但它**没有刹车**。
 
-  - 到了这里，Agent 已经能写文件、跑命令、持久工作了。
-  - 如果模型提什么就执行什么，那"智能"会立刻变成"风险"。
-  - 需要在 <strong>model intent</strong> 和 <strong>actual execution</strong> 之间插一条权限流水线。
-  - 这条 pipeline 的核心不是 yes/no，而是：**deny → mode → allow → ask**。
+模型 hallucinate 了一个路径，`rm -rf` 就直接执行了。
 
-  </v-clicks>
+每次新会话，用户偏好全忘了。输出被截断就直接崩溃。
 
-  <div class="takeaway hardening">
-    <strong>Key insight</strong>：Safety is a pipeline, not a boolean.
-  </div>
+**这个阶段给循环套上安全带、装上记忆、教它自愈。**
+
+</v-clicks>
+
+<div v-click class="mt-6 grid grid-cols-5 gap-2 text-sm">
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**s07** 权限
+
+</div>
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**s08** Hook
+
+</div>
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**s09** 记忆
+
+</div>
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**s10** Prompt
+
+</div>
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**s11** 恢复
+
+</div>
 </div>
 
-::right::
+---
 
-```mermaid
-flowchart TD
-  A[tool call from LLM] --> B[Deny rules]
-  B --> C[Mode check]
-  C --> D[Allow rules]
-  D --> E[Ask user]
-  E --> F[Execute or reject]
+# s07: 权限系统 (Permission System)
+
+> 模型说"删掉这个目录"，但它 hallucinate 了路径，没有权限管控，意图直接变成执行
+
+<div v-click>
+
+**问题**：模型可能出现幻觉，导致写错文件、删错文件、执行危险命令
+
+</div>
+
+
+<div v-click>
+
+**方案**：任何工具调用，都不应该直接执行，中间必须先过四级权限管控
+
+</div>
+
+<div class="grid grid-cols-4 gap-4 mt-8 mb-16">
+<div v-click="4" class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**deny rules**
+
+sudo、rm -rf → 绝对禁止
+
+</div>
+<div v-click="5" class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**mode check**
+
+plan / auto / default
+
+</div>
+<div v-click="6" class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**allow rules**
+
+规则匹配 → 放行
+
+</div>
+<div v-click="7" class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
+
+**ask user**
+
+都没命中 → 问用户
+
+</div>
+</div>
+
+<div v-click="3">
+
+```mermaid {scale: 0.8}
+graph LR
+  TC["tool_call"] --> D["1. deny rules"]
+  D -->|"命中"| DENY["❌ 拒绝"]
+  D -->|"未命中"| M["2. mode check"]
+  M -->|"plan+写"| DENY
+  M -->|"auto+读"| ALLOW["✅ 放行"]
+  M -->|"default 或<br/>auto+写"| A["3. allow rules"]
+  A -->|"命中"| ALLOW
+  A -->|"未命中"| ASK["🙋‍♂️ ask user"]
+  style DENY fill:#ef4444,color:#fff
+  style ALLOW fill:#22c55e,color:#fff
+  style ASK fill:#f97316,color:#fff
+  style D fill:#fca5a5,color:#000
+  style M fill:#bfdbfe,color:#000
+  style A fill:#bbf7d0,color:#000
 ```
 
-<div class="code-note small">
-  `default / plan / auto` 三种模式决定 unmatched 请求默认怎么走。
 </div>
 
 ---
-layout: two-cols-header
+layout: default
 ---
 
-## s07 · 核心变化代码：四段权限决策
+# s07: 核心代码
 
-::left::
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
 
-<div class="surface tight-list small">
-  <h3>看懂这段逻辑就够了</h3>
-  <ul class="dense-list">
-    <li><strong>deny first</strong>：危险规则永远最高优先级</li>
-    <li><strong>mode second</strong>：例如 plan 模式屏蔽写操作</li>
-    <li><strong>allow third</strong>：白名单放行安全操作</li>
-    <li><strong>ask last</strong>：剩下的交给用户</li>
-  </ul>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s07_permission_system.py</span></div>
-</div>
+## agent_loop 变更
 
-::right::
+```python {1,15-32}
+perms = PermissionManager(mode)
 
-```python {1-5|7-11|13-17|19-24|all}
-def check(self, tool_name, tool_input):
-    for rule in self.rules:
-        if rule["behavior"] == "deny" and self._matches(rule, ...):
-            return {"behavior": "deny", "reason": "..."}
+def agent_loop(messages: list, perms: PermissionManager):
+    while True:
+        response = client.messages.create(...)
+        messages.append({"role": "assistant", "content": response.content})
+        if response.stop_reason != "tool_use":
+            return
 
-    if self.mode == "plan" and tool_name in WRITE_TOOLS:
-        return {"behavior": "deny", "reason": "Plan mode: writes blocked"}
-    if self.mode == "auto" and tool_name in READ_ONLY_TOOLS:
-        return {"behavior": "allow", "reason": "Auto: read-only approved"}
+        results = []
+        for block in response.content:
+            if block.type != "tool_use":
+                continue
 
-    for rule in self.rules:
-        if rule["behavior"] == "allow" and self._matches(rule, ...):
-            return {"behavior": "allow", "reason": "..."}
+            # s07 新增：权限管道
+            decision = perms.check(block.name, block.input or {})
 
-    return {"behavior": "ask", "reason": "..."}
+            if decision["behavior"] == "deny": # 拒绝执行
+                output = f"Permission denied: {decision['reason']}"
+                print(f"  [DENIED] {block.name}: {decision['reason']}")
+            elif decision["behavior"] == "ask": # 询问用户
+                if perms.ask_user(block.name, block.input or {}):
+                    handler = TOOL_HANDLERS.get(block.name)
+                    output = handler(**(block.input or {})) if handler else f"Unknown: {block.name}"
+                    print(f"> {block.name}: {str(output)[:200]}")
+                else:
+                    output = f"Permission denied by user for {block.name}"
+                    print(f"  [USER DENIED] {block.name}")
+            else:  # 允许执行
+                handler = TOOL_HANDLERS.get(block.name)
+                output = handler(**(block.input or {})) if handler else f"Unknown: {block.name}"
+                print(f"> {block.name}: {str(output)[:200]}")
 
-if decision["behavior"] == "deny":
-    output = f"Permission denied: {decision['reason']}"
-elif decision["behavior"] == "ask":
-    output = handler(**block.input) if perms.ask_user(block.name, block.input) else "Permission denied by user"
+            results.append({...})
+
+        messages.append({"role": "user", "content": results})
 ```
 
----
-layout: two-cols-header
----
+</div>
+<div>
 
-## s08 · Hook System
+## PermissionManager
 
-::left::
+```python
+# plan：最严格，所有写操作直接禁止，只允许读
+# default：最保守，没有命中规则的操作，一律问用户
+# auto：半自动，读文件、搜索这类安全操作自动过，写文件、执行命令要走规则或问用户
+MODES = ("default", "plan", "auto")
 
-<div class="surface tight-list">
-  <div class="chapter-pill hardening">Extend Without Rewriting the Loop</div>
-  <h3>本章解决的不是权限，而是扩展性</h3>
-  <v-clicks>
+class PermissionManager:
+    def __init__(self, mode="default", rules=None):
+        self.mode = mode
+        self.rules = rules or DEFAULT_RULES
 
-  - 你可能想在工具前后做审计、lint、告警、注释注入。
-  - 如果全写进主循环，loop 很快会被 if/else 污染到不可维护。
-  - Hook 的思路是：给 loop 暴露固定生命周期点，让外部脚本在这些点观察或干预。
-  - 主循环仍然掌控控制流，hook 只做 <strong>observe / block / annotate</strong>。
+    def check(self, tool_name, tool_input) -> dict:
+        # 1. deny rules
+        # 2. mode check (plan/auto)
+        # 3. allow rules
+        # 4. ask user
+        return {"behavior": "allow|deny|ask", "reason": "..."}
+```
 
-  </v-clicks>
+## BashSecurityValidator（Step 0）
+
+bash 命令是自由文本，四级管道之前先过一遍正则检查
+
+```python
+class BashSecurityValidator:
+    VALIDATORS = [
+        ("shell_metachar", r"[;&|`$]"),
+        ("sudo", r"\bsudo\b"),
+        ("rm_rf", r"\brm\s+(-[a-zA-Z]*)?r"),
+        ("cmd_substitution", r"\$\("),
+    ]
+    def validate(self, command) -> list: ...
+    def is_safe(self, command) -> bool: ...
+```
+
+</div>
 </div>
 
-::right::
-
-<div class="surface small">
-
-| Event | When | Can Block? |
-|---|---|---|
-| `SessionStart` | 启动时一次 | No |
-| `PreToolUse` | 工具执行前 | Yes |
-| `PostToolUse` | 工具执行后 | No |
-
-<div class="hr-soft"></div>
-
-| Exit code | Meaning |
-|---|---|
-| `0` | continue |
-| `1` | block |
-| `2` | inject / annotate |
-
-<div class="takeaway hardening">
-  <strong>Key insight</strong>：The loop owns control flow; hooks only observe, block, or annotate.
-</div>
-</div>
-
----
-layout: two-cols-header
 ---
 
-## s08 · 核心变化代码：配置在外、协议在内
+# s08: Hook 系统
 
-::left::
+> 安全团队要审计 bash、QA 要自动跑 lint、运维要运行日志，难道每个需求都改主循环？
 
-<div class="surface tight-list small">
-  <h3>实现边界</h3>
-  <ul class="dense-list">
-    <li><code>.hooks.json</code> 是外部配置，不进核心 loop 代码</li>
-    <li>上下文通过环境变量传给 hook</li>
-    <li><code>PreToolUse</code> 唯一可以挡住执行</li>
-  </ul>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s08_hook_system.py</span></div>
+<div v-click>
+
+**问题**：安全审计、自动 lint、操作日志……每加横切需求都要改主循环，循环越来越重，小改动就可能影响全局
+
 </div>
 
-::right::
 
-```python {1-8|10-14|16-20|all}
+<div v-click>
+
+**方案**：主循环只在关键节点暴露"时机"，附加行为写成独立的 hook 脚本，通过配置文件注册，用退出码约定结果
+
+</div>
+
+
+<div class="grid grid-cols-3 gap-4 mt-8 mb-16">
+<div v-click="4" class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**3 个生命周期事件**
+
+SessionStart · PreToolUse · PostToolUse
+
+</div>
+<div v-click="5" class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
+
+**统一退出码协议**
+
+`0` 继续 · `1` 阻止 · `2` 追加信息
+
+</div>
+<div v-click="6" class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**核心原则**
+
+hook 不替代主循环，只在固定时机做旁路扩展
+
+</div>
+</div>
+
+<div v-click="3">
+
+```mermaid {scale: 0.7}
+graph LR
+  TU["model 发起<br/>tool_use"] --> PRE["PreToolUse<br/>hook"]
+  PRE -->|"exit 0"| EXEC["执行工具"]
+  PRE -->|"exit 1"| BLK["❌ 阻止"]
+  PRE -->|"exit 2"| INJ["💬 追加信息"]
+  INJ --> EXEC
+  EXEC --> POST["PostToolUse<br/>hook"]
+  POST -->|"exit 0"| OK["正常结束"]
+  POST -->|"exit 2"| ADD["📋 追加信息"]
+  style BLK fill:#ef4444,color:#fff
+  style INJ fill:#f97316,color:#fff
+  style ADD fill:#f97316,color:#fff
+  style PRE fill:#bfdbfe,color:#000
+  style POST fill:#bbf7d0,color:#000
+```
+
+</div>
+
+
+---
+layout: default
+---
+
+# s08: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {4-7|9-20|25-27|29-31}
+    while True:
+        response = client.messages.create(...)
+        ...
+        for block in response.content:
+            ...
+            # s08 新增：执行 PreToolUse hooks
+            pre_result = hooks.run_hooks("PreToolUse", ctx)
+
+            # s08 新增：注入 hook 的信息
+            for msg in pre_result.get("messages", []):
+                results.append({
+                    "type": "tool_result", "tool_use_id": block.id,
+                    "content": f"[Hook message]: {msg}",
+                })
+
+            if pre_result.get("blocked"):
+                reason = pre_result.get("block_reason", "Blocked by hook")
+                output = f"Tool blocked by PreToolUse hook: {reason}"
+                results.append(...)
+                continue
+
+            # 正常执行工具
+            ...
+
+            # s08 新增：执行 PostToolUse hooks
+            ctx["tool_output"] = output
+            post_result = hooks.run_hooks("PostToolUse", ctx)
+
+            # s08 新增：注入 hook 的信息
+            for msg in post_result.get("messages", []):
+                output += f"\n[Hook note]: {msg}"
+
+            results.append(...)
+
+        messages.append({"role": "user", "content": results})
+```
+
+</div>
+<div>
+
+## 新增常量
+
+```python
+HOOK_EVENTS = ("PreToolUse", "PostToolUse", "SessionStart")
+```
+
+## HookEvent
+
+```python
+event = {
+    "name": "PreToolUse",
+    "payload": {
+        "tool_name": "bash",
+        "input": {"command": "pytest"},
+    },
+}
+```
+
+## HookResult
+
+```python
+result = {
+    "exit_code": 0, # 0 继续 · 1 阻止 · 2 追加信息
+    "message": "",
+}
+```
+
+## 配置文件 `.hooks.json`
+
+```json
 {
   "hooks": {
     "PreToolUse": [
-      {"matcher": "bash", "command": "echo 'Checking bash command...'"}
+      {"matcher": "bash", "command": "audit.sh"}
     ],
     "PostToolUse": [
-      {"command": "echo 'Tool finished'"}
+      {"matcher": "*", "command": "log.sh"}
     ]
   }
 }
-
-pre_result = hooks.run_hooks("PreToolUse", ctx)
-if pre_result["blocked"]:
-    output = f"Blocked by hook: {pre_result['block_reason']}"
-    continue
-
-output = handler(**tool_input)
-post_result = hooks.run_hooks("PostToolUse", ctx)
-for msg in post_result["messages"]:
-    output += f"\n[Hook note]: {msg}"
 ```
 
----
-layout: two-cols-header
----
-
-## s09 · Memory System
-
-::left::
-
-<div class="surface tight-list">
-  <div class="chapter-pill hardening">Keep Only What Survives Sessions</div>
-  <h3>"记忆"最容易教错的地方</h3>
-  <v-clicks>
-
-  - memory 不是更长的 context，也不是 repo 的复制品。
-  - 它只存 **跨会话仍然重要、且不能从当前代码便宜重建** 的事实。
-  - 课程把 memory 划成 4 类：`user` / `feedback` / `project` / `reference`。
-  - 最重要的教学边界：memory ≠ task ≠ plan ≠ `CLAUDE.md`。
-
-  </v-clicks>
-
-  <div class="takeaway hardening">
-    <strong>Key insight</strong>：Memory gives direction; current observation gives truth.
-  </div>
 </div>
-
-::right::
-
-<div class="card-grid cols-2 small">
-  <div class="mini-panel"><strong>user</strong><br>稳定偏好，例如喜欢 `pnpm`</div>
-  <div class="mini-panel"><strong>feedback</strong><br>反复强调的纠正，例如别改 snapshot</div>
-  <div class="mini-panel"><strong>project</strong><br>repo 外部的长期项目事实</div>
-  <div class="mini-panel"><strong>reference</strong><br>外部链接、面板、规范入口</div>
-</div>
-
-<div class="code-note small">
-  <strong>不要存</strong>：函数签名、目录树、当前任务进度、临时分支名、任何 secret。
 </div>
 
 ---
-layout: two-cols-header
----
 
-## s09 · 核心变化代码：frontmatter memory record
+# s09: 记忆系统 (Memory)
 
-::left::
+> 三次告诉模型"别改 snapshots"，下次新开会话，它又改了
 
-<div class="surface tight-list small">
-  <h3>为什么用"一条记录一个文件"</h3>
-  <ul class="dense-list">
-    <li>好读、好删、好审计</li>
-    <li>frontmatter 让记录可索引、可分类</li>
-    <li>index 只负责"知道有哪些"，不负责承载正文</li>
-  </ul>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s09_memory_system.py</span></div>
+<div class="grid grid-cols-[1fr_400px] gap-8">
+<div>
+
+<div v-click>
+
+**问题**：每次新会话都从零开始，用户的长期偏好、纠正过的错误、项目的约定全部丢失
+
 </div>
 
-::right::
+<div v-click>
 
-```md {1-5|6|all}
+**方案**：引入记忆系统，持久化记忆文件，每轮会话开始时，注入记忆内容到系统提示词
+
+</div>
+
+<v-click at="+0">
+
+- **user** — 用户偏好（tabs、pytest、简洁回答）
+
+- **feedback** — 纠正的错误（"不要改 snapshots"）
+
+- **project** — 非显然约定（合规要求、不能动的旧模块）
+
+- **reference** — 外部参考（看板 URL、监控面板）
+
+</v-click>
+
+<div v-click="4" class="mt-8 text-orange-500 text-xl">
+
+**原则**：只有那些跨会话仍有价值，且不能轻易直接推出来的信息，才适合进入记忆
+
+</div>
+
+</div>
+<div>
+
+<div v-click="3">
+
+<div class="text-xs space-y-2">
+
+<div class="grid grid-cols-2 gap-3">
+
+<div class="space-y-2">
+<div class="text-gray-400 text-center mb-1">写入流程</div>
+<div class="bg-gray-800 rounded px-2 py-2 text-center">用户提到长期信息</div>
+<div class="text-center">▼</div>
+<div class="bg-orange-500 text-white rounded px-2 py-2 text-center">模型调用 save_memory</div>
+<div class="text-center">▼</div>
+<div class="bg-gray-800 rounded px-2 py-2 text-center">写入 .memory/{name}.md</div>
+<div class="text-center">▼</div>
+<div class="bg-gray-800 rounded px-2 py-2 text-center">重建 MEMORY.md 索引</div>
+</div>
+
+<div class="space-y-2">
+<div class="text-gray-400 text-center mb-1">读取流程（每轮会话）</div>
+<div class="bg-gray-800 rounded px-2 py-2 text-center">build_system_prompt()</div>
+<div class="text-center">▼</div>
+<div class="bg-green-600 text-white rounded px-2 py-2 text-center">load_memory_prompt()</div>
+<div class="text-center">▼</div>
+<div class="bg-gray-800 rounded px-2 py-2 text-center">按 type 分组拼接</div>
+<div class="text-center">▼</div>
+<div class="bg-blue-500 text-white rounded px-2 py-2 text-center">注入 system prompt</div>
+</div>
+
+</div>
+
+<div class="text-center mt-1">▼</div>
+<div class="bg-gray-600 text-white rounded px-2 py-2 text-center">
+.memory/ 磁盘（写入 ← → 读取）
+</div>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 ---
-name: prefer_pnpm
-description: User prefers pnpm over npm
+layout: default
+---
+
+# s09: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {1-4}
+def agent_loop(messages: list):
+    while True:
+      # s09 变更：每轮重建 system prompt，含最新记忆
+      system = build_system_prompt()
+      response = client.messages.create(...)
+      messages.append({"role": "assistant", "content": response.content})
+
+      ... # 核心循环保持不变
+
+      messages.append({"role": "user", "content": results})
+```
+
+## build_system_prompt
+
+组装系统提示词，其中包含记忆内容，和指导模型 何时保存记忆 和 何时不保存记忆
+
+```python
+# s09 新增：注入记忆内容
+def build_system_prompt() -> str:
+    parts = [f"You are a coding agent at {WORKDIR}."]
+    memory_section = memory_mgr.load_memory_prompt()
+    if memory_section:
+        parts.append(memory_section)
+    parts.append(MEMORY_GUIDANCE)   # 指导模型何时存/不存
+    return "\n\n".join(parts)
+```
+
+## 注册新工具
+
+```python
+TOOL_HANDLERS = {
+    ...,
+    # s09 新增工具 save_memory
+    "save_memory": lambda **kw: memory_mgr.save_memory(...),
+}
+```
+
+</div>
+<div>
+
+## 新增数据结构
+
+```python
+MEMORY_TYPES = ("user", "feedback", "project", "reference")
+```
+
+## MemoryManager
+
+```python
+class MemoryManager:
+    # 1、 启动时加载 .memory/*.md
+    def load_all(self): ...
+   
+    # 2、按 type 分组，拼成 memory section 注入 system prompt
+    def load_memory_prompt(self) -> str:
+   
+    # 3、保存记忆，写入 .memory/{name}.md 文件，重建 MEMORY.md
+    def save_memory(self, name, desc, mem_type, content) -> str:
+```
+
+## 记忆文件存储结构
+
+```text
+.memory/
+  MEMORY.md          ← 索引（≤200行）
+  prefer_tabs.md     ← 单条记忆
+  review_style.md
+```
+
+## 单条记忆文件格式
+
+```md
+---
+name: prefer_tabs
+description: User prefers tabs for indentation
 type: user
 ---
-The user explicitly prefers pnpm for package management commands.
+The user explicitly prefers tabs over spaces.
 ```
 
-```python {1-4|5-7|all}
-def save_memory(name, description, mem_type, content):
-    path = memory_dir / f"{slugify(name)}.md"
-    path.write_text(render_frontmatter(name, description, mem_type) + content)
-    rebuild_index()
-
-MEMORY_TYPES = ("user", "feedback", "project", "reference")
-memories = memory_store.load_all()
-```
-
----
-layout: two-cols-header
----
-
-## s10 · System Prompt
-
-::left::
-
-<div class="surface tight-list">
-  <div class="chapter-pill hardening">Build Inputs as a Pipeline</div>
-  <h3>这一章把 prompt 从"字符串"变成"装配线"</h3>
-  <v-clicks>
-
-  - 当系统里有 tools、skills、memory、`CLAUDE.md`、runtime context 时，prompt 不能再是一大坨字符串。
-  - 需要一个 builder，把不同来源的内容按固定顺序拼起来。
-  - 还要分清：哪些是 stable prefix，哪些是 per-turn dynamic context。
-  - memory 存好了还不够，必须重新注入到 prompt 管线里才真正生效。
-
-  </v-clicks>
-
-  <div class="takeaway hardening">
-    <strong>Key insight</strong>：The system prompt is an assembly pipeline, not one mysterious blob.
-  </div>
 </div>
-
-::right::
-
-```mermaid
-flowchart TD
-  A[core identity & rules] --> F[final model input]
-  B[tool catalog] --> F
-  C[skills] --> F
-  D[memory] --> F
-  E[CLAUDE.md layers] --> F
-  G[dynamic runtime context] --> F
-```
-
-<div class="code-note small">
-  这章真正讲的是 <strong>source boundary</strong>：每一段内容都应该能追溯来源。
 </div>
 
 ---
-layout: two-cols-header
----
 
-## s10 · 核心变化代码：`SystemPromptBuilder`
+# s10: 系统提示词 (System Prompt)
 
-::left::
+> 角色说明、工具文档、技能列表、记忆、CLAUDE.md，全塞一个系统提示词里，半年后谁敢改？
 
-<div class="surface tight-list small">
-  <h3>只记住这个 build 顺序</h3>
-  <ol class="dense-list">
-    <li>core</li>
-    <li>tools</li>
-    <li>skills</li>
-    <li>memory</li>
-    <li>`CLAUDE.md`</li>
-    <li>dynamic context</li>
-  </ol>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s10_system_prompt.py</span></div>
+<div class="grid grid-cols-[1fr_400px] gap-4">
+<div>
+
+<div v-click>
+
+**问题**：系统提示词是一整块硬编码字符串，来源越来越多却无法分段维护、测试和缓存
+
 </div>
 
-::right::
+<div v-click>
 
-```python {1-9|11-15|17-18|all}
-class SystemPromptBuilder:
-    def build(self) -> str:
-        parts = []
-        parts.append(self._build_core())
-        parts.append(self._build_tools())
-        parts.append(self._build_skills())
-        parts.append(self._build_memory())
-        parts.append(self._build_claude_md())
-        parts.append(self._build_dynamic())
-        return "\n\n".join(p for p in parts if p)
+**方案**：系统提示词的关键不是"写一段很长的话"，而是"把不同来源的信息按清晰边界组装起来"
 
-# stable: role, tool contract, long-lived safety, CLAUDE.md
-# dynamic: date, cwd, mode, per-turn warnings
+<!-- - **core** — 身份 + 规则（几乎不变）
 
-# save in s09
-# re-inject in s10
-```
+- **tools** — 工具列表
 
----
-layout: two-cols-header
----
+- **skills** — 技能列表
 
-## s11 · Error Recovery
+- **memory** — 记忆内容
 
-::left::
+- **CLAUDE.md** — 规则文件（ = AGENTS.md）
 
-<div class="surface tight-list">
-  <div class="chapter-pill hardening">Recover, Then Continue</div>
-  <h3>为什么"统一重试"不够</h3>
-  <v-clicks>
+- 用 `DYNAMIC_BOUNDARY` 分隔 静态段 和 动态段
 
-  - 输出截断、prompt 过长、网络临时失败，本质上是三类不同问题。
-  - 如果只会"再试一次"，context overflow 会无限重复，截断输出会从头再来。
-  - 所以 recovery 先做分类，再选 continuation path。
-  - 每一类恢复都要有 budget，不然系统会陷入永动机式重试。
+- **dynamic** — 日期、目录、模式、提醒（每轮会话重建） -->
 
-  </v-clicks>
-
-  <div class="takeaway hardening">
-    <strong>Key insight</strong>：Most failures are continuation signals, not true task failure.
-  </div>
 </div>
 
-::right::
+<div v-click="4" class="mt-8 text-orange-500 text-xl">
 
-```mermaid
-flowchart TD
-  A[LLM call fails / truncates] --> B{What kind?}
-  B -->|max_tokens| C[append continue reminder]
-  B -->|prompt too long| D[compact context]
-  B -->|timeout/rate limit| E[backoff and retry]
-  C --> F[retry with budget]
-  D --> F
-  E --> F
-```
+静态前缀可缓存复用，效率高、成本低，动态后缀则每轮会话重建
 
----
-layout: two-cols-header
----
-
-## s11 · 核心变化代码：分类优先，动作其次
-
-::left::
-
-<div class="surface tight-list small">
-  <h3>最小恢复策略</h3>
-  <ul class="dense-list">
-    <li><strong>continue</strong>：输出被截断，但任务没失败</li>
-    <li><strong>compact</strong>：任务没错，错的是 context 太大</li>
-    <li><strong>backoff</strong>：环境暂时不行，等一下再来</li>
-  </ul>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s11_error_recovery.py</span></div>
 </div>
 
-::right::
+</div>
+<div>
 
-```python {1-8|10-15|17-24|all}
-def choose_recovery(stop_reason: str | None, error_text: str | None) -> dict:
-    if stop_reason == "max_tokens":
-        return {"kind": "continue", "reason": "output truncated"}
-    if error_text and "prompt" in error_text and "long" in error_text:
-        return {"kind": "compact", "reason": "context too large"}
-    if error_text and any(word in error_text for word in ["timeout", "rate", "unavailable", "connection"]):
-        return {"kind": "backoff", "reason": "transient transport failure"}
-    return {"kind": "fail", "reason": "unknown or non-recoverable error"}
+<div v-click="3">
 
-if decision["kind"] == "continue":
-    messages.append({"role": "user", "content": CONTINUE_MESSAGE})
-if decision["kind"] == "compact":
-    messages = auto_compact(messages)
-if decision["kind"] == "backoff":
-    time.sleep(backoff_delay(...))
-```
+<div class="text-sm space-y-2">
+
+<div class="border border-gray-600 rounded p-2">
+<div class="text-gray-400 text-center mb-1">静态段（可缓存复用）</div>
+<div class="space-y-2">
+<div class="bg-gray-800 rounded px-2 py-1">1. core — 身份 + 规则</div>
+<div class="bg-gray-800 rounded px-2 py-1">2. tools — 工具列表</div>
+<div class="bg-gray-800 rounded px-2 py-1">3. skills — 技能列表</div>
+<div class="bg-gray-800 rounded px-2 py-1">4. memory — 记忆内容</div>
+<div class="bg-gray-800 rounded px-2 py-1">5. CLAUDE.md — 规则文件</div>
+</div>
+</div>
+
+<div class="text-center">▼</div>
+
+<div class="bg-orange-500 text-white text-center rounded px-2 py-1 font-bold">DYNAMIC_BOUNDARY</div>
+
+<div class="text-center">▼</div>
+
+<div class="border border-gray-600 rounded p-2">
+<div class="text-gray-400 text-center mb-1">动态段（每轮会话重建）</div>
+<div class="space-y-2">
+<div class="bg-gray-800 rounded px-2 py-1">1. 当前日期</div>
+<div class="bg-gray-800 rounded px-2 py-1">2. 工作目录</div>
+<div class="bg-gray-800 rounded px-2 py-1">3. 当前模式</div>
+<div class="bg-gray-800 rounded px-2 py-1">4. 操作系统</div>
+<div class="bg-gray-800 rounded px-2 py-1">5. 本轮提醒</div>
+</div>
+</div>
+
+<div class="text-center">▼</div>
+
+<div class="bg-green-500 text-white text-center rounded px-2 py-1 font-bold">最终系统提示词</div>
+
+</div>
+
+</div>
+
+</div>
+</div>
 
 ---
 layout: default
 ---
 
-## Stage 2 小结：harness 开始具备"治理能力"
+# s10: 核心代码
 
-<div class="summary-grid">
-  <div class="summary-card hardening">
-    <h3><code>s07</code> 控制执行权</h3>
-    <p>模型只是在提议动作，真正是否执行，要经过 permission pipeline。</p>
-  </div>
-  <div class="summary-card hardening">
-    <h3><code>s08</code> 控制扩展点</h3>
-    <p>loop 不再被业务方定制逻辑污染，扩展行为可以挂到固定生命周期上。</p>
-  </div>
-  <div class="summary-card hardening">
-    <h3><code>s09-s10</code> 控制长期知识与输入装配</h3>
-    <p>memory 负责保存 durable facts，prompt builder 负责把它们重新送进模型输入。</p>
-  </div>
-  <div class="summary-card hardening">
-    <h3><code>s11</code> 控制失败后的 continuation</h3>
-    <p>系统不再"遇错即死"，而是知道为什么错，以及接下来应该走哪条恢复分支。</p>
-  </div>
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {3-4}
+def agent_loop(messages: list):
+    while True:
+        # s10 新增：用 builder 组装系统提示词
+        system = prompt_builder.build()
+        response = client.messages.create(
+            model=MODEL, 
+            system=system,
+            messages=messages, 
+            tools=TOOLS, 
+            max_tokens=8000,
+        )
+        ...  # 标准循环
+```
+
+## build 方法
+
+```python
+def build(self) -> str:
+    sections = []
+    core = self._build_core()                # 1、core 身份 + 规则
+    if core: sections.append(core)
+    tools = self._build_tool_listing()       # 2、tools 工具列表
+    if tools: sections.append(tools)
+    skills = self._build_skill_listing()     # 3、skills 技能列表
+    if skills: sections.append(skills)
+    memory = self._build_memory_section()    # 4、memory 记忆内容
+    if memory: sections.append(memory)
+    claude_md = self._build_claude_md()      # 5、CLAUDE.md 规则文件
+    if claude_md: sections.append(claude_md)
+    sections.append(DYNAMIC_BOUNDARY)        # 6、分隔线
+    dynamic = self._build_dynamic_context()  # 7、动态内容 日期/目录
+    if dynamic: sections.append(dynamic)
+    return "\n\n".join(sections)
+```
+
+</div>
+<div>
+
+## _build_claude_md
+
+规则文件，三级查找叠加
+
+```python
+def _build_claude_md(self) -> str:
+    sources = []
+    # 1. 用户全局级
+    user_claude = Path.home() / ".claude" / "CLAUDE.md"
+    if user_claude.exists():
+        sources.append(("user global", user_claude.read_text()))
+    # 2. 项目根目录级
+    project_claude = self.workdir / "CLAUDE.md"
+    if project_claude.exists():
+        sources.append(("project root", project_claude.read_text()))
+    # 3. 当前子目录级
+    if cwd != self.workdir:
+        subdir_claude = cwd / "CLAUDE.md"
+        if subdir_claude.exists():
+            sources.append(("subdir", subdir_claude.read_text()))
+    ...  # 全部拼接，不覆盖
+```
+
+## _build_dynamic_context
+
+动态内容，每轮会话重建
+
+```python
+def _build_dynamic_context(self) -> str:
+    lines = [
+        f"Current date: {datetime.date.today().isoformat()}",
+        f"Working directory: {self.workdir}",
+        f"Model: {MODEL}",
+        f"Platform: {os.uname().sysname}",
+    ]
+    return "# Dynamic context\n" + "\n".join(lines)
+```
+
+</div>
 </div>
 
-<div class="center-note">
-  到这里，Agent 已经不仅是"会工作"，而是开始"能自我治理"。
+---
+
+# s11: 错误恢复 (Error Recovery)
+
+> 大文件写到一半 max_tokens 截断、上下文爆了、API 超时，如果每次遇到问题就崩溃，用户就不敢用了
+
+<div v-click>
+
+**问题**：模型输出截断、上下文过长、网络抖动，这三种常见错误直接让主循环停住
+
+</div>
+
+<div v-click>
+
+**方案**：先对错误分类，再选恢复路径，每条路径有独立的重试预算，全部耗尽才真正失败
+
+</div>
+
+
+<div class="grid grid-cols-3 gap-4 mt-8">
+
+<div v-click class="p-3 rounded-lg border border-blue-300 dark:border-blue-700">
+
+<div class="text-center mb-2 text-sm text-gray-500">错误问题 1</div>
+
+**输出被截断**：模型还没说完，但 `max_tokens` 用完了
+
+<div class="mt-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**续写恢复**
+
+注入续写消息："不要重来，直接从中断点接着写"
+
+最多重试 **3 次**
+
+</div>
+</div>
+
+<div v-click class="p-3 rounded-lg border border-green-300 dark:border-green-700">
+
+<div class="text-center mb-2 text-sm text-gray-500">错误问题 2</div>
+
+**上下文爆了**：对话历史太长，`prompt_too_long` 请求直接失败
+
+<div class="mt-4 p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**压缩恢复**
+
+`auto_compact()` 把旧对话总结为摘要，缩短后重试
+
+最多重试 **3 次**
+
+</div>
+</div>
+
+<div v-click class="p-3 rounded-lg border border-amber-300 dark:border-amber-700">
+
+<div class="text-center mb-2 text-sm text-gray-500">错误问题 3</div>
+
+**网络抖动**：网络超时 (timeout)、限流 (rate limit)、服务抖动
+
+<div class="mt-4 p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
+
+**退避重试**
+
+`backoff_delay()` 指数等待 + 随机 jitter，不要立刻连续重试
+
+最多重试 **3 次**
+
+</div>
+</div>
+
+</div>
+
+<div v-click class="mt-8 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm text-center">
+
+**全部耗尽才是真正失败**
+
+每条路径都有独立的重试预算（默认 3 次），三条路径互不干扰
+
+</div>
+
+
+---
+layout: default
+---
+
+# s11: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {4-10|11-14|16-19|21-27}
+def agent_loop(messages: list):
+    max_output_recovery_count = 0
+    while True:
+        # s11 新增：API 调用 + 重试包装
+        response = None
+        for attempt in range(MAX_RECOVERY_ATTEMPTS + 1):
+            try:
+                response = client.messages.create(...)
+                break
+            except APIError as e:
+                # 恢复路径 2: prompt_too_long → 压缩重试
+                if "prompt" in str(e) and "long" in str(e):
+                    messages[:] = auto_compact(messages)
+                    continue
+                
+                # 恢复路径 3: 请求失败 → 退避重试
+                delay = backoff_delay(attempt)
+                time.sleep(delay)
+                continue
+        ...
+        # 恢复路径 1: max_tokens → 注入续写提示消息
+        if response.stop_reason == "max_tokens":
+            max_output_recovery_count += 1
+            if max_output_recovery_count <= MAX_RECOVERY_ATTEMPTS:
+                messages.append({"role": "user", "content": CONTINUATION_MESSAGE})
+                continue
+        max_output_recovery_count = 0
+        ...  
+        # 正常执行循环
+```
+
+</div>
+<div>
+
+## 恢复常量
+
+```python
+MAX_RECOVERY_ATTEMPTS = 3
+BACKOFF_BASE_DELAY = 1.0   # seconds
+BACKOFF_MAX_DELAY = 30.0   # seconds
+
+CONTINUATION_MESSAGE = (
+    "Output limit hit. Continue directly from where you stopped. "
+    "Do not restart or repeat."
+)
+```
+
+## 退避函数
+
+```python
+def backoff_delay(attempt: int) -> float:
+    delay = min(BACKOFF_BASE_DELAY * (2 ** attempt),
+                BACKOFF_MAX_DELAY)
+    jitter = random.uniform(0, 1)
+    return delay + jitter
+```
+
+## 自动压缩
+
+```python
+def auto_compact(messages: list) -> list:
+    summary = client.messages.create(
+        model=MODEL,
+        messages=[{"role": "user",
+                   "content": "Summarize this conversation for continuity..."}],
+    ).content[0].text
+    return [{"role": "user", "content": summary}]
+```
+
+</div>
 </div>
 
 ---
 layout: section
-class: section-runtime
 ---
 
-<div class="section-hero">
-  <div class="layer-chip runtime">Task Runtime · s12-s14</div>
-  
-  # Stage 3 · 任务运行时：让工作跨时间存在
-  
-  <div class="section-subtitle">
-    这一段把工作从"只在当前会话活着"升级为"可以跨压缩、跨重启、跨时间触发"的持久化运行时：task graph、background threads、cron scheduler。
+# 阶段 3：任务管理
+
+## s12 — s14
+
+<div class="text-gray-500 mt-4">
+把"聊天中的清单"升级成"磁盘上的任务图"
+</div>
+
+---
+layout: center
+---
+
+# 阶段 3 要解决什么？
+
+<v-clicks>
+
+s03 的 TodoWrite 是"会话内清单"——压缩一次就丢了。
+
+真实工作有**结构**：任务 B 等任务 A，C 和 D 能并行，E 等 C+D 都完成。
+
+有些命令要跑 90 秒（`pytest`），难道 agent 傻等？
+
+有些事要"每周一早 9 点跑"——难道用户每次手动提？
+
+</v-clicks>
+
+<div v-click class="mt-6 grid grid-cols-3 gap-3 text-sm">
+<div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
+
+**s12** 持久任务图
+
+</div>
+<div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
+
+**s13** 后台执行
+
+</div>
+<div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-center">
+
+**s14** 定时调度
+
+</div>
+</div>
+
+---
+
+# s12: 任务系统 (Task System)
+
+> s03 的 Todo 只能提醒你“有事要做”，任务系统才能告诉你“先做什么、谁在等谁、哪一步还卡着”
+
+<div class="grid grid-cols-[1fr_450px] gap-4">
+<div>
+
+<div v-click>
+
+**问题**：Todo 是会话内临时清单，压缩一次就丢了，并且任务之间没有依赖关系，也不能跨会话
+
+</div>
+
+<div v-click>
+
+**方案**：可持久化的任务图，写入磁盘文件，`blockedBy`/`blocks` 双向依赖，完成时自动解锁
+
+- 每个 task 有 `blockedBy` / `blocks` 依赖关系
+- `is_ready(task)` = pending + 没有前置阻塞
+- 完成一个 task → 自动从下游的 `blockedBy` 移除
+- 每个任务的状态持久化到 `.tasks/task_N.json`
+- 核心循环不变，新增工具：`task_create` / `task_update` / `task_list` / `task_get`
+
+</div>
+
+<div v-click="4" class="mt-8 text-orange-500 text-lg">
+
+todo 更像本轮计划，task 更像长期工作板
+
+</div>
+
+</div>
+
+<div v-click="3">
+
+<div class="text-sm space-y-2">
+
+  <div class="bg-green-600 text-white rounded px-2 py-2 text-center">
+    Task 1: 写解析器<br/>
+    <span class="text-xs">status: completed<br/>blockedBy: [] · blocks: [2,3,4]</span>
   </div>
 
-  <div class="badge-row">
-    <span class="ghost-chip">blockedBy / blocks</span>
-    <span class="ghost-chip">daemon threads</span>
-    <span class="ghost-chip">notification queue</span>
-    <span class="ghost-chip">cron triggers</span>
+  <div class="grid grid-cols-3 gap-2 mt-1">
+  <div class="text-center">
+  <div class="text-gray-500 mt-1 mb-2">▼ 解锁</div>
+  <div class="bg-blue-200 text-black rounded px-2 py-2">
+    Task 2: 语义检查<br/>
+    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [] · blocks: [5]</span>
   </div>
-</div>
-
----
-layout: two-cols-header
----
-
-## s12 · Task System
-
-::left::
-
-<div class="surface tight-list">
-  <div class="chapter-pill runtime">Durable Work Graph</div>
-  <h3>为什么 flat todo 不够了</h3>
-  <v-clicks>
-
-  - 真实工作有依赖：A 做完了，B 和 C 才能开；D 还要等 B、C 一起完成。
-  - `s03` 的 todo 只能表达"做没做"，表达不了阻塞关系和并行关系。
-  - 而且 todo 在内存里，压缩或重启后就没了。
-  - 所以这里把 checklist 升级成 **持久化 DAG**：知道谁 ready、谁 blocked、谁 completed。
-
-  </v-clicks>
-
-  <div class="takeaway runtime">
-    <strong>Key insight</strong>：Todo lists help a session; task graphs coordinate work that outlives it.
   </div>
+  <div class="text-center">
+  <div class="text-gray-500 mt-1 mb-2">▼ 解锁</div>
+  <div class="bg-blue-200 text-black rounded px-2 py-2">
+    Task 3: 测试<br/>
+    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [] · blocks: [5]</span>
+  </div>
+  </div>
+  <div class="text-center">
+  <div class="text-gray-500 mt-1 mb-2">▼ 解锁</div>
+  <div class="bg-blue-200 text-black rounded px-2 py-2">
+    Task 4: 文档<br/>
+    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [] · blocks: [5]</span>
+  </div>
+  </div>
+  </div>
+
+  <div class="text-center text-gray-500">▼ ▼ ▼ 全部完成后解锁</div>
+
+  <div class="bg-red-200 text-black rounded px-2 py-2 text-center">
+    Task 5: 整体验收<br/>
+    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [2,3,4] · blocks: []</span>
+  </div>
+
 </div>
 
-::right::
-
-```mermaid
-flowchart LR
-  T1[task 1\ncompleted] --> T2[task 2\npending]
-  T1 --> T3[task 3\npending]
-  T2 --> T4[task 4\nblocked]
-  T3 --> T4
-```
-
-<div class="code-note small">
-  关键结构不是"更多字段"，而是：<strong>依赖边 + 状态流转 + 落盘持久化</strong>。
 </div>
-
----
-layout: two-cols-header
----
-
-## s12 · 核心变化代码：`TaskManager` 和自动解阻塞
-
-::left::
-
-<div class="surface tight-list small">
-  <h3>本章值得记住的三个动作</h3>
-  <ul class="dense-list">
-    <li><strong>create</strong>：生成 JSON task record</li>
-    <li><strong>update</strong>：状态变化时触发依赖清理</li>
-    <li><strong>list/get</strong>：把 task graph 暴露给 agent 使用</li>
-  </ul>
-  <div class="chapter-source">Run it: <span class="command-pill">python agents/s12_task_system.py</span></div>
 </div>
-
-::right::
-
-```python {1-8|10-16|18-23|all}
-class TaskManager:
-    def create(self, subject, description=""):
-        task = {
-            "id": self._next_id,
-            "subject": subject,
-            "status": "pending",
-            "blockedBy": [],
-            "blocks": [],
-        }
-        self._save(task)
-        return json.dumps(task, indent=2)
-
-    def _clear_dependency(self, completed_id):
-        for f in self.dir.glob("task_*.json"):
-            task = json.loads(f.read_text())
-            if completed_id in task.get("blockedBy", []):
-                task["blockedBy"].remove(completed_id)
-                self._save(task)
-
-TOOL_HANDLERS = {
-    "task_create": lambda **kw: TASKS.create(kw["subject"]),
-    "task_update": lambda **kw: TASKS.update(kw["task_id"], kw.get("status")),
-    "task_list": lambda **kw: TASKS.list_all(),
-    "task_get": lambda **kw: TASKS.get(kw["task_id"]),
-}
-```
 
 ---
 layout: default
 ---
 
-## 收束 s12：task graph 为后续运行时打底
+# s12: 核心代码
 
-<div class="takeaway runtime">
-  <strong>s12 的核心</strong>：把 flat todo 升级为持久化 DAG，知道谁 ready、谁 blocked、谁 completed。后续的 background、cron、teams 都建在这个 task 结构上。
-</div>
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
 
----
-layout: two-cols-header
----
+## 新增工具
 
-## s13 · Background Tasks
-
-::left::
-
-<div class="surface tight-list">
-  <div class="chapter-pill runtime">Separate Goal from Running Work</div>
-  <h3>为什么需要后台执行</h3>
-  <v-clicks>
-
-  - `npm install`、`pytest`、`docker build` 可能跑几分钟。
-  - 如果主循环阻塞等待，用户也只能干等。
-  - 解法是把慢命令放进 **daemon thread**，主循环继续接活。
-  - 结果通过 **thread-safe notification queue** 在下次 LLM 调用前注入。
-
-  </v-clicks>
-
-  <div class="takeaway runtime">
-    <strong>Key insight</strong>：Background execution is a runtime lane, not a second main loop.
-  </div>
-</div>
-
-::right::
-
-```mermaid
-flowchart TD
-  A[Agent loop] -->|spawn| B[Daemon thread]
-  B --> C[subprocess runs]
-  C --> D[enqueue result]
-  D --> E[drain before next LLM call]
-  E --> A
+```python
+TOOL_HANDLERS = {
+    "bash":        ...,
+    "read_file":   ...,
+    "write_file":  ...,
+    "edit_file":   ...,
+    # s12 新增工具
+    "task_create": lambda **kw: TASKS.create(kw["subject"], ...),
+    "task_update": lambda **kw: TASKS.update(kw["task_id"], ...),
+    "task_list":   lambda **kw: TASKS.list_all(),
+    "task_get":    lambda **kw: TASKS.get(kw["task_id"]),
+}
 ```
 
-```python {1-5|7-10|all}
+## 任务存储结构
+
+```text
+.tasks/
+  task_1.json  {"id":1, "status":"completed", ...}
+  task_2.json  {"id":2, "blockedBy":[1], ...}
+```
+
+## TaskRecord
+
+```python
+task = {
+    "id": 1,
+    "subject": "Write parser",
+    "description": "",
+    "status": "pending",    # pending | in_progress | completed
+    "blockedBy": [],        # 它还在等谁完成
+    "blocks": [],           # 它完成后解锁谁
+    "owner": "",
+}
+```
+
+</div>
+<div>
+
+## TaskManager
+
+```python
+class TaskManager:
+    def __init__(self, tasks_dir: Path):
+        self.dir = tasks_dir
+    def create(self, subject, desc) -> str: ...
+    def get(self, task_id) -> str: ...
+    def update(self, task_id, status=None, ...) -> str:
+        ...
+        if status == "completed":
+            self._clear_dependency(task_id)
+    def list_all(self) -> str: 
+        ...
+```
+
+## 自动解锁
+
+```python
+def _clear_dependency(self, completed_id: int):
+    for f in self.dir.glob("task_*.json"):
+        task = json.loads(f.read_text())
+        if completed_id in task.get("blockedBy", []):
+            task["blockedBy"].remove(completed_id)
+            self._save(task)
+```
+
+</div>
+</div>
+
+---
+
+# s13: 后台任务 (Background Tasks)
+
+> 用户说"跑测试，同时帮我建配置文件"——但你的 agent 只会傻等 90 秒测试跑完
+
+<div v-click>
+
+**问题**：慢命令（pytest、npm build）同步执行会卡住主循环，模型和用户都在空等
+
+</div>
+
+
+<div v-click>
+
+**方案**：daemon 线程执行慢命令，主循环立即拿到 task_id 继续前进，结果通过通知队列在下一轮注入
+
+</div>
+
+
+<div v-click>
+
+```mermaid {scale: 0.7}
+graph LR
+  ML["主循环"] -->|"background_run('pytest')"| BG["后台线程"]
+  ML -->|"继续其他工作"| ML2["下一轮模型调用"]
+  BG -->|"完成"| NQ["通知队列"]
+  NQ -->|"drain_notifications()"| ML2
+  style BG fill:#f97316,color:#fff
+  style NQ fill:#bfdbfe,color:#000
+```
+
+</div>
+
+<div class="grid grid-cols-3 gap-3 mt-2 text-sm">
+<div v-click class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
+
+**启动即返回**
+
+`background_run` → 立即返回 task_id
+
+</div>
+<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**通知只放摘要**
+
+完整输出写磁盘，通知只带 preview
+
+</div>
+<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**并行的是等待**
+
+主循环仍然只有一条，并行的是执行与等待
+
+</div>
+</div>
+
+---
+layout: default
+---
+
+# s13: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {3-10}
+def agent_loop(messages: list):
+    while True:
+        # s13 新增：每轮开始前 drain 后台通知
+        notifs = BG.drain_notifications()
+        if notifs and messages:
+            notif_text = "\n".join(
+                f"[bg:{n['task_id']}] {n['status']}: {n['preview']}"
+                for n in notifs
+            )
+            messages.append({"role": "user",
+                "content": f"<background-results>\n{notif_text}\n</background-results>"})
+
+        response = client.messages.create(...)
+        ...  # 标准循环
+```
+
+## 注册新工具
+
+```python
+TOOL_HANDLERS = {
+    ...,
+    # s13 新增
+    "background_run":   lambda **kw: BG.run(kw["command"]),
+    "check_background": lambda **kw: BG.check(kw.get("task_id")),
+}
+```
+
+</div>
+<div>
+
+## BackgroundManager
+
+```python
 class BackgroundManager:
-    def run(self, command: str) -> str:
+    def __init__(self):
+        self.tasks = {}       # task_id -> status/result
+        self._notification_queue = []
+        self._lock = threading.Lock()
+
+    def run(self, command) -> str:
+        # 启动 daemon 线程，立即返回 task_id
         task_id = str(uuid.uuid4())[:8]
         thread = threading.Thread(
-            target=self._execute, args=(task_id, command), daemon=True)
+            target=self._execute,
+            args=(task_id, command), daemon=True)
         thread.start()
+        return f"Background task {task_id} started"
 
-    # drain-before-call pattern
-    notifs = BG.drain_notifications()
-    if notifs:
-        messages.append({"role": "user", "content": f"<background-results>..."})
+    def drain_notifications(self) -> list:
+        # 返回并清空通知队列
+        ...
 ```
 
----
-layout: two-cols-header
----
+## RuntimeTaskRecord
 
-## s14 · Cron Scheduler
+```python
+task = {
+    "id": "a1b2c3d4",
+    "command": "pytest",
+    "status": "running",      # running | completed | error
+    "result_preview": "",
+    "output_file": ".runtime-tasks/a1b2c3d4.log",
+}
+```
 
-::left::
-
-<div class="surface tight-list">
-  <div class="chapter-pill runtime">Let Time Trigger Work</div>
-  <h3>从"用户触发"到"时间触发"</h3>
-  <v-clicks>
-
-  - s13 解决了"慢任务不阻塞"，但任务仍然只能由用户发起。
-  - 如果想"每晚跑一次测试"，用户每天都得重新下指令。
-  - Cron scheduler 存储 **future intent**：记录时间规则 + prompt。
-  - 后台 checker 每 60 秒轮询，匹配到就走同一条 notification queue。
-
-  </v-clicks>
-
-  <div class="takeaway runtime">
-    <strong>Key insight</strong>：A scheduler stores future intent, not a second loop.
-  </div>
+</div>
 </div>
 
-::right::
+---
 
-```mermaid
-flowchart TD
-  A[schedule_create] --> B[durable schedule record]
-  B --> C[time checker loop]
-  C -->|match?| D[enqueue notification]
-  D --> E[main loop injects as new work]
+# s14: 定时调度 (Cron Scheduler)
+
+> 后台任务解决"现在开始的慢任务"，但"每周一 9 点跑报告"怎么办？——agent 需要学会"记住未来"
+
+<div v-click>
+
+**问题**：agent 只能响应当前请求，不能"将来某个时间再开始做事"
+
+</div>
+
+
+<div v-click>
+
+**方案**：cron 表达式 + 后台检查线程 + 通知注入，触发后仍然回到同一条主循环
+
+</div>
+
+
+<div class="grid grid-cols-[1fr_450px] gap-4">
+<div>
+
+<v-clicks>
+
+- `cron_create("0 9 * * 1", "Run report")` 注册
+- 后台线程每分钟检查一次是否匹配
+- 到期 → 推入通知队列 → 主循环注入
+- 支持 recurring / one-shot
+- 支持 durable（重启后仍在）
+- 新增工具：`cron_create` / `cron_delete` / `cron_list`
+
+</v-clicks>
+
+<div v-click class="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-sm">
+
+**调度器做的是"记住未来"，触发后仍然回到同一条主循环**
+
+</div>
+
+</div>
+<div>
+
+```mermaid {scale: 0.45}
+graph TD
+  CR["cron_create()"] --> REC["ScheduleRecord<br/>cron: 0 9 * * 1"]
+  REC --> CHK["后台检查线程<br/>每分钟检查"]
+  CHK -->|"时间匹配"| NQ["通知队列"]
+  NQ -->|"drain()"| ML["主循环注入"]
+  ML --> LLM["模型处理"]
+  CHK -->|"不匹配"| CHK
+  style CR fill:#f97316,color:#fff
+  style NQ fill:#bfdbfe,color:#000
+  style CHK fill:#bbf7d0,color:#000
 ```
 
-```python {1-6|8-12|all}
-schedule = {
-    "id": "job_001",
-    "cron": "0 9 * * 1",
-    "prompt": "Run weekly status report.",
-    "recurring": True,
-    "last_fired_at": None,
-}
-
-def check_jobs(self, now):
-    for job in self.jobs:
-        if cron_matches(job["cron"], now):
-            self.queue.put({"type": "scheduled_prompt",
-                "schedule_id": job["id"], "prompt": job["prompt"]})
-```
+</div>
+</div>
 
 ---
 layout: default
 ---
 
-## Stage 3 小结：从"只能当下做"到"跨时间工作"
+# s14: 核心代码
 
-<div class="summary-grid">
-  <div class="summary-card runtime">
-    <h3><code>s12</code> Task Graph</h3>
-    <p>持久化 DAG：依赖、解阻塞、落盘，是整个 runtime 层的骨架。</p>
-  </div>
-  <div class="summary-card runtime">
-    <h3><code>s13</code> Background Tasks</h3>
-    <p>daemon threads + notification queue，慢任务不再阻塞主循环。</p>
-  </div>
-  <div class="summary-card runtime">
-    <h3><code>s14</code> Cron Scheduler</h3>
-    <p>future intent 落盘 + 时间匹配触发，agent 可以自行安排将来的工作。</p>
-  </div>
-  <div class="summary-card runtime">
-    <h3>一句话</h3>
-    <p><strong>计划 → 并行 → 定时</strong>：agent 从纯反应式变成能组织跨时间工作。</p>
-  </div>
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {3-6}
+def agent_loop(messages: list):
+    while True:
+        # s14 新增：drain 定时任务通知
+        notifications = scheduler.drain_notifications()
+        for note in notifications:
+            messages.append({"role": "user", "content": note})
+
+        response = client.messages.create(...)
+        ...  # 标准循环
+```
+
+## 注册新工具
+
+```python
+TOOL_HANDLERS = {
+    ...,
+    # s14 新增
+    "cron_create": lambda **kw: scheduler.create(
+        kw["cron"], kw["prompt"],
+        kw.get("recurring", True), kw.get("durable", False)),
+    "cron_delete": lambda **kw: scheduler.delete(kw["id"]),
+    "cron_list":   lambda **kw: scheduler.list_tasks(),
+}
+```
+
+</div>
+<div>
+
+## ScheduleRecord
+
+```python
+schedule = {
+    "id": "job_001",
+    "cron": "0 9 * * 1",       # 每周一 9 点
+    "prompt": "Run weekly status report.",
+    "recurring": True,
+    "durable": True,
+    "last_fired": None,
+}
+```
+
+## CronScheduler
+
+```python
+class CronScheduler:
+    def __init__(self):
+        self.tasks = []
+        self.queue = Queue()
+    def start(self): ...          # 启动后台检查线程
+    def create(self, cron, prompt, ...) -> str: ...
+    def drain_notifications(self) -> list: ...
+```
+
+## cron_matches
+
+```python
+def cron_matches(expr: str, dt: datetime) -> bool:
+    # 5 字段匹配: min hour dom month dow
+    # 支持 * / */N / N-M / N,M
+    ...
+```
+
+<div class="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-sm">
+
+**调度器做的是"记住未来"，触发后仍然回到同一条主循环。**
+
+</div>
+
+</div>
+</div>
+
+---
+
+# 阶段 3 完成：从纯反应式到可持续运行
+
+<div class="grid grid-cols-3 gap-4 text-sm">
+
+<div v-click class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
+
+**s12 任务图**
+
+依赖关系 + 自动解锁
+
+持久化到磁盘
+
+</div>
+
+<div v-click class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
+
+**s13 后台执行**
+
+daemon 线程 + 通知队列
+
+drain-before-call 模式
+
+</div>
+
+<div v-click class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
+
+**s14 定时调度**
+
+cron 表达式 + 触发注入
+
+"记住未来"
+
+</div>
+
+</div>
+
+<div v-click class="mt-6 p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm">
+
+| 概念 | 区别 |
+|------|------|
+| **Todo** vs **Task** | 临时会话步骤 vs 持久化工作节点（有依赖、有 owner） |
+| **Task** vs **Runtime Task** | "要做什么"（目标）vs"正在跑的执行槽位"（运行时） |
+
 </div>
 
 ---
 layout: section
 ---
 
-<div class="section-hero">
-  <div class="layer-chip platform">Multi-Agent Platform · s15-s19</div>
-  
-  # Stage 4 · 从单代理走向多代理平台
-  
-  <div class="section-subtitle">
-    最后一段把"一个 agent 做所有事"升级为"多个 agent 协同做事"：持久化队友、结构化协议、自治认领、隔离执行、外部能力接入。
-  </div>
+# 阶段 4：多 Agent 与外部系统
 
-  <div class="badge-row">
-    <span class="ghost-chip">JSONL inboxes</span>
-    <span class="ghost-chip">request-response protocols</span>
-    <span class="ghost-chip">idle polling + auto-claim</span>
-    <span class="ghost-chip">git worktrees</span>
-    <span class="ghost-chip">MCP stdio</span>
-  </div>
+## s15 — s19
+
+<div class="text-gray-500 mt-4">
+从单 agent 升级成真正的平台
 </div>
 
 ---
-layout: two-cols-header
+layout: center
 ---
 
-## s15 · Agent Teams
+# 阶段 4 要解决什么？
 
-::left::
+<v-clicks>
 
-<div class="surface tight-list">
-  <div class="chapter-pill platform">Persistent Specialists</div>
-  <h3>从一次性子代理到持久队友</h3>
-  <v-clicks>
+一个 agent 忙不过来了。
 
-  - s04 的 subagent 是一次性的：做完就丢。
-  - 真正的团队需要：**持久身份**、**独立 loop**、**通信通道**。
-  - 每个队友有自己的 JSONL inbox，inbox 是 append-only + drain-on-read。
-  - lifecycle：`spawn → working → idle → working → ... → shutdown`。
+前端、后端、测试——需要**多个 agent 并行工作**。
 
-  </v-clicks>
+但它们不能共享一个对话、不能都改同一个文件、也不能自说自话。
 
-  <div class="takeaway">
-    <strong>Key insight</strong>：Teammates persist beyond one prompt, each with identity and a durable mailbox.
-  </div>
+**这个阶段解决：谁在做、怎么协调、在哪做、外部能力怎么接入。**
+
+</v-clicks>
+
+<div v-click class="mt-6 grid grid-cols-5 gap-2 text-sm">
+<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**s15** 团队
+
+</div>
+<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**s16** 协议
+
+</div>
+<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**s17** 自治
+
+</div>
+<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**s18** 隔离
+
+</div>
+<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**s19** MCP
+
+</div>
 </div>
 
-::right::
+---
 
-```mermaid
-flowchart LR
-  subgraph Team
-    L[Lead] -->|spawn| A[Alice]
-    L -->|spawn| B[Bob]
-    A -->|send| B
-    B -->|send| L
-  end
-  subgraph Storage
-    C[config.json]
-    I[inbox/*.jsonl]
-  end
+# s15: 智能体团队 (Agent Teams)
+
+> s04 的 Subagent 是"用完即弃"；团队成员**长期在线、有身份、有邮箱、能反复接活**
+
+<div v-click>
+
+**问题**：Subagent 是一次性的，干完就消失，无法长期分工协作
+
+</div>
+
+
+<div v-click>
+
+**方案**：持久化名册 + JSONL 邮箱 + 每个队友独立线程运行自己的 agent loop
+
+</div>
+
+
+<div class="grid grid-cols-[1fr_450px] gap-4">
+<div>
+
+<v-clicks>
+
+- **名册** `.team/config.json`：成员列表、角色、状态
+- **邮箱** `.team/inbox/alice.jsonl`：append-only 收件箱
+- 每个队友有自己的 `messages[]` 和 agent loop
+- 每轮先 drain inbox，再继续工作
+- 新增工具：`spawn_teammate` / `send_message` / `read_inbox` / `broadcast`
+
+</v-clicks>
+
+<div v-click class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">
+
+**subagent 是一次性外包，teammate 是长期在线队友**
+
+</div>
+
+</div>
+<div>
+
+```mermaid {scale: 0.45}
+graph TD
+  Lead["Lead"] -->|"spawn"| A["Alice (coder)<br/>独立 loop"]
+  Lead -->|"spawn"| B["Bob (tester)<br/>独立 loop"]
+  Lead -->|"send_message"| AI["alice.jsonl"]
+  Lead -->|"send_message"| BI["bob.jsonl"]
+  AI -->|"drain inbox"| A
+  BI -->|"drain inbox"| B
+  A -->|"send_message"| LI["lead.jsonl"]
+  B -->|"send_message"| LI
+  LI -->|"drain inbox"| Lead
+  style Lead fill:#f97316,color:#fff
+  style A fill:#bfdbfe,color:#000
+  style B fill:#bbf7d0,color:#000
 ```
 
-```python {1-4|6-9|all}
+</div>
+</div>
+
+---
+layout: default
+---
+
+# s15: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更（Lead 循环）
+
+```python {3-7}
+def agent_loop(messages: list):
+    while True:
+        # s15 新增：每轮 drain lead 的邮箱
+        inbox = BUS.read_inbox("lead")
+        if inbox:
+            messages.append({"role": "user",
+                "content": f"<inbox>{json.dumps(inbox)}</inbox>"})
+
+        response = client.messages.create(...)
+        ...  # 标准循环
+```
+
+## Lead 工具（9 个）
+
+```python
+TOOL_HANDLERS = {
+    "bash": ..., "read_file": ..., "write_file": ..., "edit_file": ...,
+    # s15 新增
+    "spawn_teammate":  lambda **kw: TEAM.spawn(kw["name"], kw["role"], kw["prompt"]),
+    "list_teammates":  lambda **kw: TEAM.list_all(),
+    "send_message":    lambda **kw: BUS.send("lead", kw["to"], kw["content"]),
+    "read_inbox":      lambda **kw: json.dumps(BUS.read_inbox("lead")),
+    "broadcast":       lambda **kw: BUS.broadcast("lead", kw["content"], ...),
+}
+```
+
+</div>
+<div>
+
+## MessageBus（JSONL 邮箱）
+
+```python
 class MessageBus:
     def send(self, sender, to, content, msg_type="message"):
-        with open(self.dir / f"{to}.jsonl", "a") as f:
-            f.write(json.dumps(msg) + "\n")
+        msg = {"type": msg_type, "from": sender,
+               "content": content, "timestamp": time.time()}
+        # append 到 .team/inbox/{to}.jsonl
 
-    def read_inbox(self, name):
-        path = self.dir / f"{name}.jsonl"
-        msgs = [json.loads(l) for l in path.read_text().strip().splitlines()]
-        path.write_text("")  # drain
-        return json.dumps(msgs, indent=2)
+    def read_inbox(self, name) -> list:
+        # 读取并清空 .team/inbox/{name}.jsonl
 ```
 
----
-layout: two-cols-header
----
+## TeammateManager
 
-## s16 · Team Protocols
+```python
+class TeammateManager:
+    def spawn(self, name, role, prompt) -> str:
+        # 写入 config.json
+        # 启动独立线程 → _teammate_loop
+        ...
 
-::left::
+    def _teammate_loop(self, name, role, prompt):
+        messages = [{"role": "user", "content": prompt}]
+        for _ in range(50):
+            inbox = BUS.read_inbox(name)
+            ...  # 标准 agent loop
+```
 
-<div class="surface tight-list">
-  <div class="chapter-pill platform">Shared Request-Response Rules</div>
-  <h3>从自由聊天到结构化握手</h3>
-  <v-clicks>
-
-  - s15 有通信了，但没有协调规则。
-  - 两个典型场景：**graceful shutdown** 和 **plan approval**。
-  - 核心抽象就一个：**带 `request_id` 的 request-response 信封**。
-  - 一个 FSM 覆盖两种协议：`pending → approved | rejected`。
-
-  </v-clicks>
-
-  <div class="takeaway">
-    <strong>Key insight</strong>：A protocol request is a structured message with an ID; the response must reference the same ID.
-  </div>
+</div>
 </div>
 
-::right::
+---
 
-```mermaid
-sequenceDiagram
-  participant Lead
-  participant Teammate
-  Lead->>Teammate: shutdown_request {req_id: "abc"}
-  Teammate->>Lead: shutdown_response {req_id: "abc", approve: true}
-  Note over Lead,Teammate: Same FSM: pending → approved/rejected
+# s16: 团队协议 (Team Protocols)
+
+> Lead 说"请停下"，Alice 无视了；Bob 直接开始数据库迁移没人审批——自由聊天不够，需要结构化握手
+
+<div v-click>
+
+**问题**：自由文本消息无法保证"请求必须被回应"，多个请求并存时无法对号
+
+</div>
+
+
+<div v-click>
+
+**方案**：`request_id` 关联的结构化协议 — 请求-响应 + 状态追踪表（pending → approved | rejected）
+
+</div>
+
+
+<div v-click>
+
+```mermaid {scale: 0.7}
+graph LR
+  L["Lead"] -->|"shutdown_request<br/>req_001"| A["Alice inbox"]
+  A -->|"drain"| AH["Alice 处理"]
+  AH -->|"approve<br/>req_001"| LI["Lead inbox"]
+  LI -->|"drain"| LS["Lead 确认关闭"]
+  style L fill:#f97316,color:#fff
+  style AH fill:#bfdbfe,color:#000
+  style LS fill:#22c55e,color:#fff
 ```
 
-```python {1-5|7-10|all}
+</div>
+
+<div class="grid grid-cols-3 gap-3 mt-2 text-sm">
+<div v-click class="p-2 bg-red-50 dark:bg-red-900/20 rounded text-center">
+
+**shutdown 协议**
+
+Lead 发请求 → 队友 approve/reject
+
+</div>
+<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**plan_approval 协议**
+
+队友提交计划 → Lead 审批
+
+</div>
+<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**统一模板**
+
+request_id + 状态机 = 可复用的协议模式
+
+</div>
+</div>
+
+---
+layout: default
+---
+
+# s16: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## Lead 新增工具（+3 个）
+
+```python
+TOOL_HANDLERS = {
+    ...  # s15 的 9 个
+    # s16 新增
+    "shutdown_request": lambda **kw:
+        handle_shutdown_request(kw["teammate"]),
+    "shutdown_response": lambda **kw:
+        _check_shutdown_status(kw["request_id"]),
+    "plan_approval": lambda **kw:
+        handle_plan_review(kw["request_id"],
+            kw["approve"], kw.get("feedback", "")),
+}
+```
+
+## shutdown 流程
+
+```python
 def handle_shutdown_request(teammate: str) -> str:
     req_id = str(uuid.uuid4())[:8]
-    shutdown_requests[req_id] = {"target": teammate, "status": "pending"}
-    BUS.send("lead", teammate, "Please shut down gracefully.",
+    REQUEST_STORE.create({
+        "request_id": req_id, "kind": "shutdown",
+        "from": "lead", "to": teammate,
+        "status": "pending", ...
+    })
+    BUS.send("lead", teammate, "Please shut down.",
              "shutdown_request", {"request_id": req_id})
-
-def handle_plan_review(request_id, approve, feedback=""):
-    req = plan_requests[request_id]
-    req["status"] = "approved" if approve else "rejected"
-    BUS.send("lead", req["from"], feedback,
-             "plan_approval_response", {"request_id": request_id, "approve": approve})
+    return f"Shutdown request {req_id} sent"
 ```
 
----
-layout: two-cols-header
----
+</div>
+<div>
 
-## s17 · Autonomous Agents
+## RequestStore
 
-::left::
+```python
+class RequestStore:
+    def __init__(self, base_dir: Path):
+        self.dir = base_dir   # .team/requests/
 
-<div class="surface tight-list">
-  <div class="chapter-pill platform">Self-Claim and Self-Resume</div>
-  <h3>从 lead 手动派活到自治</h3>
-  <v-clicks>
+    def create(self, record: dict) -> dict:
+        # 写 {request_id}.json
+    def get(self, request_id) -> dict | None: ...
+    def update(self, request_id, **changes): ...
+```
 
-  - s15-s16 的队友还需要 lead 一个一个派任务。
-  - 自治意味着：空闲时 **自己扫 task board**，发现未认领任务就 **auto-claim**。
-  - idle 阶段每 5 秒轮询 inbox + task board，60 秒无活就 auto-shutdown。
-  - 压缩后可能忘记身份，所以要做 **identity re-injection**。
+## 协议信封
 
-  </v-clicks>
+```python
+# shutdown_request
+message = {
+    "type": "shutdown_request",
+    "from": "lead", "to": "alice",
+    "request_id": "req_001",
+    "timestamp": 1710000000.0,
+}
 
-  <div class="takeaway">
-    <strong>Key insight</strong>：Autonomous teammates scan, claim, and shut down — removing the lead as bottleneck.
-  </div>
+# shutdown_response
+response = {
+    "request_id": "req_001",
+    "approve": True,
+    "reason": "Work complete",
+}
+```
+
+## 队友新增工具
+
+```python
+# 队友可以：
+"shutdown_response"  # 回应关机请求
+"plan_approval"      # 提交计划审批
+```
+
+</div>
 </div>
 
-::right::
-
-```mermaid
-flowchart TD
-  S[spawn] --> W[WORK]
-  W -->|idle tool / end_turn| I[IDLE poll]
-  I -->|inbox msg| W
-  I -->|unclaimed task| CL[claim] --> W
-  I -->|60s timeout| SD[SHUTDOWN]
-```
-
-```python {1-7|9-12|all}
-def _idle_poll(self, name, messages):
-    for _ in range(IDLE_TIMEOUT // POLL_INTERVAL):
-        time.sleep(POLL_INTERVAL)
-        inbox = BUS.read_inbox(name)
-        if inbox: return True
-        unclaimed = scan_unclaimed_tasks()
-        if unclaimed:
-            claim_task(unclaimed[0]["id"], name)
-            return True
-    return False  # timeout -> shutdown
-
-if len(messages) <= 3:
-    messages.insert(0, {"role": "user", "content": f"<identity>You are '{name}'...</identity>"})
-```
-
----
-layout: two-cols-header
 ---
 
-## s18 · Worktree + Task Isolation
+# s17: 自治智能体 (Autonomous Agents)
 
-::left::
+> 任务板上 10 个待办，Lead 一个一个分配——Lead 成了瓶颈。让队友自己去任务板找活干
 
-<div class="surface tight-list">
-  <div class="chapter-pill platform">Separate Directory, Separate Lane</div>
-  <h3>多人同时改代码怎么不冲突</h3>
-  <v-clicks>
+<div v-click>
 
-  - 所有 agent 共享同一目录 → 文件冲突。
-  - 解法：给每个 task 绑定独立的 **git worktree**。
-  - Task 管"做什么"，Worktree 管"在哪做"，靠 `task_id` 双向关联。
-  - lifecycle 有 event stream：`events.jsonl` 记录每次 create / keep / remove。
+**问题**：所有任务都由 Lead 手动分配，Lead 成了瓶颈
 
-  </v-clicks>
-
-  <div class="takeaway">
-    <strong>Key insight</strong>：Tasks answer <em>what</em>; worktrees answer <em>where</em>. Keep them separate.
-  </div>
 </div>
 
-::right::
 
-```mermaid
-flowchart LR
-  subgraph Control Plane
-    T1[task_1.json] --> W1[auth-refactor]
-    T2[task_2.json] --> W2[ui-login]
-  end
-  subgraph Execution Plane
-    W1 --> B1[branch wt/auth-refactor]
-    W2 --> B2[branch wt/ui-login]
-  end
-```
+<div v-click>
 
-```python {1-5|7-10|all}
-def bind_worktree(self, task_id, worktree):
-    task = self._load(task_id)
-    task["worktree"] = worktree
-    if task["status"] == "pending":
-        task["status"] = "in_progress"
-    self._save(task)
+**方案**：WORK/IDLE 双阶段循环 — 空闲时先检查邮箱，再按角色扫描任务板自动认领
 
-def remove(self, name, force=False, complete_task=False):
-    self._run_git(["worktree", "remove", wt["path"]])
-    if complete_task and wt.get("task_id") is not None:
-        self.tasks.update(wt["task_id"], status="completed")
-```
-
----
-layout: two-cols-header
----
-
-## s19 · MCP & Plugin
-
-::left::
-
-<div class="surface tight-list">
-  <div class="chapter-pill platform">External Capability Bus</div>
-  <h3>工具不再只能写在 harness 里</h3>
-  <v-clicks>
-
-  - 到 s18 为止，每个工具都是手写 Python handler。
-  - MCP 让 **外部程序** 通过 stdio 协议暴露 tools。
-  - 名字用 `mcp__{server}__{tool}` 前缀，避免碰撞。
-  - 统一 router：原生工具和 MCP 工具走同一条路由、同一套权限。
-  - Plugin manifest 负责发现和启动 server。
-
-  </v-clicks>
-
-  <div class="takeaway">
-    <strong>Key insight</strong>：External capabilities enter the same pipeline — same routing, same permissions.
-  </div>
 </div>
 
-::right::
 
-```mermaid
-flowchart TD
-  L[LLM tool_use] --> R{{Unified Router}}
-  R -->|native| N[Local Python handler]
-  R -->|mcp__*| M[MCP Server over stdio]
-  N --> RES[tool_result]
-  M --> RES
-  RES --> L
+<div class="grid grid-cols-[1fr_400px] gap-4">
+<div>
+
+<v-clicks>
+
+- **WORK 阶段**：标准 agent loop
+- **IDLE 阶段**：每 5 秒轮询邮箱 + 任务板
+- 有消息 → 恢复 WORK
+- 有 unclaimed ready task → 认领 → 恢复 WORK
+- 60 秒无事 → shutdown
+- 认领需原子锁 + 角色匹配
+- 压缩后自动重注入 `<identity>` block
+
+</v-clicks>
+
+</div>
+<div>
+
+```mermaid {scale: 0.45}
+graph TD
+  W["WORK 阶段"] -->|"工作做完"| I["IDLE 阶段"]
+  I -->|"邮箱有消息"| W
+  I -->|"任务板有 ready task"| CL["认领任务"]
+  CL -->|"补身份 + 任务提示"| W
+  I -->|"60s 无事"| SD["shutdown"]
+  style W fill:#22c55e,color:#fff
+  style I fill:#bfdbfe,color:#000
+  style CL fill:#f97316,color:#fff
+  style SD fill:#6b7280,color:#fff
 ```
 
-```python {1-5|7-10|12-15|all}
+</div>
+</div>
+
+---
+layout: default
+---
+
+# s17: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## 队友循环变更（WORK → IDLE → WORK）
+
+```python {3-8|10-19}
+def _loop(self, name, role, prompt):
+    messages = [{"role": "user", "content": prompt}]
+    while True:
+        # WORK 阶段：标准 agent loop
+        for _ in range(50):
+            ...  # 正常执行，直到 stop_reason != tool_use
+            if idle_requested:
+                break
+
+        # IDLE 阶段：轮询
+        self._set_status(name, "idle")
+        for _ in range(IDLE_TIMEOUT // POLL_INTERVAL):
+            time.sleep(POLL_INTERVAL)
+            inbox = BUS.read_inbox(name)
+            if inbox:
+                ensure_identity_context(messages, ...)
+                resume = True; break
+            unclaimed = scan_unclaimed_tasks(role)
+            if unclaimed:
+                claim_task(unclaimed[0]["id"], name, ...)
+                resume = True; break
+
+        if not resume:
+            self._set_status(name, "shutdown"); return
+        self._set_status(name, "working")
+```
+
+</div>
+<div>
+
+## 认领条件
+
+```python
+def is_claimable_task(task: dict, role=None) -> bool:
+    return (
+        task.get("status") == "pending"
+        and not task.get("owner")
+        and not task.get("blockedBy")
+        and _task_allows_role(task, role)
+    )
+```
+
+## 身份重注入
+
+```python
+def ensure_identity_context(messages, name, role, team):
+    if "<identity>" in str(messages[0].get("content", "")):
+        return  # 已有身份
+    messages.insert(0, {
+        "role": "user",
+        "content": f"<identity>You are '{name}', "
+                   f"role: {role}, team: {team}."
+                   f"</identity>"
+    })
+```
+
+## 新增工具
+
+```python
+# 队友新增
+"idle":       # 信号：进入 IDLE 阶段
+"claim_task": # 手动认领任务
+```
+
+</div>
+</div>
+
+---
+
+# s18: Worktree 任务隔离
+
+> Alice 在重构 auth，Bob 在做登录页——两人同时改 `config.py`，文件冲突了。每个任务需要自己的"车道"
+
+<div v-click>
+
+**问题**：多个队友在同一个目录工作，未提交改动互相污染
+
+</div>
+
+
+<div v-click>
+
+**方案**：git worktree = 每个任务一个隔离目录，Task 管"做什么"，Worktree 管"在哪做"
+
+</div>
+
+
+<div class="grid grid-cols-[1fr_450px] gap-4">
+<div>
+
+<v-clicks>
+
+- `worktree_create` → `git worktree add -b wt/{name}`
+- `worktree_run` → `subprocess.run(cmd, cwd=wt_path)`
+- `worktree_closeout` → keep（保留）或 remove（删除）
+- 任务状态（`status`）和车道状态（`worktree_state`）**分开管理**
+- 两张注册表通过 `task_id` 关联
+
+</v-clicks>
+
+<div v-click class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">
+
+**任务 completed 但 worktree kept 是完全合理的**（保留给 reviewer 看）
+
+</div>
+
+</div>
+<div>
+
+```mermaid {scale: 0.45}
+graph TD
+  TC["task_create()"] --> TB["task_bind_worktree()"]
+  TB --> WC["worktree_create()<br/>git worktree add"]
+  WC --> WE["worktree_enter()"]
+  WE --> WR["worktree_run()<br/>cwd=wt_path"]
+  WR --> CO{"closeout?"}
+  CO -->|"keep"| K["保留目录"]
+  CO -->|"remove"| R["删除目录"]
+  style TC fill:#f97316,color:#fff
+  style WC fill:#bfdbfe,color:#000
+  style WR fill:#bbf7d0,color:#000
+```
+
+</div>
+</div>
+
+---
+layout: default
+---
+
+# s18: 核心代码
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## 主循环无本质变化（新增工具）
+
+```python
+TOOL_HANDLERS = {
+    ...,  # 基础 4 个 + task 4 个
+    # s18 新增：worktree 系列
+    "worktree_create":   lambda **kw: WORKTREES.create(kw["name"], ...),
+    "worktree_list":     lambda **kw: WORKTREES.list_all(),
+    "worktree_enter":    lambda **kw: WORKTREES.enter(kw["name"]),
+    "worktree_run":      lambda **kw: WORKTREES.run(kw["name"], kw["command"]),
+    "worktree_closeout": lambda **kw: WORKTREES.closeout(
+        kw["name"], kw["action"], ...),
+    "worktree_status":   lambda **kw: WORKTREES.status(kw["name"]),
+    "worktree_events":   lambda **kw: EVENTS.list_recent(...),
+    "task_bind_worktree": ...,
+}
+```
+
+## 生命周期
+
+```text
+1. task_create("Refactor auth")
+2. worktree_create("auth-refactor", task_id=12)
+3. worktree_enter("auth-refactor")
+4. worktree_run("auth-refactor", "pytest")
+5. worktree_closeout("auth-refactor", "keep"|"remove")
+```
+
+</div>
+<div>
+
+## 两张注册表
+
+```python
+# .tasks/task_12.json
+task = {
+    "id": 12,
+    "subject": "Refactor auth",
+    "worktree": "auth-refactor",
+    "worktree_state": "active",  # 独立于 status
+}
+
+# .worktrees/index.json
+worktree = {
+    "name": "auth-refactor",
+    "path": ".worktrees/auth-refactor",
+    "branch": "wt/auth-refactor",
+    "task_id": 12,
+    "status": "active",  # active | kept | removed
+}
+```
+
+## WorktreeManager
+
+```python
+class WorktreeManager:
+    def create(self, name, task_id=None, base_ref="HEAD"):
+        # git worktree add -b wt/{name} ...
+        # 写入 index.json
+        # 绑定 task
+    def run(self, name, command) -> str:
+        # subprocess.run(cmd, cwd=wt_path)
+    def closeout(self, name, action, ...):
+        # action="keep" | "remove"
+```
+
+## EventBus
+
+```python
+class EventBus:
+    def emit(self, event, task_id=None, wt_name=None): ...
+    # worktree.create / worktree.run / worktree.remove
+```
+
+</div>
+</div>
+
+---
+
+# s19: MCP 与插件系统
+
+> 想查数据库？写个 handler。想控浏览器？再写一个。每次加能力都改代码？——让外部进程自己报到
+
+<div v-click>
+
+**问题**：所有工具都硬编码在主程序中，无法让外部程序动态接入新能力
+
+</div>
+
+
+<div v-click>
+
+**方案**：MCP 协议 — 外部进程暴露工具，统一命名（`mcp__{server}__{tool}`），统一路由，仍走同一条权限管道
+
+</div>
+
+
+<div v-click>
+
+```mermaid {scale: 0.7}
+graph LR
+  LLM["LLM tool_use"] --> R["Tool Router"]
+  R -->|"native tool"| NH["本地 Handler"]
+  R -->|"mcp__postgres__query"| MC["MCPClient"]
+  MC --> ES["外部 Server"]
+  ES --> MC
+  NH --> TR["统一 tool_result"]
+  MC --> TR
+  TR --> LLM
+  style R fill:#bfdbfe,color:#000
+  style MC fill:#f97316,color:#fff
+  style NH fill:#bbf7d0,color:#000
+```
+
+</div>
+
+<div class="grid grid-cols-3 gap-3 mt-2 text-sm">
+<div v-click class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-center">
+
+**Plugin 发现配置**
+
+`.claude-plugin/plugin.json` → server 启动命令
+
+</div>
+<div v-click class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
+
+**MCP Server 连接**
+
+`connect()` → `list_tools()` → 标准化名字
+
+</div>
+<div v-click class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
+
+**统一权限**
+
+MCP + native 走同一条 `PermissionGate`
+
+</div>
+</div>
+
+---
+layout: default
+---
+
+# s19: 核心代码 — 统一路由
+
+<div class="grid grid-cols-[1.3fr_1fr] gap-4">
+<div>
+
+## agent_loop 变更
+
+```python {2|8-9|11-15}
+def agent_loop(messages: list):
+    # s19 新增：合并 native + MCP 工具
+    tools = build_tool_pool()
+    while True:
+        response = client.messages.create(
+            model=MODEL, system=system,
+            messages=messages, tools=tools, max_tokens=8000)
+        ...
+        for block in response.content:
+            # s19 新增：统一权限检查
+            decision = permission_gate.check(block.name, block.input)
+            if decision["behavior"] == "deny":
+                output = f"Permission denied"
+            elif decision["behavior"] == "ask" and not ...:
+                output = f"Permission denied by user"
+            else:
+                # s19 新增：统一路由
+                output = handle_tool_call(block.name, block.input)
+            results.append({...})
+```
+
+## 统一路由
+
+```python
+def handle_tool_call(tool_name, tool_input) -> str:
+    if mcp_router.is_mcp_tool(tool_name):   # mcp__ 前缀
+        return mcp_router.call(tool_name, tool_input)
+    handler = NATIVE_HANDLERS.get(tool_name)
+    return handler(**tool_input) if handler else "Unknown"
+```
+
+</div>
+<div>
+
+## MCPClient
+
+```python
 class MCPClient:
-    def call_tool(self, tool_name, arguments):
-        self._send({"method": "tools/call", "params": {
-            "name": tool_name, "arguments": arguments}})
-        return self._recv()
-
-    def get_agent_tools(self):
-        for tool in self._tools:
-            prefixed = f"mcp__{self.server_name}__{tool['name']}"
-            agent_tools.append({"name": prefixed, ...})
-
-# Unified dispatch
-if tool_name.startswith("mcp__"):
-    return mcp_router.call(tool_name, arguments)
-else:
-    return native_handler(arguments)
+    def __init__(self, server_name, command, args):
+        ...
+    def connect(self): ...         # 启动进程 + initialize
+    def list_tools(self) -> list:  # tools/list
+    def call_tool(self, name, args) -> str:  # tools/call
+    def get_agent_tools(self) -> list:
+        # 给每个 tool 加 mcp__{server}__{tool} 前缀
 ```
 
----
-layout: default
----
+## MCPToolRouter
 
-## Stage 4 小结：从"一个 agent"到"一个平台"
+```python
+class MCPToolRouter:
+    def __init__(self):
+        self.clients = {}  # server_name -> MCPClient
+    def is_mcp_tool(self, name) -> bool:
+        return name.startswith("mcp__")
+    def call(self, tool_name, args) -> str:
+        _, server, tool = tool_name.split("__", 2)
+        return self.clients[server].call_tool(tool, args)
+```
 
-<div class="summary-grid">
-  <div class="summary-card" style="border-color: #fca5a5;">
-    <h3><code>s15</code> 持久化队友</h3>
-    <p>有名字、有 inbox、有独立 loop，不再是用完即弃的 subagent。</p>
-  </div>
-  <div class="summary-card" style="border-color: #fca5a5;">
-    <h3><code>s16</code> 结构化协议</h3>
-    <p>request_id 让消息变成可追踪的握手，shutdown 和 plan approval 是两个基本协议。</p>
-  </div>
-  <div class="summary-card" style="border-color: #fca5a5;">
-    <h3><code>s17-s18</code> 自治 + 隔离</h3>
-    <p>agent 自己认领任务、自己关掉自己；worktree 让并行修改代码不冲突。</p>
-  </div>
-  <div class="summary-card" style="border-color: #fca5a5;">
-    <h3><code>s19</code> 外部能力接入</h3>
-    <p>MCP 统一了原生和外部工具的路由与权限，agent 的能力不再被 harness 代码冻结。</p>
-  </div>
+## CapabilityPermissionGate
+
+```python
+class CapabilityPermissionGate:
+    def check(self, tool_name, tool_input) -> dict:
+        intent = self.normalize(tool_name, tool_input)
+        # read → allow; write → ask; high → ask
+        # MCP 和 native 走同一条管道
+```
+
+</div>
 </div>
 
 ---
-layout: default
+
+# 阶段 4 完成：从单 Agent 到完整平台
+
+<div class="grid grid-cols-5 gap-2 text-sm">
+
+<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+
+**s15 团队**
+
+名册 + 邮箱 + 独立循环
+
+</div>
+
+<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+
+**s16 协议**
+
+request_id 握手
+
+shutdown + plan
+
+</div>
+
+<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+
+**s17 自治**
+
+IDLE 轮询 + 自动认领
+
+身份重注入
+
+</div>
+
+<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+
+**s18 Worktree**
+
+控制面 vs 执行面
+
+git worktree 隔离
+
+</div>
+
+<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+
+**s19 MCP**
+
+统一路由 + 权限一致
+
+mcp__前缀
+
+</div>
+
+</div>
+
+<div v-click class="mt-6 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg text-sm">
+
+| 概念 | 区别 |
+|------|------|
+| **Subagent** vs **Teammate** | 用完即弃 vs 长期存在、有身份、有邮箱 |
+| **Worktree** vs **Task** | "在哪做"（执行车道）vs"做什么"（工作目标） |
+
+</div>
+
 ---
 
-## 全课程收束：19 章一条主线
+# 全景回顾：系统三层架构
 
-<div class="outro-grid">
-  <div class="surface">
-    <h3>从 s01 到 s19 可以这样复述</h3>
-    <ul class="dense-list">
-      <li><strong>s01-s02</strong>：最小 loop + 工具控制面</li>
-      <li><strong>s03-s04</strong>：计划防漂移 + 子代理防上下文污染</li>
-      <li><strong>s05-s06</strong>：按需加载知识 + 压缩保长寿</li>
-      <li><strong>s07-s11</strong>：安全、扩展、记忆、装配、恢复</li>
-      <li><strong>s12-s14</strong>：持久化 task graph + 后台执行 + 定时触发</li>
-      <li><strong>s15-s19</strong>：团队、协议、自治、隔离、外部能力</li>
-    </ul>
-    <div class="takeaway">
-      每章只引入 <strong>一个新的控制层</strong>。19 章叠完，你得到一个生产级 agent 平台的完整架构蓝图。
-    </div>
-  </div>
-  <div class="surface small">
-    <h3>运行这份 deck</h3>
-    <div class="badge-row">
-      <span class="command-pill">cd learn-claude-code/slidev</span>
-      <span class="command-pill">npm install</span>
-      <span class="command-pill">npm run dev</span>
-      <span class="command-pill">npm run build</span>
-    </div>
-    <div class="hr-soft"></div>
-    <p><strong>建议演讲节奏</strong></p>
-    <ul class="dense-list">
-      <li>Stage 1 讲"能力如何长出来"</li>
-      <li>Stage 2 讲"为什么真实系统必须治理自己"</li>
-      <li>Stage 3 讲"工作如何跨时间存在"</li>
-      <li>Stage 4 讲"多个 agent 如何协同"</li>
-    </ul>
-    <p class="slide-caption">教程源码：<code>learn-claude-code/agents/</code> · 文档：<code>learn-claude-code/docs/en/</code></p>
-  </div>
+```mermaid {scale: 0.7}
+graph TB
+  User["👤 用户"] --> ML["Agent Loop (s01)"]
+  subgraph Layer1["第一层：主循环"]
+    ML["1.组装输入 → 2.调模型 → 3.看stop_reason → 4.执行工具 → 5.回写messages → 6.继续"]
+  end
+  subgraph Layer2["第二层：横切机制"]
+    P["权限 s07"] ~~~ H["Hook s08"] ~~~ M["Memory s09"] ~~~ PR["Prompt s10"] ~~~ ER["恢复 s11"] ~~~ CC["压缩 s06"]
+  end
+  subgraph Layer3["第三层：更大的工作平台"]
+    T["任务图 s12"] ~~~ BG["后台 s13"] ~~~ CR["Cron s14"] ~~~ TM["团队 s15-s17"] ~~~ WT["Worktree s18"] ~~~ MCP["MCP s19"]
+  end
+  ML --> Layer2
+  Layer2 --> Layer3
+```
+
+<div class="mt-2 text-sm text-center text-gray-500">
+
+现在再看这张图，每一个方块你都知道它是什么、为什么存在、最小实现长什么样。
+
+</div>
+
+---
+
+# 核心数据结构总览
+
+<div class="text-sm">
+
+| 层次 | 关键结构 | 职责 |
+|------|----------|------|
+| **对话控制** | `Message` / `QueryState` / `TransitionReason` | 管本轮输入和继续理由 |
+| **工具执行** | `ToolSpec` / `DispatchMap` / `ToolUseContext` | 管动作怎么安全执行 |
+| **权限 Hook** | `PermissionRule` / `PermissionDecision` / `HookEvent` | 管安全和扩展 |
+| **持久工作** | `TaskRecord` / `MemoryEntry` / `ScheduleRecord` | 管跨会话的持久工作 |
+| **运行时** | `RuntimeTaskState` / `TeamMember` / `WorktreeRecord` | 管当前执行车道 |
+| **外部能力** | `MCPServerConfig` / `MCPToolSpec` | 管系统怎样向外接能力 |
+
+</div>
+
+---
+
+# 最容易混淆的概念对照
+
+<div class="grid grid-cols-2 gap-4 text-sm">
+
+<div>
+
+| 概念对 | 区分方法 |
+|--------|----------|
+| **Todo** vs **Task** | 临时步骤 vs 持久化工作节点 |
+| **Task** vs **Runtime Task** | 目标 vs 执行槽位 |
+| **Subagent** vs **Teammate** | 一次性 vs 长期存在 |
+| **Memory** vs **Context** | 跨会话 vs 当前轮 |
+
+</div>
+
+<div>
+
+| 概念对 | 区分方法 |
+|--------|----------|
+| **Prompt** vs **Reminder** | 稳定说明 vs 临时提醒 |
+| **Worktree** vs **Task** | 在哪做 vs 做什么 |
+| **Tool** vs **Resource** | 动作 vs 可读内容 |
+| **Permission** vs **Hook** | 能不能做 vs 额外插入行为 |
+
+</div>
+
+</div>
+
+---
+
+# 四个里程碑
+
+```mermaid {scale: 0.7}
+graph LR
+  A["🅰️ s06<br/>能工作的单 Agent"] --> B["🅱️ s11<br/>高完成度的单 Agent"]
+  B --> C["🅲 s14<br/>可持续运行时"]
+  C --> D["🅳 s19<br/>完整平台边界"]
+```
+
+<div class="grid grid-cols-4 gap-3 mt-6 text-sm">
+
+<div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+
+**A: s06 完成**
+
+主循环 + 工具 + 计划 + 子任务 + 技能 + 压缩
+
+</div>
+
+<div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
+
+**B: s11 完成**
+
+权限 + Hook + Memory + Prompt + 恢复
+
+</div>
+
+<div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
+
+**C: s14 完成**
+
+持久任务 + 后台执行 + 定时触发
+
+</div>
+
+<div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+
+**D: s19 完成**
+
+队友 + 协议 + 自治 + Worktree + MCP
+
+</div>
+
+</div>
+
+---
+layout: center
+class: text-center
+---
+
+# 一句话记住
+
+<div class="text-2xl mt-8 font-bold">
+
+先做出能工作的最小循环
+
+再一层一层给它补上
+
+**规划 → 隔离 → 安全 → 记忆 → 任务 → 协作 → 外部能力**
+
+</div>
+
+<div class="mt-8 text-gray-500">
+
+好的章节顺序，不是把所有机制排成一列，
+
+而是让每一章都像前一章**自然长出来的下一层**。
+
+</div>
+
+<div class="mt-6 text-sm text-gray-400">
+
+如果你能从 s01 开始，不看代码重建到 s19，你就真正理解了这套设计。
+
+</div>
+
+---
+layout: end
+---
+
+# Thank You!
+
+Learn Claude Code · 从零手搓 AI Coding Agent
+
+<div class="text-sm text-gray-500 mt-4">
+
+GitHub: [shareAI-lab/learn-claude-code](https://github.com/shareAI-lab/learn-claude-code)
+
 </div>

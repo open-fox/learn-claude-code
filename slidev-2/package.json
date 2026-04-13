@@ -1,0 +1,15 @@
+{
+  "name": "learn-claude-code-slidev",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Detailed Slidev deck for Learn Claude Code chapters s01-s12.",
+  "scripts": {
+    "dev": "slidev --open false",
+    "build": "slidev build",
+    "export": "slidev export"
+  },
+  "devDependencies": {
+    "@slidev/cli": "^52.14.2",
+    "@slidev/theme-default": "^0.25.0"
+  }
+}
