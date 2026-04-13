@@ -588,55 +588,55 @@ layout: default
 
 # Learn Claude Code
 
-- 教程在 Claude Code 源码泄漏之前就存在，并不是 Claude Code 源码分析教程
+<div class="grid grid-cols-[1fr_1fr] gap-8 mt-4">
+<div>
 
-- 教程在 Claude Code 源码泄漏之后，新增了 7 个章节，可能是受泄漏的源码启发
+- 教程在 Claude Code 源码泄漏之前就存在，并不是源码分析教程
 
-- 它是 Coding Agent 简化版实现，跟实际生产环境的 Agent 有差异，但很值得学习
+- Claude Code 泄漏之后新增了 7 个章节，可能受泄漏源码启发
 
-<div class="mt-32 flex items-start justify-center gap-2">
+- 它是 Coding Agent 简化版的实现，并非实际实现，但值得学习
 
-  <div v-click class="flex items-center gap-2">
-    <div class="px-5 py-4 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-center" style="min-width:180px;">
-      <div class="text-blue-300 font-bold text-base">🔵 阶段1: 核心单Agent</div>
-      <div class="text-blue-400/60 text-xs mt-1">s01 - s06</div>
-      <div class="text-blue-200/80 text-sm mt-2">先做出一个真能工作的 agent</div>
-    </div>
+<img src="./images/coding-agent-diagram.png" alt="Coding agent" class="rounded-lg mt-8" />
+
+</div>
+
+<div class="flex flex-col items-center gap-3 mt-2">
+
+  <div v-click class="px-5 py-3 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-center w-full">
+    <div class="text-blue-300 font-bold text-base">🔵 阶段1: 核心单Agent</div>
+    <div class="text-blue-400/60 text-xs mt-1">s01 - s06</div>
+    <div class="text-blue-200/80 text-sm mt-1">先做出一个真能工作的 agent</div>
   </div>
 
-  <div v-click class="flex items-center gap-2">
-    <div class="text-gray-500 text-2xl mt-2">→</div>
-    <div class="px-5 py-4 rounded-xl bg-green-500/15 border-2 border-green-400 text-center" style="min-width:180px;">
+  <div v-click class="w-full text-center">
+    <div class="text-gray-500">↓</div>
+    <div class="px-5 py-3 rounded-xl bg-green-500/15 border-2 border-green-400 text-center w-full mt-3">
       <div class="text-green-300 font-bold text-base">🟢 阶段2: 生产加固</div>
       <div class="text-green-400/60 text-xs mt-1">s07 - s11</div>
-      <div class="text-green-200/80 text-sm mt-2">再补安全、扩展、记忆和恢复</div>
+      <div class="text-green-200/80 text-sm mt-1">再补安全、扩展、记忆和恢复</div>
     </div>
   </div>
 
-  <div v-click class="flex items-center gap-2">
-    <div class="text-gray-500 text-2xl mt-2">→</div>
-    <div class="px-5 py-4 rounded-xl bg-orange-500/15 border-2 border-orange-400 text-center" style="min-width:180px;">
+  <div v-click class="w-full text-center">
+    <div class="text-gray-500">↓</div>
+    <div class="px-5 py-3 rounded-xl bg-orange-500/15 border-2 border-orange-400 text-center w-full mt-3">
       <div class="text-orange-300 font-bold text-base">🟠 阶段3: 任务管理</div>
       <div class="text-orange-400/60 text-xs mt-1">s12 - s14</div>
-      <div class="text-orange-200/80 text-sm mt-2">临时清单升级成持久化任务系统</div>
+      <div class="text-orange-200/80 text-sm mt-1">临时清单升级成持久化任务系统</div>
     </div>
   </div>
 
-  <div v-click class="flex items-center gap-2">
-    <div class="text-gray-500 text-2xl mt-2">→</div>
-    <div class="px-5 py-4 rounded-xl bg-red-500/15 border-2 border-red-400 text-center" style="min-width:180px;">
+  <div v-click class="w-full text-center">
+    <div class="text-gray-500">↓</div>
+    <div class="px-5 py-3 rounded-xl bg-red-500/15 border-2 border-red-400 text-center w-full mt-3">
       <div class="text-red-300 font-bold text-base">🔴 阶段4: 多Agent平台</div>
       <div class="text-red-400/60 text-xs mt-1">s15 - s19</div>
-      <div class="text-red-200/80 text-sm mt-2">从单 agent 升级成多 agent 平台</div>
+      <div class="text-red-200/80 text-sm mt-1">从单 agent 升级成多 agent 平台</div>
     </div>
   </div>
 
 </div>
-
-<div v-click class="mt-32 text-xl text-orange-500 w-full text-center">
-
-每一章节都是上一章节自然迭代出来的，从最小的单 Agent 开始，到复杂的多 Agent 平台
-
 </div>
 
 ---
