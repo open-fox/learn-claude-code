@@ -3051,6 +3051,110 @@ layout: default
 
 # Agent 框架对比
 
+<div class="overflow-auto mt-2" style="font-size: 0.62rem; line-height: 1.4;">
+<table class="w-full border-collapse">
+<thead>
+<tr class="text-white/90 border-b-2 border-blue-400/50">
+  <th class="text-left py-1.5 px-2 w-[80px]">维度</th>
+  <th class="text-left py-1.5 px-2 text-blue-300">Deep Agents</th>
+  <th class="text-left py-1.5 px-2 text-green-300">Mastra</th>
+  <th class="text-left py-1.5 px-2 text-yellow-300">Mini Agent</th>
+  <th class="text-left py-1.5 px-2 text-purple-300">Pi-Mono</th>
+  <th class="text-left py-1.5 px-2 text-orange-300">OpenHarness</th>
+</tr>
+</thead>
+<tbody class="text-white/80">
+<tr class="border-b border-white/10">
+  <td class="py-1 px-2 font-bold text-white/60">定位</td>
+  <td class="py-1 px-2">开箱即用的深度 Agent</td>
+  <td class="py-1 px-2">AI 应用全栈框架</td>
+  <td class="py-1 px-2">教学级参考实现</td>
+  <td class="py-1 px-2">分层 Agent SDK</td>
+  <td class="py-1 px-2">Claude Code 开源复刻</td>
+</tr>
+<tr class="border-b border-white/10">
+  <td class="py-1 px-2 font-bold text-white/60">语言</td>
+  <td class="py-1 px-2">Python</td>
+  <td class="py-1 px-2">TypeScript</td>
+  <td class="py-1 px-2">Python</td>
+  <td class="py-1 px-2">TypeScript 100%</td>
+  <td class="py-1 px-2">Python + TS (TUI)</td>
+</tr>
+<tr class="border-b border-white/10">
+  <td class="py-1 px-2 font-bold text-white/60">Agent Loop</td>
+  <td class="py-1 px-2">LangGraph 状态图</td>
+  <td class="py-1 px-2">AI SDK agentic loop</td>
+  <td class="py-1 px-2">手写 while 循环</td>
+  <td class="py-1 px-2">事件循环 + 状态机</td>
+  <td class="py-1 px-2">流式 tool-call 循环</td>
+</tr>
+<tr class="border-b border-white/10">
+  <td class="py-1 px-2 font-bold text-white/60">工具系统</td>
+  <td class="py-1 px-2">中间件注入</td>
+  <td class="py-1 px-2">Zod Schema + DI</td>
+  <td class="py-1 px-2">Pydantic 双格式</td>
+  <td class="py-1 px-2">TypeBox + Ajv</td>
+  <td class="py-1 px-2">Pydantic + 43 内置工具</td>
+</tr>
+<tr class="border-b border-white/10">
+  <td class="py-1 px-2 font-bold text-white/60">多 Agent</td>
+  <td class="py-1 px-2">SubAgent 中间件</td>
+  <td class="py-1 px-2">Agent Network</td>
+  <td class="py-1 px-2">无 (单 Agent)</td>
+  <td class="py-1 px-2">无 (Extension)</td>
+  <td class="py-1 px-2">Swarm 子进程</td>
+</tr>
+<tr class="border-b border-white/10">
+  <td class="py-1 px-2 font-bold text-white/60">上下文管理</td>
+  <td class="py-1 px-2">摘要中间件压缩</td>
+  <td class="py-1 px-2">Memory + 语义召回</td>
+  <td class="py-1 px-2">LLM 驱动摘要</td>
+  <td class="py-1 px-2">自动压缩 + 分支摘要</td>
+  <td class="py-1 px-2">压缩 + 任务焦点</td>
+</tr>
+<tr class="border-b border-white/10">
+  <td class="py-1 px-2 font-bold text-white/60">MCP 支持</td>
+  <td class="py-1 px-2">✅ + A2A</td>
+  <td class="py-1 px-2">✅ 客户端+服务端</td>
+  <td class="py-1 px-2">✅ stdio/SSE/HTTP</td>
+  <td class="py-1 px-2">❌</td>
+  <td class="py-1 px-2">✅ stdio + HTTP</td>
+</tr>
+<tr class="border-b border-white/10">
+  <td class="py-1 px-2 font-bold text-white/60">LLM 供应商</td>
+  <td class="py-1 px-2">18+ (LangChain)</td>
+  <td class="py-1 px-2">40+ (AI SDK)</td>
+  <td class="py-1 px-2">2 类协议</td>
+  <td class="py-1 px-2">20+ (自实现)</td>
+  <td class="py-1 px-2">多供应商</td>
+</tr>
+<tr class="border-b border-white/10">
+  <td class="py-1 px-2 font-bold text-white/60">权限系统</td>
+  <td class="py-1 px-2">中间件级控制</td>
+  <td class="py-1 px-2">无内置</td>
+  <td class="py-1 px-2">无内置</td>
+  <td class="py-1 px-2">beforeToolCall Hook</td>
+  <td class="py-1 px-2">三级权限模式</td>
+</tr>
+<tr class="border-b border-white/10">
+  <td class="py-1 px-2 font-bold text-white/60">适用场景</td>
+  <td class="py-1 px-2">生产级深度 Agent</td>
+  <td class="py-1 px-2">全栈 AI 应用</td>
+  <td class="py-1 px-2">学习 Agent 模式</td>
+  <td class="py-1 px-2">自定义 Coding Agent</td>
+  <td class="py-1 px-2">自托管 CC 替代品</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="mt-3 grid grid-cols-5 gap-2 text-center" style="font-size: 0.55rem;">
+  <div class="rounded-lg bg-blue-500/15 border border-blue-400/50 py-1.5 px-1 text-blue-300">中间件组装 LangGraph 图<br/>每个能力是一个拦截 Middleware</div>
+  <div class="rounded-lg bg-green-500/15 border border-green-400/50 py-1.5 px-1 text-green-300">DI 容器 + 模块化 monorepo<br/>70+ 包即插即用</div>
+  <div class="rounded-lg bg-yellow-500/15 border border-yellow-400/50 py-1.5 px-1 text-yellow-300">最小化单循环<br/>520 行就是全部核心</div>
+  <div class="rounded-lg bg-purple-500/15 border border-purple-400/50 py-1.5 px-1 text-purple-300">分层 SDK 严格依赖树<br/>每层可独立发布</div>
+  <div class="rounded-lg bg-orange-500/15 border border-orange-400/50 py-1.5 px-1 text-orange-300">CC 兼容的模块化单体<br/>Hook/Skill/Plugin 直接兼容</div>
+</div>
 
 ---
 layout: default
@@ -3058,7 +3162,7 @@ layout: default
 
 # Pi
 
-OpenClaw 的底层核心
+OpenClaw 的底层核心，支持插件系统，有个[插件市场](https://shittycodingagent.ai/packages)
 
 <div class="slide-image" style="width: 80%;">
 <img src="./images/pi-diagram.png" alt="Pi" />
