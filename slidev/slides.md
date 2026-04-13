@@ -555,6 +555,9 @@ layout: default
 
 # <span class="text-orange-500">Agent = Model + Harness</span>
 
+<div class="grid grid-cols-[1fr_700px] gap-8 mt-8">
+<div>
+
 - Agent 是大脑和身体的结合
 
 - Model 是大脑，负责思考+推理
@@ -565,12 +568,18 @@ layout: default
 
 - <span class="text-orange-500">如何设计并实现一个 Agent 框架？</span>
 
+[Mini-Agent](https://github.com/MiniMax-AI/Mini-Agent)
+
 [OpenHarness](https://github.com/HKUDS/OpenHarness)
 
-<div class="section-image">
-  <img src="./images/harness.png" alt="Harness" />
 </div>
 
+</div>
+<div v-click>
+
+<img src="./images/open-harness-diagram.png" alt="Open Harness" class="rounded-lg" />
+
+</div>
 </div>
 
 ---
