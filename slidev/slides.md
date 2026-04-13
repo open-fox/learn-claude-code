@@ -847,19 +847,49 @@ layout: default
 
 <div v-after>
 
-```mermaid {scale: 0.4}
-graph TD
-  LLM["🤖 LLM"] -->|"tool_use"| D["Dispatch Map"]
-  D --> B["bash"]
-  D --> R["read_file"]
-  D --> W["write_file"]
-  D --> E["edit_file"]
-  B & R & W & E --> TR["tool_result"]
-  TR -->|"写回 messages"| LLM
-  style R fill:#f97316,color:#fff
-  style W fill:#f97316,color:#fff
-  style E fill:#f97316,color:#fff
-```
+<div class="relative flex flex-col items-center gap-2 mt-16">
+
+  <!-- SVG 回环曲线：从 tool_result 右侧绕回 LLM -->
+  <svg class="absolute -right-2 top-0 h-full w-16 pointer-events-none" viewBox="0 0 60 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 8 275 Q 55 275, 55 160 Q 55 45, 8 45" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="5 3" fill="none" />
+    <path d="M 14 40 L 6 45 L 14 50" stroke="#60a5fa" stroke-width="1.5" fill="none" />
+  </svg>
+
+  <div class="px-6 py-3 rounded-xl bg-blue-500/15 border-2 border-blue-400 text-blue-300 font-bold text-base text-center w-56">
+    🤖 LLM
+  </div>
+  <div class="text-gray-500 text-base">↓ <span class="text-sm text-blue-400">tool_use</span></div>
+
+  <div class="px-6 py-3 rounded-xl bg-gray-500/15 border-2 border-gray-400 text-gray-300 font-bold text-base text-center w-56">
+    Dispatch Map
+  </div>
+
+  <div class="flex items-start justify-center gap-4 mt-2">
+    <div class="flex flex-col items-center">
+      <div class="text-gray-500">↓</div>
+      <div class="px-4 py-2 rounded-xl bg-cyan-500/15 border-2 border-cyan-400 text-cyan-300 font-bold text-sm text-center">bash</div>
+    </div>
+    <div class="flex flex-col items-center">
+      <div class="text-gray-500">↓</div>
+      <div class="px-4 py-2 rounded-xl bg-orange-500/20 border-2 border-orange-400 text-orange-300 font-bold text-sm text-center">read_file</div>
+    </div>
+    <div class="flex flex-col items-center">
+      <div class="text-gray-500">↓</div>
+      <div class="px-4 py-2 rounded-xl bg-orange-500/20 border-2 border-orange-400 text-orange-300 font-bold text-sm text-center">write_file</div>
+    </div>
+    <div class="flex flex-col items-center">
+      <div class="text-gray-500">↓</div>
+      <div class="px-4 py-2 rounded-xl bg-orange-500/20 border-2 border-orange-400 text-orange-300 font-bold text-sm text-center">edit_file</div>
+    </div>
+  </div>
+
+  <div class="text-gray-500 text-base mt-2">↓</div>
+
+  <div class="px-6 py-3 rounded-xl bg-green-500/15 border-2 border-green-400 text-green-300 font-bold text-base text-center w-56">
+    tool_result
+  </div>
+
+</div>
 
 </div>
 
