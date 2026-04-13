@@ -330,7 +330,7 @@ layout: two-cols
 </div>
 
 <div class="slide-image">
-  <img src="./images/ai-engineering.png" alt="AI Engineering" />
+  <img src="./images/ai-harness.jpg" alt="AI Harness Engineering" />
 </div>
 
 </div>
