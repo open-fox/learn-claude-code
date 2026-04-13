@@ -657,7 +657,7 @@ layout: default
 
 <div v-click class="mt-32 text-xl text-orange-500 w-full text-center">
 
-核心原则：每一章节都是上一章节自然迭代出来的，从最小的单 Agent 开始，到复杂的多 Agent 平台
+每一章节都是上一章节自然迭代出来的，从最小的单 Agent 开始，到复杂的多 Agent 平台
 
 </div>
 
@@ -1734,7 +1734,7 @@ class BashSecurityValidator:
 
 ---
 
-# s08: Hook 系统
+# s08: Hook 系统 (Hooks)
 
 > 安全团队要审计 bash、QA 要自动跑 lint、运维要运行日志，难道每个需求都改主循环？
 
@@ -2831,53 +2831,6 @@ schedule = {
 </div>
 
 ---
-
-# 阶段 3 完成：从纯反应式到可持续运行
-
-<div class="grid grid-cols-3 gap-4 text-sm">
-
-<div v-click class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
-
-**s12 任务图**
-
-依赖关系 + 自动解锁
-
-持久化到磁盘
-
-</div>
-
-<div v-click class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
-
-**s13 后台执行**
-
-daemon 线程 + 通知队列
-
-drain-before-call 模式
-
-</div>
-
-<div v-click class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
-
-**s14 定时调度**
-
-cron 表达式 + 触发注入
-
-"记住未来"
-
-</div>
-
-</div>
-
-<div v-click class="mt-6 p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm">
-
-| 概念 | 区别 |
-|------|------|
-| **Todo** vs **Task** | 临时会话步骤 vs 持久化工作节点（有依赖、有 owner） |
-| **Task** vs **Runtime Task** | "要做什么"（目标）vs"正在跑的执行槽位"（运行时） |
-
-</div>
-
----
 layout: section
 ---
 
@@ -3334,7 +3287,7 @@ def ensure_identity_context(messages, name, role, team):
 
 ---
 
-# s18: Worktree 任务隔离
+# s18: Worktree 任务隔离 (Worktree)
 
 > Alice 在重构 auth，Bob 在做登录页——两人同时改 `config.py`，文件冲突了。每个任务需要自己的"车道"
 
@@ -3485,28 +3438,28 @@ class EventBus:
 
 ---
 
-# s19: MCP 与插件系统
+# s19: MCP 与插件系统 (MCP & Plugin)
 
-> 想查数据库？写个 handler。想控浏览器？再写一个。每次加能力都改代码？——让外部进程自己报到
+> 想查数据库？写个工具。想控浏览器？再写个工具。每次加能力都改代码？
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：所有工具都硬编码在主程序中，无法让外部程序动态接入新能力
+**问题**：所有工具都硬编码在主程序中，无法让外部程序动态注入新能力
 
 </div>
 
 <div v-click>
 
-**方案**：MCP 协议 — 外部进程暴露工具，统一命名（`mcp__{server}__{tool}`），统一路由，仍走同一条权限管道
+**方案**：支持 MCP 协议，让外部进程暴露新的工具
 
-- **Plugin 发现**：`.claude-plugin/plugin.json` → server 启动命令
-- **MCP Server 连接**：`connect()` → `list_tools()` → 标准化名字
-- **统一权限**：MCP + native 走同一条 `PermissionGate`
+- **Plugin 发现**：`plugin.json` → server 启动命令
+- **MCP Server 连接**：`connect()` → `list_tools()`
+- **MCP 工具名字格式**：`mcp__{server}__{tool}`
+- **统一权限**：MCP + native 工具走同一条鉴权通道
 - **统一路由**：`mcp__` 前缀走 MCPClient，其余走本地 handler
-- 新增组件：`MCPClient` / `MCPToolRouter` / `CapabilityPermissionGate`
 
 </div>
 
@@ -3553,7 +3506,7 @@ MCP 不是替代工具系统，是让工具系统可以被外部扩展
 layout: default
 ---
 
-# s19: 核心代码 — 统一路由
+# s19: 核心代码
 
 <div class="grid grid-cols-[1.3fr_1fr] gap-4">
 <div>
@@ -3636,217 +3589,76 @@ class CapabilityPermissionGate:
 
 ---
 
-# 阶段 4 完成：从单 Agent 到完整平台
+# 系统三层架构
 
-<div class="grid grid-cols-5 gap-2 text-sm">
+<div class="flex flex-col items-center gap-0 mt-4">
 
-<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+  <!-- 用户入口 -->
+  <div class="px-6 py-2 rounded-full bg-gray-500/15 border-2 border-gray-400 text-gray-300 font-bold text-sm">👤 用户</div>
+  <div class="text-gray-500">↓</div>
 
-**s15 团队**
+  <!-- 第一层：主循环 -->
+  <div class="w-full rounded-xl border-2 border-blue-400/60 bg-blue-500/5 p-4">
+    <div class="text-blue-400 font-bold text-xs text-center mb-3">第一层：主循环 — Agent Loop</div>
+    <div class="flex items-center justify-center gap-2 flex-wrap">
+      <div class="px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs font-bold">1. 组装输入</div>
+      <div class="text-blue-400/50">→</div>
+      <div class="px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs font-bold">2. 调大模型</div>
+      <div class="text-blue-400/50">→</div>
+      <div class="px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs font-bold">3. 看 stop_reason</div>
+      <div class="text-blue-400/50">→</div>
+      <div class="px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs font-bold">4. 执行工具</div>
+      <div class="text-blue-400/50">→</div>
+      <div class="px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs font-bold">5. 回写消息</div>
+      <div class="text-blue-400/50">→</div>
+      <div class="px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs font-bold">6. 继续循环</div>
+    </div>
+    <div class="flex items-center justify-center gap-3 mt-3">
+      <div class="px-3 py-2 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs text-center font-bold">智能体循环<br/><span class="font-normal opacity-60">s01</span></div>
+      <div class="px-3 py-2 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs text-center font-bold">工具使用<br/><span class="font-normal opacity-60">s02</span></div>
+      <div class="px-3 py-2 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs text-center font-bold">会话内规划<br/><span class="font-normal opacity-60">s03</span></div>
+      <div class="px-3 py-2 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs text-center font-bold">子智能体<br/><span class="font-normal opacity-60">s04</span></div>
+      <div class="px-3 py-2 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs text-center font-bold">技能系统<br/><span class="font-normal opacity-60">s05</span></div>
+      <div class="px-3 py-2 rounded-lg bg-blue-500/15 border border-blue-400/50 text-blue-300 text-xs text-center font-bold">上下文压缩<br/><span class="font-normal opacity-60">s06</span></div>
+    </div>
+  </div>
 
-名册 + 邮箱 + 独立循环
+  <div class="text-gray-500 my-1">↓ <span class="text-xs text-gray-400">横切增强</span></div>
 
-</div>
+  <!-- 第二层：横切机制 -->
+  <div class="w-full rounded-xl border-2 border-green-400/60 bg-green-500/5 p-4">
+    <div class="text-green-400 font-bold text-xs text-center mb-3">第二层：横切机制 — 给主循环加 buff</div>
+    <div class="flex items-center justify-center gap-3">
+      <div class="px-3 py-2 rounded-lg bg-green-500/15 border border-green-400/50 text-green-300 text-xs text-center font-bold">权限系统<br/><span class="font-normal opacity-60">s07</span></div>
+      <div class="px-3 py-2 rounded-lg bg-green-500/15 border border-green-400/50 text-green-300 text-xs text-center font-bold">Hook 系统<br/><span class="font-normal opacity-60">s08</span></div>
+      <div class="px-3 py-2 rounded-lg bg-green-500/15 border border-green-400/50 text-green-300 text-xs text-center font-bold">记忆系统<br/><span class="font-normal opacity-60">s09</span></div>
+      <div class="px-3 py-2 rounded-lg bg-green-500/15 border border-green-400/50 text-green-300 text-xs text-center font-bold">系统提示词<br/><span class="font-normal opacity-60">s10</span></div>
+      <div class="px-3 py-2 rounded-lg bg-green-500/15 border border-green-400/50 text-green-300 text-xs text-center font-bold">错误恢复<br/><span class="font-normal opacity-60">s11</span></div>
+    </div>
+  </div>
 
-<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+  <div class="text-gray-500 my-1">↓ <span class="text-xs text-gray-400">能力扩展</span></div>
 
-**s16 协议**
-
-request_id 握手
-
-shutdown + plan
-
-</div>
-
-<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
-
-**s17 自治**
-
-IDLE 轮询 + 自动认领
-
-身份重注入
-
-</div>
-
-<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
-
-**s18 Worktree**
-
-控制面 vs 执行面
-
-git worktree 隔离
-
-</div>
-
-<div v-click class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
-
-**s19 MCP**
-
-统一路由 + 权限一致
-
-mcp__前缀
-
-</div>
-
-</div>
-
-<div v-click class="mt-6 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg text-sm">
-
-| 概念 | 区别 |
-|------|------|
-| **Subagent** vs **Teammate** | 用完即弃 vs 长期存在、有身份、有邮箱 |
-| **Worktree** vs **Task** | "在哪做"（执行车道）vs"做什么"（工作目标） |
-
-</div>
-
----
-
-# 全景回顾：系统三层架构
-
-```mermaid {scale: 0.7}
-graph TB
-  User["👤 用户"] --> ML["Agent Loop (s01)"]
-  subgraph Layer1["第一层：主循环"]
-    ML["1.组装输入 → 2.调模型 → 3.看stop_reason → 4.执行工具 → 5.回写messages → 6.继续"]
-  end
-  subgraph Layer2["第二层：横切机制"]
-    P["权限 s07"] ~~~ H["Hook s08"] ~~~ M["Memory s09"] ~~~ PR["Prompt s10"] ~~~ ER["恢复 s11"] ~~~ CC["压缩 s06"]
-  end
-  subgraph Layer3["第三层：更大的工作平台"]
-    T["任务图 s12"] ~~~ BG["后台 s13"] ~~~ CR["Cron s14"] ~~~ TM["团队 s15-s17"] ~~~ WT["Worktree s18"] ~~~ MCP["MCP s19"]
-  end
-  ML --> Layer2
-  Layer2 --> Layer3
-```
-
-<div class="mt-2 text-sm text-center text-gray-500">
-
-现在再看这张图，每一个方块你都知道它是什么、为什么存在、最小实现长什么样。
+  <!-- 第三层：更大的工作平台 -->
+  <div class="w-full rounded-xl border-2 border-orange-400/60 bg-orange-500/5 p-4">
+    <div class="text-orange-400 font-bold text-xs text-center mb-3">第三层：更大的工作平台 — 从单 Agent 到多 Agent 平台</div>
+    <div class="flex items-center justify-center gap-3">
+      <div class="px-3 py-2 rounded-lg bg-orange-500/15 border border-orange-400/50 text-orange-300 text-xs text-center font-bold">任务系统<br/><span class="font-normal opacity-60">s12</span></div>
+      <div class="px-3 py-2 rounded-lg bg-orange-500/15 border border-orange-400/50 text-orange-300 text-xs text-center font-bold">后台任务<br/><span class="font-normal opacity-60">s13</span></div>
+      <div class="px-3 py-2 rounded-lg bg-orange-500/15 border border-orange-400/50 text-orange-300 text-xs text-center font-bold">定时调度<br/><span class="font-normal opacity-60">s14</span></div>
+      <div class="px-3 py-2 rounded-lg bg-orange-500/15 border border-orange-400/50 text-orange-300 text-xs text-center font-bold">智能体团队<br/><span class="font-normal opacity-60">s15</span></div>
+      <div class="px-3 py-2 rounded-lg bg-orange-500/15 border border-orange-400/50 text-orange-300 text-xs text-center font-bold">团队协议<br/><span class="font-normal opacity-60">s16</span></div>
+      <div class="px-3 py-2 rounded-lg bg-orange-500/15 border border-orange-400/50 text-orange-300 text-xs text-center font-bold">自治智能体<br/><span class="font-normal opacity-60">s17</span></div>
+      <div class="px-3 py-2 rounded-lg bg-orange-500/15 border border-orange-400/50 text-orange-300 text-xs text-center font-bold">任务隔离<br/><span class="font-normal opacity-60">s18</span></div>
+      <div class="px-3 py-2 rounded-lg bg-orange-500/15 border border-orange-400/50 text-orange-300 text-xs text-center font-bold">MCP 插件<br/><span class="font-normal opacity-60">s19</span></div>
+    </div>
+  </div>
 
 </div>
 
----
+<div class="mt-3 text-sm text-center text-gray-500">
 
-# 核心数据结构总览
-
-<div class="text-sm">
-
-| 层次 | 关键结构 | 职责 |
-|------|----------|------|
-| **对话控制** | `Message` / `QueryState` / `TransitionReason` | 管本轮输入和继续理由 |
-| **工具执行** | `ToolSpec` / `DispatchMap` / `ToolUseContext` | 管动作怎么安全执行 |
-| **权限 Hook** | `PermissionRule` / `PermissionDecision` / `HookEvent` | 管安全和扩展 |
-| **持久工作** | `TaskRecord` / `MemoryEntry` / `ScheduleRecord` | 管跨会话的持久工作 |
-| **运行时** | `RuntimeTaskState` / `TeamMember` / `WorktreeRecord` | 管当前执行车道 |
-| **外部能力** | `MCPServerConfig` / `MCPToolSpec` | 管系统怎样向外接能力 |
-
-</div>
-
----
-
-# 最容易混淆的概念对照
-
-<div class="grid grid-cols-2 gap-4 text-sm">
-
-<div>
-
-| 概念对 | 区分方法 |
-|--------|----------|
-| **Todo** vs **Task** | 临时步骤 vs 持久化工作节点 |
-| **Task** vs **Runtime Task** | 目标 vs 执行槽位 |
-| **Subagent** vs **Teammate** | 一次性 vs 长期存在 |
-| **Memory** vs **Context** | 跨会话 vs 当前轮 |
-
-</div>
-
-<div>
-
-| 概念对 | 区分方法 |
-|--------|----------|
-| **Prompt** vs **Reminder** | 稳定说明 vs 临时提醒 |
-| **Worktree** vs **Task** | 在哪做 vs 做什么 |
-| **Tool** vs **Resource** | 动作 vs 可读内容 |
-| **Permission** vs **Hook** | 能不能做 vs 额外插入行为 |
-
-</div>
-
-</div>
-
----
-
-# 四个里程碑
-
-```mermaid {scale: 0.7}
-graph LR
-  A["🅰️ s06<br/>能工作的单 Agent"] --> B["🅱️ s11<br/>高完成度的单 Agent"]
-  B --> C["🅲 s14<br/>可持续运行时"]
-  C --> D["🅳 s19<br/>完整平台边界"]
-```
-
-<div class="grid grid-cols-4 gap-3 mt-6 text-sm">
-
-<div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
-
-**A: s06 完成**
-
-主循环 + 工具 + 计划 + 子任务 + 技能 + 压缩
-
-</div>
-
-<div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
-
-**B: s11 完成**
-
-权限 + Hook + Memory + Prompt + 恢复
-
-</div>
-
-<div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
-
-**C: s14 完成**
-
-持久任务 + 后台执行 + 定时触发
-
-</div>
-
-<div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
-
-**D: s19 完成**
-
-队友 + 协议 + 自治 + Worktree + MCP
-
-</div>
-
-</div>
-
----
-layout: center
-class: text-center
----
-
-# 一句话记住
-
-<div class="text-2xl mt-8 font-bold">
-
-先做出能工作的最小循环
-
-再一层一层给它补上
-
-**规划 → 隔离 → 安全 → 记忆 → 任务 → 协作 → 外部能力**
-
-</div>
-
-<div class="mt-8 text-gray-500">
-
-好的章节顺序，不是把所有机制排成一列，
-
-而是让每一章都像前一章**自然长出来的下一层**。
-
-</div>
-
-<div class="mt-6 text-sm text-gray-400">
-
-如果你能从 s01 开始，不看代码重建到 s19，你就真正理解了这套设计。
+核心循环始终不变，每一章都是上一章自然迭代出来的，从最小的单 Agent 开始，到复杂的多 Agent 平台
 
 </div>
 
@@ -3855,11 +3667,3 @@ layout: end
 ---
 
 # Thank You!
-
-Learn Claude Code · 从零手搓 AI Coding Agent
-
-<div class="text-sm text-gray-500 mt-4">
-
-GitHub: [shareAI-lab/learn-claude-code](https://github.com/shareAI-lab/learn-claude-code)
-
-</div>
