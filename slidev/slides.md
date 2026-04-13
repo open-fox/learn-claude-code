@@ -3573,6 +3573,26 @@ class CapabilityPermissionGate:
 
 </div>
 
+
+
+---
+layout: section
+---
+
+# Agent 框架使用
+
+<div class="text-gray-500 mt-4">
+利用开源的 Agent 框架，可以快速开发自己的 Agent
+</div>
+
+---
+layout: default
+---
+
+# Agent 框架对比
+
+
+
 ---
 layout: end
 ---
