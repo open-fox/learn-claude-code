@@ -3052,7 +3052,119 @@ layout: default
 # Agent 框架对比
 
 
+---
+layout: default
+---
 
+# Pi
+
+OpenClaw 的底层核心
+
+<div class="slide-image" style="width: 80%;">
+<img src="./images/pi-diagram.png" alt="Pi" />
+</div>
+
+---
+layout: default
+---
+
+# Pi Agent SDK 使用示例
+
+pi-coding-agent 可以作为 Agent SDK，通过代码配置工具、扩展和上下文
+
+<div class="grid grid-cols-3 gap-4 mt-6">
+
+<div v-click>
+
+## 工具配置
+
+```ts
+import {
+  createAgentSession,
+  readOnlyTools,
+  readTool, 
+  bashTool, 
+  grepTool,
+  SessionManager,
+} from "@mariozechner/pi-coding-agent";
+
+// 只读模式
+await createAgentSession({
+  tools: readOnlyTools,
+  sessionManager: SessionManager.inMemory(),
+});
+
+// 自选工具组合
+await createAgentSession({
+  tools: [readTool, bashTool, grepTool],
+  sessionManager: SessionManager.inMemory(),
+});
+
+```
+
+</div>
+
+<div v-click>
+
+## 扩展 (Hook + 自定义工具)
+
+```ts
+const resourceLoader = new DefaultResourceLoader({
+  extensionFactories: [(pi) => {
+    // 监听事件
+    pi.on("tool_call", async (event) => {
+      console.log(`Tool: ${event.toolName}`);
+    });
+
+    // 注册自定义工具
+    pi.registerTool({
+      name: "my_tool",
+      description: "Does something",
+      parameters: Type.Object({
+        input: Type.String(),
+      }),
+      execute: async (id, params) => ({
+        content: [{ type: "text",
+          text: `Result: ${params.input}` }],
+      }),
+    });
+  }],
+});
+```
+
+</div>
+
+<div v-click>
+
+## 上下文文件 (AGENTS.md)
+
+```ts
+const loader = new DefaultResourceLoader({
+  agentsFilesOverride: (current) => ({
+    agentsFiles: [
+      ...current.agentsFiles,
+      {
+        path: "/virtual/AGENTS.md",
+        content: `# Project Guidelines
+## Code Style
+- Use TypeScript strict mode
+- No any types
+- Prefer const over let`,
+      },
+    ],
+  }),
+});
+await loader.reload();
+
+await createAgentSession({
+  resourceLoader: loader,
+  sessionManager: SessionManager.inMemory(),
+});
+```
+
+</div>
+
+</div>
 ---
 layout: end
 ---
