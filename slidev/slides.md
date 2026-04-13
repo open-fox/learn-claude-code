@@ -21,26 +21,9 @@ layout: section
 
 <!--
 基于开源项目 Learn Claude Code 的教程，分享一个简化版本的 AI Coding Agent 的构建流程
-这个教程是在 Claude Code 代码泄漏之前就有，在这之后，可能基于泄漏的源码，又补充了几个章节
+大模型的核心概念和 AI 编程工具的演进，这次是介绍半年后它们的进展，以及现在火热的 Agent
+科普基础知识，对齐大家认知，方便工作中遇到 Agent 开发时沟通交流，或者寻找问题解决方案
 -->
-
----
-layout: section
----
-
-# 内容大纲
-
-## 1、回顾近半年进展
-
-## 2、Agent 框架对比
-
-## 3、Agent 框架实现
-
-## 4、Agent 框架使用
-
-<!-- 大模型的核心概念，这次是介绍半年后它们的进展，以及现在火热的 Agent 开发入门。
-基础知识的科普，对齐大家的认知，方便工作中遇到 Agent 开发时沟通交流，或者寻找方向。
-不追热点，聚焦本质，将原来的编程思想应用到 Agent 开发中-->
 
 ---
 layout: default
@@ -191,10 +174,6 @@ layout: two-cols
 
 如果当前请求的输入前缀和之前的请求完全一致，模型商就可以直接从缓存中读取结果，效率更高，成本更低
 
-<!-- <div class="slide-image">
-  <img src="./images/prompt-caching.png" alt="Prompt Caching" style="width: 60%" />
-</div> -->
-
 <div class="slide-image">
   <img src="./images/token-price.png" alt="Input token price" style="width: 60%"/>
 </div>
@@ -205,11 +184,11 @@ layout: two-cols
 
 ### 2、设计提示词的核心原则
 
-<span class="text-orange-500">常驻内容要短且稳定：把不变的放前面，把变化的放后面</span>
+<span class="text-orange-500">常驻内容要短且稳定，把不变的放前面，把变化的放后面</span>
 
-- 前面：系统提示、工具定义等在多轮请求中基本不会变的内容
+- 前面放基本不变的内容：系统提示、工具列表、技能列表等
 
-- 后面：当前时间、用户输入、工具调用结果等动态变化的内容
+- 后面放动态变化的内容：当前时间、用户输入、工具调用结果等
 
 </div>
 
@@ -256,7 +235,7 @@ Token是大模型处理信息的最小信息单元，也是结算单位
 
 ### 2、Token Plan
 
-模型服务商从提供 Coding Plan 到提供 Token Plan，满足用户使用 AI 应用时多模态输入输出的需求
+模型服务商从提供 Coding Plan 到提供 Token Plan，满足用户多模态输入输出的需求
 
 - Tencent Token Plan
 - MiniMax Token Plan
@@ -398,14 +377,8 @@ layout: two-cols
 # Send an email
 gws gmail +send --to alice@example.com --subject "Hello" --body "Hi there"
 
-# Create a spreadsheet
-gws sheets spreadsheets create --json '{"properties": {"title": "Q1 Budget"}}'
-
 # Create a new note
 obsidian create name="Trip to Paris"
-
-# Search your vault
-obsidian search query="meeting notes"
 ```
 
 </div>
@@ -443,7 +416,7 @@ layout: two-cols
 
 ### 1、<a href="https://youtu.be/CEvIs9y1uog" target="_blank"><span class="text-orange-500">Don't build agents, build skills instead</span></a>
 
-- Claude Code 证明：不同领域的 Agent 底层可以完全一样（bash + 文件系统）
+- Claude Code 证明：不同领域的 Agent 底层可以完全一样（通用 Agent + 通用工具）
 
 - 构建 Skills 生态，让通用 Agent 通过可积累、可复用的 Skills 变成各领域的专业工具
 
@@ -463,7 +436,7 @@ layout: two-cols
 
 <div v-click>
 
-### 3、MCP 和 Skill
+### 3、理解 MCP 和 Skill
 
 - 对于 Agent 而言，MCP 和 Skill 都在工具层，都是为了扩展 Agent 的能力
 
@@ -538,7 +511,7 @@ layout: two-cols
 
 - AI IDE：CodeBuddy IDE
 - VS Code 插件：CodeBuddy 插件
-- AI Coding Agent：CodeBuddy Code
+- Coding Agent：CodeBuddy Code
 - 底层共享通用的 CodeBuddy Agent SDK
 
 </div>
@@ -547,13 +520,11 @@ layout: two-cols
 
 ### 2、Claude Code 源码泄漏
 
-国内外各种源码分析，带动全网开发和设计更加高效的 Agent 框架
+国内外各种源码分析
 
 [Claude Code Upacked](https://ccunpacked.dev/)
 
 [Claude Code From Source](https://claude-code-from-source.com/)
-
-<!-- [驾驭工程 — 从 Claude Code 源码到 AI 编码最佳实践](https://zhanghandong.github.io/harness-engineering-from-cc-to-ai-coding/preface.html) -->
 
 </div>
 
@@ -561,7 +532,7 @@ layout: two-cols
 
 ### 3、Learn Claude Code
 
-通过学习这个<a href="https://learn.shareai.run/" target="_blank">教程</a>，了解 AI Coding Agent 的架构设计和开发流程
+通过学习这个<a href="https://learn.shareai.run/" target="_blank">教程</a>，了解 AI Coding Agent 的架构设计
 
 </div>
 
@@ -681,20 +652,20 @@ layout: default
 
 # s01: 智能体循环 (The Agent Loop)
 
-> 没有循环，就没有 agent，真正的 agent 起点是把真实工具结果重新喂回模型
+> 真正的 agent 起点，是把真实工具结果重新喂回模型，而不只是输出一段文本
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：模型能思考，但不会打开文件、运行命令，是个"只会说话，不会干活"的程序，需要人参与完成任务
+**问题**：模型能思考但不能动手，不能打开文件、不能跑命令，每一步都需要人复制粘贴结果
 
 </div>
 
 <div v-click>
 
-**方案**：把"模型 + 工具"连接成一个能持续推进任务的主循环，不要让人来做 AI 的测试员，最小的心智循环
+**方案**：给模型接上工具，让思考、调用、拿结果形成自动循环，这就是最小的 Agent Loop
 
 </div>
 
@@ -828,20 +799,20 @@ layout: default
 
 # s02: 工具使用 (Tool Use)
 
-> 只有 bash 工具，`rm -rf /` 谁来拦？路径逃逸谁来管？高危高频的文件操作需要专用工具
+> 主循环本身不用变复杂；工具能力靠一层清晰的路由面增长
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：只有 bash 工具，所有操作都走 shell，每次 bash 调用都是不受约束的，存在严重的安全隐患
+**问题**：循环跑起来了，但只有一个 bash 工具，所有操作都走 shell，路径逃逸和危险命令都拦不住
 
 </div>
 
 <div v-click>
 
-**方案**：专用工具 (read_file, write_file) 可以在工具层面做路径沙箱，新增工具只是新增处理方法，核心循环保持不变
+**方案**：为高频操作定义专用工具，在工具层面做路径沙箱，新增工具只需新增一行路由，核心循环不变
 
 </div>
 
@@ -964,7 +935,7 @@ def run_read(path: str, limit: int = None) -> str:
 |------|-----|-----|
 | Tools | 1 (仅 bash) | <span class="text-orange-500">4 (bash, read, write, edit)</span> |
 | Dispatch | 硬编码 | 工具注册表 |
-| 路径安全 | 无 | 安全路径校验 |
+| 路径安全 | 无 | 路径安全校验 |
 | Agent loop | 不变 | <span class="text-orange-500">不变</span> |
 
 </div>
@@ -978,20 +949,20 @@ layout: default
 
 # s03: 会话内规划 (TodoWrite)
 
-> 对模型说"重构这个模块：加类型、文档、测试、保证编译通过"，结果 Agent 做完前两步之后，就开始即兴发挥
+> 对多步骤任务来说，可见计划不是装饰，而是防止会话漂移的稳定器
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：模型没有显式的任务计划状态，注意力始终受上下文影响太大，大任务做着做着方向就漂了
+**问题**：工具多了能干的事也多了，但大任务做着做着方向就漂了，没有计划全凭即兴发挥
 
 </div>
 
 <div v-click>
 
-**方案**：在会话内做规划，先把要做的任务列表写出来，并不断更新任务状态，在合适时机注入提醒
+**方案**：让 Agent 先写任务清单再动手，每完成一步更新状态，清单会话内可见防止漂移
 
 - 不是任务系统，只是当前会话的计划外显
 
@@ -1102,20 +1073,20 @@ TOOL_HANDLERS = {
 
 # s04: 子智能体 (Subagent)
 
-> 问"项目用什么测试框架？"，Agent 读了 5 个文件，但答案只有一个词："pytest"，那 5 个文件为什么还留在上下文里？
+> 把探索性工作移进干净上下文后，父 agent 才能持续盯住主目标
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：如果中间过程的结果都永久留在对话里，后面的问题会越来越难回答，因为上下文被大量局部任务的噪声填满了
+**问题**：探索性工作的中间结果全留在上下文里，噪声越积越多，主任务反而做不好
 
 </div>
 
 <div v-click>
 
-**方案**：引入 subagent，把局部任务放进 subagent 的独立上下文里做，做完只把必要结果带回来，保持主 agent 上下文干净
+**方案**：把局部任务交给 subagent 在独立上下文里做，做完只带必要结果回来，保持主 agent 上下文干净
 
 </div>
 
@@ -1234,30 +1205,30 @@ PARENT_TOOLS = CHILD_TOOLS + [
 
 # s05: 技能系统  (Skills)
 
-> 你不会每次做饭前把所有菜谱从头到尾看一遍，agent 的领域知识也一样
+> 专门知识不该一开始全部塞进上下文，而该在需要时被轻量发现、按需展开
 
 <div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
 <div v-click>
 
-**问题**：代码审查需要一套审查清单，代码提交需要一套提交约定，如果把这些知识包全部塞进系统提示词，会占用大量 tokens
+**问题**：代码审查、提交约定等领域知识全塞进系统提示词，上下文很快就满了，还不一定用得上
 
 </div>
 
 <div v-click>
 
-**方案**：把技能说明从系统提示词中拆出来，改成 2 层架构，系统提示词只告诉模型有哪些技能，模型按需加载完整技能说明
+**方案**：把技能拆成两层，系统提示词只存放技能摘要，模型按需加载完整技能说明，始终不在系统提示词中
 
 </div>
 
 <v-click at="+0">
 
-- **Layer 1 目录**：始终在 system prompt，~120 tokens
+- **第 1 层**：始终在 system prompt，~120 tokens
 
-- **Layer 2 正文**：模型调用 `load_skill` 工具按需加载
+- **第 2 层**：模型调用 `load_skill` 工具按需加载
 
-- 新增工具 `load_skill`，Agent 核心循环保持不变
+- 新增工具 load_skill，Agent 核心循环保持不变
 
 </v-click>
 
@@ -1357,32 +1328,32 @@ TOOL_HANDLERS = {
 
 # s06: 上下文压缩 (Context Compact)
 
-> 读了 30 个文件，跑了 20 条命令后，10 万 tokens 烧完了，但活儿才干了一半
+> 压缩的目标不是删历史，而是保住连续性和下一步所需的工作记忆
 
 <div class="grid grid-cols-[1fr_600px] gap-4">
 <div>
 
 <div v-click>
 
-**问题**：读个大文件，塞进大量文本，跑个长命令，得到大段输出，上下文不断膨胀，如何在保证主线任务连续性的前提下，给上下文腾出空间
+**问题**：读了大量文件、跑了很多命令，上下文不断膨胀，Token 都烧完了，活儿才干一半
 
 </div>
 
 <div v-click>
 
-**方案**：上下文压缩，三层压缩策略
+**方案**：三层上下文压缩策略，在保住任务连续性的条件下，给上下文腾出空间
 
 </div>
 
 <v-click at="+0">
 
-- Level 1：大结果写磁盘，只留预览（`persist_large_output`）
+- 第 1 层：大结果写磁盘，只留预览（`persist_large_output`）
 
-- Level 2：旧工具调用结果替换为占位符（`micro_compact`）
+- 第 2 层：旧工具调用结果替换为占位符（`micro_compact`）
 
-- Level 3：消息历史太长，整体摘要压缩（`compact_history`）
+- 第 3 层：消息历史太长，整体摘要压缩（`compact_history`）
 
-- 新增工具 `compact`，上下文超阈值自动触发，也可以手动触发
+- 新增工具 compact，上下文超阈值自动触发，也可以手动触发
 
 </v-click>
 
@@ -1571,18 +1542,18 @@ layout: section
 
 # s07: 权限系统 (Permission System)
 
-> 模型说"删掉这个目录"，但它 hallucinate 了路径，没有权限管控，意图直接变成执行
+> 模型产生的执行意图，必须先通过清晰的权限门，再变成真正动作
 
 <div v-click>
 
-**问题**：模型可能出现幻觉，导致写错文件、删错文件、执行危险命令
+**问题**：Agent 能工作了，但模型可能幻觉出错误路径，写错文件、删错目录，意图直接执行很危险
 
 </div>
 
 
 <div v-click>
 
-**方案**：任何工具调用，都不应该直接执行，中间必须先过四级权限管控
+**方案**：工具调用前必须先经过权限管控，四级管道：deny rules、mode check、allow rules、ask user
 
 </div>
 
@@ -1736,18 +1707,18 @@ class BashSecurityValidator:
 
 # s08: Hook 系统 (Hooks)
 
-> 安全团队要审计 bash、QA 要自动跑 lint、运维要运行日志，难道每个需求都改主循环？
+> Hook 让系统围绕主循环生长，而不是不断重写主循环本身
 
 <div v-click>
 
-**问题**：安全审计、自动 lint、操作日志……每加横切需求都要改主循环，循环越来越重，小改动就可能影响全局
+**问题**：安全审计、自动 lint、操作日志，每加一个横切需求都要改主循环，越改越重，小改动就可能影响全局
 
 </div>
 
 
 <div v-click>
 
-**方案**：主循环只在关键节点暴露"时机"，附加行为写成独立的 hook 脚本，通过配置文件注册，用退出码约定结果
+**方案**：主循环在关键节点暴露生命周期事件，附加行为写成独立的 hook 脚本，通过配置文件注册，在事件触发时执行
 
 </div>
 
@@ -1899,25 +1870,28 @@ result = {
 
 # s09: 记忆系统 (Memory)
 
-> 三次告诉模型"别改 snapshots"，下次新开会话，它又改了
+> 只有跨会话、无法从当前工作重新推导的知识，才值得进入 memory
 
 <div class="grid grid-cols-[1fr_500px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：每次新会话都从零开始，用户的长期偏好、纠正过的错误、项目的约定全部丢失
+**问题**：每次开新会话从零开始，用户偏好、纠正过的错误、项目约定全部丢失
 
 </div>
 
 <div v-click>
 
-**方案**：引入记忆系统，持久化记忆文件，每轮会话开始时，注入记忆内容到系统提示词
+**方案**：持久化记忆文件到磁盘，每轮会话开始时自动注入记忆内容到系统提示词
 
-- **user** — 用户偏好（tabs、pytest、简洁回答）
+- **user** — 用户偏好（tabs还是space、简洁回答）
+
 - **feedback** — 纠正的错误（"不要改 snapshots"）
+
 - **project** — 非显然约定（合规要求、不能动的旧模块）
-- **reference** — 外部参考（看板 URL、监控面板）
+
+- **reference** — 外部参考（项目文档、设计规范等）
 
 </div>
 
@@ -2068,30 +2042,25 @@ The user explicitly prefers tabs over spaces.
 
 # s10: 系统提示词 (System Prompt)
 
-> 角色说明、工具文档、技能列表、记忆、CLAUDE.md，全塞一个系统提示词里，半年后谁敢改？
+> 模型看到的不是一坨固定 prompt，而是一条按阶段拼装的输入流水线
 
 <div class="grid grid-cols-[1fr_500px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：系统提示词是一整块硬编码字符串，来源越来越多却无法分段维护、测试和缓存
+**问题**：系统提示词是一整块硬编码的字符串，来源越来越多，无法分段维护和缓存
 
 </div>
 
 <div v-click>
 
-**方案**：系统提示词的关键不是"写一段很长的话"，而是"把不同来源的信息按清晰边界组装起来"
+**方案**：把系统提示词拆成静态段和动态段，按来源分段组装，静态前缀可缓存复用
 
-- 启发：JSON序列化的结果要按照key进行排序，保证缓存复用
-
-</div>
-
-<div v-click="4" class="mt-8 text-orange-500 text-lg">
-
-静态前缀可缓存复用，效率高、成本低，动态后缀则每轮会话重建
+- 启发：JSON序列化的结果要按照 key 进行排序，否则没法命中缓存
 
 </div>
+
 
 </div>
 
@@ -2232,17 +2201,17 @@ def _build_dynamic_context(self) -> str:
 
 # s11: 错误恢复 (Error Recovery)
 
-> 大文件写到一半 max_tokens 截断、上下文爆了、API 超时，如果每次遇到问题就崩溃，用户就不敢用了
+> 系统必须清楚自己此刻是在继续、重试，还是处于恢复流程
 
 <div v-click>
 
-**问题**：模型输出截断、上下文过长、网络抖动，这三种常见错误直接让主循环停住
+**问题**：输出截断、上下文爆了、API 超时，遇到错误主循环直接停住，用户不敢再用
 
 </div>
 
 <div v-click>
 
-**方案**：先对错误分类，再选恢复路径，每条路径有独立的重试预算，全部耗尽才真正失败
+**方案**：先对错误分类，再选恢复路径，每条路径有独立重试预算，全部耗尽才真正失败
 
 </div>
 
@@ -2413,20 +2382,20 @@ layout: default
 
 # s12: 任务系统 (Task System)
 
-> s03 的 Todo 只能提醒你“有事要做”，任务系统才能告诉你“先做什么、谁在等谁、哪一步还卡着”
+> Todo 适合会话内规划，持久任务图才负责跨步骤、跨阶段协调工作
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：Todo 是会话内临时清单，压缩一次就丢了，并且任务之间没有依赖关系，也不能跨会话
+**问题**：s03 的 Todo 是会话内临时清单，压缩一次就丢，任务之间也没有依赖关系
 
 </div>
 
 <div v-click>
 
-**方案**：可持久化的任务图，写入磁盘文件，`blockedBy`/`blocks` 双向依赖，完成时自动解锁
+**方案**：持久化任务图，写入磁盘文件，支持双向依赖关系，完成一个任务自动解锁下游任务
 
 - 每个 task 有 `blockedBy` / `blocks` 依赖关系
 - `is_ready(task)` = pending + 没有前置阻塞
@@ -2537,20 +2506,20 @@ def _clear_dependency(self, completed_id: int):
 
 # s13: 后台任务 (Background Tasks)
 
-> 用户说"跑测试，同时帮我建配置文件"，但 agent 只会傻等 90 秒等测试跑完
+> 持久任务描述要完成什么，运行槽位描述谁在跑、跑到哪里；两者相关但不是一回事
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：慢命令（pytest、npm build、docker build）同步执行会卡住主循环，导致模型和用户都在空等
+**问题** build 要跑 10 分钟，同步执行会卡住主循环，模型和用户都在空等
 
 </div>
 
 <div v-click>
 
-**方案**：把慢命令放到后台 daemon 线程执行，让主循环继续推进别的事情，结果通过通知队列在下一轮注入
+**方案**：慢命令放到后台线程执行，主循环立即拿到 task_id 继续干别的事
 
 - 后台任务启动 daemon 线程，立即返回 task_id
 - 完整输出写入磁盘，通知只带 preview 摘要
@@ -2671,20 +2640,20 @@ task = {
 
 # s14: 定时调度 (Cron Scheduler)
 
-> 后台任务解决"现在开始的慢任务"，定时调度解决"将来某个时间再开始做事"
+> 当任务能后台运行以后，时间本身也会变成另一种启动入口
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：agent 只能响应当前请求，不能"将来某个时间再开始做事"——用户想"每周一 9 点跑报告"只能每次手动再说一遍
+**问题**：后台任务解决了"现在启动的慢命令"，但"每周一 9 点跑报告"怎么办？
 
 </div>
 
 <div v-click>
 
-**方案**：cron 表达式 + 后台检查线程 + 通知注入，触发后仍然回到同一条主循环
+**方案**：cron 表达式 + 后台检查线程 + 通知注入，时间到了自动触发回到主循环
 
 - `cron_create("0 9 * * 1", "Run report")` 注册调度记录
 - 后台线程每分钟检查一次是否匹配当前时间
@@ -2848,14 +2817,14 @@ layout: default
 
 # s15: 智能体团队 (Agent Teams)
 
-> s04 的 Subagent 是"用完即弃"；团队成员**长期在线、有身份、有邮箱、能反复接活**
+> 系统一旦长期运行，就需要有名字、有身份、可持续存在的队友，而不只是一次性子任务
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：Subagent 是一次性的，干完就消失，无法长期分工协作
+**问题**：s04 的 Subagent 用完就消失，无法长期分工协作，复杂项目需要持久团队
 
 </div>
 
@@ -2986,20 +2955,20 @@ class TeammateManager:
 
 # s16: 团队协议 (Team Protocols)
 
-> Lead 说"请停下"，Alice 无视了；Bob 直接开始数据库迁移没人审批——自由聊天不够，需要结构化握手
+> 团队只有在协作遵守共同消息模式时，才会变得可理解、可调试、可扩展
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：自由文本消息无法保证"请求必须被回应"，多个请求并存时无法对号
+**问题**：队友之间自由发消息，但"请停下"可以被无视，多个请求并存时无法对号
 
 </div>
 
 <div v-click>
 
-**方案**：`request_id` 关联的结构化协议 — 请求-响应 + 状态追踪表（pending → approved | rejected）
+**方案**：结构化协议，每个请求带 request_id，响应必须关联同一个 id
 
 - **shutdown 协议**：Lead 发请求 → 队友 approve/reject
 - **plan_approval 协议**：队友提交计划 → Lead 审批
@@ -3139,20 +3108,20 @@ response = {
 
 # s17: 自治智能体 (Autonomous Agents)
 
-> 任务板上 10 个待办，Lead 一个一个分配——Lead 成了瓶颈。让队友自己去任务板找活干
+> 自主性开始于：队友能安全找到可做的事、认领它，并带着正确身份继续执行
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：所有任务都由 Lead 手动分配，Lead 成了瓶颈
+**问题**：任务板上 10 个待办，全靠 Lead 手动分配，Lead 成了瓶颈
 
 </div>
 
 <div v-click>
 
-**方案**：WORK/IDLE 双阶段循环 — 空闲时先检查邮箱，再按角色扫描任务板自动认领
+**方案**：WORK/IDLE 双阶段循环，空闲时自动扫描任务板，按角色认领可做的任务
 
 - **WORK 阶段**：标准 agent loop，执行具体任务
 - **IDLE 阶段**：每 5 秒轮询邮箱 + 任务板
@@ -3289,20 +3258,20 @@ def ensure_identity_context(messages, name, role, team):
 
 # s18: Worktree 任务隔离 (Worktree)
 
-> Alice 在重构 auth，Bob 在做登录页——两人同时改 `config.py`，文件冲突了。每个任务需要自己的"车道"
+> task 管目标，worktree 管隔离执行车道和收尾状态；两者不能混成一个概念
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：多个队友在同一个目录工作，未提交改动互相污染
+**问题**：多个队友在同一目录工作，Alice 改了 config.py，Bob 也在改，文件冲突了
 
 </div>
 
 <div v-click>
 
-**方案**：git worktree = 每个任务一个隔离目录，Task 管"做什么"，Worktree 管"在哪做"
+**方案**：git worktree 给每个任务一个隔离目录，Task 管"做什么"，Worktree 管"在哪做"
 
 - `worktree_create` → `git worktree add -b wt/{name}`
 - `worktree_run` → `subprocess.run(cmd, cwd=wt_path)`
@@ -3440,20 +3409,20 @@ class EventBus:
 
 # s19: MCP 与插件系统 (MCP & Plugin)
 
-> 想查数据库？写个工具。想控浏览器？再写个工具。每次加能力都改代码？
+> 外部能力系统不该是外挂；它们应和原生工具一起处在同一控制面上
 
 <div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
 
-**问题**：所有工具都硬编码在主程序中，无法让外部程序动态注入新能力
+**问题**：想查数据库写个工具，想操作浏览器再写个工具，每次加能力都要改主程序代码
 
 </div>
 
 <div v-click>
 
-**方案**：支持 MCP 协议，让外部进程暴露新的工具
+**方案**：支持 MCP 协议，外部进程自己暴露提供的工具，统一命名、统一路由、统一权限
 
 - **Plugin 发现**：`plugin.json` → server 启动命令
 - **MCP Server 连接**：`connect()` → `list_tools()`
