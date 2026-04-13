@@ -2529,7 +2529,7 @@ s03 的 TodoWrite 是"会话内清单"——压缩一次就丢了。
 
 > s03 的 Todo 只能提醒你“有事要做”，任务系统才能告诉你“先做什么、谁在等谁、哪一步还卡着”
 
-<div class="grid grid-cols-[1fr_450px] gap-4">
+<div class="grid grid-cols-[1fr_600px] gap-8">
 <div>
 
 <div v-click>
@@ -2552,7 +2552,7 @@ s03 的 TodoWrite 是"会话内清单"——压缩一次就丢了。
 
 <div v-click="4" class="mt-8 text-orange-500 text-lg">
 
-todo 更像本轮计划，task 更像长期工作板
+todo 更像本轮任务计划，task 更像长期工作面板
 
 </div>
 
@@ -2560,44 +2560,8 @@ todo 更像本轮计划，task 更像长期工作板
 
 <div v-click="3">
 
-<div class="text-sm space-y-2">
-
-  <div class="bg-green-600 text-white rounded px-2 py-2 text-center">
-    Task 1: 写解析器<br/>
-    <span class="text-xs">status: completed<br/>blockedBy: [] · blocks: [2,3,4]</span>
-  </div>
-
-  <div class="grid grid-cols-3 gap-2 mt-1">
-  <div class="text-center">
-  <div class="text-gray-500 mt-1 mb-2">▼ 解锁</div>
-  <div class="bg-blue-200 text-black rounded px-2 py-2">
-    Task 2: 语义检查<br/>
-    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [] · blocks: [5]</span>
-  </div>
-  </div>
-  <div class="text-center">
-  <div class="text-gray-500 mt-1 mb-2">▼ 解锁</div>
-  <div class="bg-blue-200 text-black rounded px-2 py-2">
-    Task 3: 测试<br/>
-    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [] · blocks: [5]</span>
-  </div>
-  </div>
-  <div class="text-center">
-  <div class="text-gray-500 mt-1 mb-2">▼ 解锁</div>
-  <div class="bg-blue-200 text-black rounded px-2 py-2">
-    Task 4: 文档<br/>
-    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [] · blocks: [5]</span>
-  </div>
-  </div>
-  </div>
-
-  <div class="text-center text-gray-500">▼ ▼ ▼ 全部完成后解锁</div>
-
-  <div class="bg-red-200 text-black rounded px-2 py-2 text-center">
-    Task 5: 整体验收<br/>
-    <span class="text-xs text-gray-600">status: pending<br/>blockedBy: [2,3,4] · blocks: []</span>
-  </div>
-
+<div v-click class="embed-viz">
+<iframe src="https://build-your-own-agent.vercel.app/en/embed/s07/" />
 </div>
 
 </div>
