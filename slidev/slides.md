@@ -563,45 +563,11 @@ layout: two-cols
 
 通过学习这个<a href="https://learn.shareai.run/" target="_blank">教程</a>，了解 AI Coding Agent 的架构设计和开发流程
 
-- 教程在 Claude Code 源码泄漏之前就存在，并不是 Claude Code 源码分析教程
-
-- 教程在 Claude Code 源码泄漏之后，新增了 7 个章节，可能是受泄漏的源码启发
-
-- 它是 Coding Agent 简化版实现，跟实际生产环境的 Agent 有差异，但很值得学习
-
 </div>
 
 </template>
 
 <!-- AI Coding-->
-
----
-layout: section
----
-
-# Agent 框架对比
-
-<div class="text-gray-500 mt-4">
-常见的 Coding Agent 框架的架构和对比
-</div>
-
----
-layout: default
----
-
-# <span class="text-orange-500">Agent = Model + Harness</span>
-
-- Agent 是大脑和身体的结合
-
-- Model 是大脑，负责思考+推理
-
-- Harness 是身体，负责感知+执行
-
-- 如何设计和实现一个 Agent 框架？需要解决哪些问题？需要包含哪些功能？为什么要这样设计和实现？
-
-<div class="section-image">
-  <img src="./images/harness.png" alt="Harness" />
-</div>
 
 
 ---
@@ -618,7 +584,37 @@ layout: section
 layout: default
 ---
 
+# <span class="text-orange-500">Agent = Model + Harness</span>
+
+- Agent 是大脑和身体的结合
+
+- Model 是大脑，负责思考+推理
+
+- Harness 是身体，负责感知+执行
+
+<div v-click>
+
+- <span class="text-orange-500">如何设计并实现一个 Agent 框架？</span>
+
+[OpenHarness](https://github.com/HKUDS/OpenHarness)
+
+<div class="section-image">
+  <img src="./images/harness.png" alt="Harness" />
+</div>
+
+</div>
+
+---
+layout: default
+---
+
 # Learn Claude Code
+
+- 教程在 Claude Code 源码泄漏之前就存在，并不是 Claude Code 源码分析教程
+
+- 教程在 Claude Code 源码泄漏之后，新增了 7 个章节，可能是受泄漏的源码启发
+
+- 它是 Coding Agent 简化版实现，跟实际生产环境的 Agent 有差异，但很值得学习
 
 <div class="mt-32 flex items-start justify-center gap-2">
 
@@ -675,42 +671,6 @@ layout: section
 
 <div class="text-gray-500 mt-4">
 先让 agent 能跑起来
-</div>
-
----
-layout: center
----
-
-# 阶段 1 要解决什么？
-
-<v-clicks>
-
-想象你有一个天才助手——能推理、能写代码、能设计方案
-
-**但它什么都不能"做"。**
-
-每次它建议你跑一个命令，你得手动复制、执行、再把结果粘回去。
-
-你就是那个循环。**这个阶段的目标就是把你从循环里解放出来。**
-
-</v-clicks>
-
-<div v-click class="mt-6 grid grid-cols-3 gap-3 text-sm">
-<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
-
-**s01** 最小循环
-
-</div>
-<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
-
-**s02** 工具 · **s03** 规划
-
-</div>
-<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-center">
-
-**s04** 隔离 · **s05** 知识 · **s06** 压缩
-
-</div>
 </div>
 
 <!-- s01 agent loop -->
@@ -1575,52 +1535,6 @@ layout: section
 
 <div class="text-gray-500 mt-4">
 能跑 ≠ 能上线，让 agent 更安全、更稳定、更可扩展
-</div>
-
----
-layout: center
----
-
-# 阶段 2 要解决什么？
-
-<v-clicks>
-
-你的 agent 很能干——但它**没有刹车**。
-
-模型 hallucinate 了一个路径，`rm -rf` 就直接执行了。
-
-每次新会话，用户偏好全忘了。输出被截断就直接崩溃。
-
-**这个阶段给循环套上安全带、装上记忆、教它自愈。**
-
-</v-clicks>
-
-<div v-click class="mt-6 grid grid-cols-5 gap-2 text-sm">
-<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
-
-**s07** 权限
-
-</div>
-<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
-
-**s08** Hook
-
-</div>
-<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
-
-**s09** 记忆
-
-</div>
-<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
-
-**s10** Prompt
-
-</div>
-<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded text-center">
-
-**s11** 恢复
-
-</div>
 </div>
 
 ---
