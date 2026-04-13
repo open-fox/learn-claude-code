@@ -3270,6 +3270,34 @@ await createAgentSession({
 </div>
 
 </div>
+
+
+---
+layout: default
+---
+
+# OpenClaw vs Hermes
+
+| 维度 | 🐙 OpenClaw | 🪶 Hermes Agent |
+|:---|:---|:---|
+| **定位** | 万能协同网关 (The AI that actually does things) | 自进化智能体 (An agent that grows with you) |
+| **语言** | TypeScript | Python |
+| **架构** | Gateway + Node + Channel | 模块化单代理持久循环 (~9200 行) |
+| **平台** | 20+ 消息渠道 (微信/企微 原生支持) | 15+ 消息渠道 (微信/企微 原生支持) |
+| **GitHub** | 35 万+ ⭐ | 4.7 万+ ⭐ (2 个月) |
+| **记忆** | 🧠 四层系统，依赖模型自主判断写入 | 🧠 四层架构 + 主动周期提示写入 |
+| **技能** | ❌ 人工编写维护 | ✅ 自动生成技能 |
+| **安全** | 🔴 36.8% 插件存在漏洞 | 🟢 无严重 CVE + 五层防护 |
+
+<div class="flex gap-8 mt-3">
+  <img src="/images/hermes-reasoning.jpg" class="max-h-80 rounded shadow" />
+  <img src="/images/hermes-tools.jpg" class="max-h-80 rounded shadow" />
+  <img src="/images/hermes-skill.jpg" class="max-h-80 rounded shadow" />
+  <img src="/images/hermes-permission.jpg" class="max-h-80 rounded shadow" />
+  <img src="/images/hermes-image.jpg" class="max-h-80 rounded shadow" />
+</div>
+
+
 ---
 layout: end
 ---
