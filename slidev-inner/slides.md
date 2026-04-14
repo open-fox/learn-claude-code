@@ -115,6 +115,458 @@ class: flex items-center justify-center
 今天我们就来梳理这些概念，理清脉络，帮大家建立清晰的认知框架
 -->
 
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- <span class="text-orange-500 font-bold">LLM</span>
+- Prompt
+- Token
+- Context
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-llm.png" alt="LLM" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+<div v-click>
+
+### 1、主流模型竞赛
+
+[models.dev](https://models.dev) 记录主流模型的发布时间、知识库时间、性能、价格和能力
+
+- OpenAI GPT 5.4 / Google Gemini 3.1 / Anthropic Claude Opus 4.6
+
+- GLM 5.1 / Kimi K2.5 / MiniMax M2.7
+
+</div>
+
+<div v-click>
+
+### 2、主流模型调用量
+
+[openrouter.ai](https://openrouter.ai/rankings) 调用量前十中除了国外三家模型，国产开源模型也表现亮眼
+
+<div class="concept-slide-image">
+  <img src="./images/open-router-leaderboard.png" alt="OpenRouter Leaderboard" />
+</div>
+
+</div>
+
+</template>
+
+<!-- LLM -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- <span class="text-orange-500 font-bold">Prompt</span>
+- Token
+- Context
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-prompt.png" alt="Prompt" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+<div v-click>
+
+### 1、提示词缓存（Prompt Caching）
+
+如果当前请求的输入前缀和之前的请求完全一致，模型商就可以直接从缓存中读取结果，效率更高，成本更低
+
+<div class="slide-image">
+  <img src="./images/token-price.png" alt="Input token price" style="width: 60%"/>
+</div>
+
+</div>
+
+<div v-click>
+
+### 2、设计提示词的核心原则
+
+<span class="text-orange-500">常驻内容要短且稳定，把不变的放前面，把变化的放后面</span>
+
+- 前面放基本不变的内容：系统提示、工具列表、技能列表等
+
+- 后面放动态变化的内容：当前时间、用户输入、工具调用结果等
+
+</div>
+
+</template>
+
+<!-- Prompt -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- <span class="text-orange-500 font-bold">Token</span>
+- Context
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-token.png" alt="Token" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+<div v-click>
+
+### 1、中文名：<span class="text-orange-500">词元</span>
+
+Token是大模型处理信息的最小信息单元，也是结算单位
+
+信息时代的基础单位是 Bit，而 AI 时代的基础单位是 Token
+
+</div>
+
+<div v-click>
+
+### 2、Token Plan
+
+模型服务商从提供 Coding Plan 到提供 Token Plan，满足用户多模态输入输出的需求
+
+- Tencent Token Plan
+- MiniMax Token Plan
+
+<div class="slide-image" style="margin-top: 8px">
+  <img src="./images/token-plan.png" alt="Token Plan" />
+</div>
+
+</div>
+
+</template>
+
+<!-- Token -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- Token
+- <span class="text-orange-500 font-bold">Context</span>
+- Tools
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-context-engineering.png" alt="Context" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+<div v-click>
+
+### 1、工程化的演进
+
+<div class="mt-4 mb-8">
+  <table class="w-full">
+    <thead>
+      <tr class="">
+        <th class="w-28 text-left pb-2"></th>
+        <th class="w-28 text-left pb-2">时间</th>
+        <th class="text-left pb-2">解决的问题</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="pr-2 pb-2 align-center">提示词工程</td>
+        <td class="pr-2 pb-2 align-center">2023-2024</td>
+        <td class="pb-2 align-top">怎么跟模型说，<span class="text-orange-500">侧重于措辞和结构化、单轮 AI 交互</span></td>
+      </tr>
+      <tr>
+        <td class="pr-2 pb-2 align-center">上下文工程</td>
+        <td class="pr-2 pb-2 align-center">2025</td>
+        <td class="pb-2 align-top">给模型什么信息，<span class="text-orange-500">侧重于上下文信息编排、多轮 AI 交互</span></td>
+      </tr>
+      <tr>
+        <td class="pr-2 align-center">驾驭工程</td>
+        <td class="pr-2 align-center">2026+</td>
+        <td class="align-top">如何搭建运行环境、设计约束规则、建立反馈循环，<span class="text-orange-500">侧重于运行环境的设计</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="slide-image">
+  <img src="./images/ai-harness.jpg" alt="AI Harness Engineering" />
+</div>
+
+</div>
+
+</template>
+
+<!-- Context -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- Token
+- Context
+- <span class="text-orange-500 font-bold">Tools</span>
+- MCP
+
+<div class="concept-slide-image">
+  <img src="./images/ai-tools.png" alt="Tools" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+<div v-click>
+
+### 1、<a href="https://youtu.be/TqC1qOfiVcQ" target="_blank"><span class="text-orange-500">Bash is all you need</span></a>
+
+- HCI (Human Computer Interface) 向 ACI (Agent Computer Interface) 转化
+
+- GUI 是给人看的 (Chrome)，Agent 只需要 bash 工具就行 (Headless Chrome)
+
+</div>
+
+<div v-click>
+
+### 2、为什么选择 bash？
+
+- bash 能读写文件、管理文件系统、编写脚本并执行
+
+- bash 可以利用其他三方工具，比如 ffmpeg/git/grep
+
+- 增加工具不会解锁新能力，只会增加模型需要理解的接口
+
+</div>
+
+<div v-click>
+
+### 3、CLI 工具的兴起
+
+- 飞书推出 CLI，钉钉推出 CLI，企微推出 CLI
+
+- Google Workspace 推出 CLI，Obsidian 推出 CLI
+
+```bash
+# Send an email
+gws gmail +send --to alice@example.com --subject "Hello" --body "Hi there"
+
+# Create a new note
+obsidian create name="Trip to Paris"
+```
+
+</div>
+
+</template>
+
+<!-- Tools -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (1/2) 大模型基础概念
+
+- LLM
+- Prompt
+- Token
+- Context
+- Tools
+- <span class="text-orange-500 font-bold">MCP + Skill</span>
+
+<div class="concept-slide-image">
+  <img src="./images/ai-mcp.png" alt="MCP" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+<div v-click>
+
+### 1、<a href="https://youtu.be/CEvIs9y1uog" target="_blank"><span class="text-orange-500">Don't build agents, build skills instead</span></a>
+
+- Claude Code 证明：不同领域的 Agent 底层可以完全一样（通用 Agent + 通用工具）
+
+- 构建 Skills 生态，让通用 Agent 通过可积累、可复用的 Skills 变成各领域的专业工具
+
+</div>
+
+<div v-click>
+
+### 2、理解 Skill
+
+- <span class="text-orange-500">Agent = 系统，Tools = 系统接口，Skills = 安装在系统上的应用</span>
+
+- Claude Code/Cowork = iOS 系统，OpenClaw = Android 系统
+
+- ClawHub = 国外应用商店，SkillsHub = 国内应用商店，有毒的 Skill = 恶意应用
+
+</div>
+
+<div v-click>
+
+### 3、理解 MCP 和 Skill
+
+- 对于 Agent 而言，MCP 和 Skill 都在工具层，都是为了扩展 Agent 的能力
+
+- MCP 和 Skill 不是竞争关系，而是互补关系，Skills + MCP = 专业知识 + 外部连接
+
+<div class="mt-3">
+  <table class="w-full">
+    <thead>
+      <tr class="text-orange-500">
+        <th class="w-32 text-left"></th>
+        <th class="text-left">MCP</th>
+        <th class="text-left">Skill</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="pr-2 pb-2 align-top">解决的问题</td>
+        <td class="pr-2 pb-2 align-top">把外部能力接进来给 Agent 用</td>
+        <td class="pb-2 align-top">把做事的方法和步骤教给 Agent</td>
+      </tr>
+      <tr>
+        <td class="pr-2 pb-2 align-top">内容形态</td>
+        <td class="pr-2 pb-2 align-top">tools / resources / prompts</td>
+        <td class="pb-2 align-top">Skill.md / scripts / references</td>
+      </tr>
+      <tr>
+        <td class="pr-2 pb-2 align-top">加载方式</td>
+        <td class="pr-2 pb-2 align-top">连接 server 后暴露能力</td>
+        <td class="pb-2 align-top">按需加载正文和脚本</td>
+      </tr>
+      <tr>
+        <td class="pr-2 align-top">上下文成本</td>
+        <td class="pr-2 align-top">工具定义和结果可能太大</td>
+        <td class="align-top">分层设计，按需加载</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+</template>
+
+<!-- MCP -->
+
+---
+layout: two-cols
+---
+
+<template v-slot:default>
+
+# (2/2) AI 编程工具的演进和经验
+
+- Chat：ChatGPT
+- VS Code 插件：Copilot
+- AI IDE：Cursor、Windsurf
+- AI Coding Agent：Claude Code、Codex
+
+<div class="concept-slide-image">
+  <img src="./images/ai-coding.png" alt="Coding" />
+</div>
+
+</template>
+
+<template v-slot:right>
+
+## 近半年进展
+
+<div v-click>
+
+### 1、CodeBuddy 逐渐完善
+
+- AI IDE：CodeBuddy IDE
+- VS Code 插件：CodeBuddy 插件
+- Coding Agent：CodeBuddy Code
+- 底层共享通用的 CodeBuddy Agent SDK
+
+</div>
+
+<div v-click>
+
+### 2、Claude Code 源码泄漏
+
+国内外各种源码分析
+
+[Claude Code Upacked](https://ccunpacked.dev/)
+
+[Claude Code From Source](https://claude-code-from-source.com/)
+
+</div>
+
+<div v-click>
+
+### 3、Learn Claude Code
+
+通过学习这个<a href="https://learn.shareai.run/" target="_blank">教程</a>，了解 AI Coding Agent 的架构设计
+
+</div>
+
+</template>
+
+<!-- AI Coding-->
+
+
 ---
 layout: section
 ---
